@@ -18,15 +18,15 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="title: Burnside引理，Polya定理及其应用 date: 2023-12-18 19:02:08 tags: Math 123 不妨记环上点的集合为\(B&#x3D;\{b_1,b_2,...b_n\}\),染色方案集合为\(C&#x3D;\{c_1,c_2,...c_m\}\),考虑集合">
+    <meta name="description" content="title: Burnside引理，Polya定理及其应用 date: 2023-12-18 19:02:08 tags: Math mathjax: true Burnside引理 书接上回，继续深入研究在群作用下集合的轨道与稳定子群的相关性质 现在我们想要研究这样一个问题： \[ 有限群G在有限集合S上面有一个作用，那么S的G-轨道条数是多少 \] 也就是在有限群\(G\)作用">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Sophilex‘s Blog">
 <meta property="og:url" content="https://sophilex.github.io/2023/12/18/Burnside%E5%BC%95%E7%90%86%EF%BC%8CPolya%E5%AE%9A%E7%90%86%E5%8F%8A%E5%85%B6%E5%BA%94%E7%94%A8/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="title: Burnside引理，Polya定理及其应用 date: 2023-12-18 19:02:08 tags: Math 123 不妨记环上点的集合为\(B&#x3D;\{b_1,b_2,...b_n\}\),染色方案集合为\(C&#x3D;\{c_1,c_2,...c_m\}\),考虑集合">
+<meta property="og:description" content="title: Burnside引理，Polya定理及其应用 date: 2023-12-18 19:02:08 tags: Math mathjax: true Burnside引理 书接上回，继续深入研究在群作用下集合的轨道与稳定子群的相关性质 现在我们想要研究这样一个问题： \[ 有限群G在有限集合S上面有一个作用，那么S的G-轨道条数是多少 \] 也就是在有限群\(G\)作用">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-12-18T11:02:08.759Z">
-<meta property="article:modified_time" content="2023-12-18T11:25:30.245Z">
+<meta property="article:modified_time" content="2023-12-18T11:34:36.169Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="抽象代数，组合数学，算法，多项式，动态规划">
 <meta name="twitter:card" content="summary_large_image">
@@ -267,7 +267,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          46 字
+          2.2k 字
         
       </span>
     
@@ -278,7 +278,7 @@
         
         
         
-          1 分钟
+          19 分钟
         
       </span>
     
@@ -322,8 +322,250 @@
                 
                 <hr />
 <p>title: Burnside引理，Polya定理及其应用 date: 2023-12-18 19:02:08
-tags: Math</p>
-<h1 id="section">123</h1>
+tags: Math mathjax: true</p>
+<h2 id="burnside引理">Burnside引理</h2>
+<p>书接上回，继续深入研究在群作用下集合的轨道与稳定子群的相关性质</p>
+<p>现在我们想要研究这样一个问题： <span class="math display">\[
+有限群G在有限集合S上面有一个作用，那么S的G-轨道条数是多少
+\]</span> 也就是在有限群<span
+class="math inline">\(G\)</span>作用下集合<span
+class="math inline">\(S\)</span>的等价类的数量</p>
+<p>不妨设<span class="math inline">\(S\)</span>有<span
+class="math inline">\(r\)</span>条<span
+class="math inline">\(G\)</span>-轨道条数，那么就有 <span
+class="math display">\[
+S=\bigcup_{i=1}^{r}Orb(x_i)
+\]</span> 其中<span
+class="math inline">\(x_i\)</span>就是每一条轨道的代表元。注意到任意两条轨道交集为空，所以
+<span class="math display">\[
+|S|=\bigcup_{i=1}^{r}|Orb(x_i)|=\bigcup_{i=1}^{r}\frac{|G|}{|Stab(x_i)|}
+\]</span>
+这里有点怪，它似乎暗示我们<strong>同一个轨道的元素的不变子群的阶都是一样的</strong>。我们再仔细研究一下</p>
+<p><span class="math inline">\(\forall x,y\in S\)</span>,且<span
+class="math inline">\(x\)</span>,<span
+class="math inline">\(y\)</span>在同一条轨道里面，<span
+class="math inline">\(\exist a\in G,a\cdot x=y\)</span>。则 <span
+class="math display">\[
+\begin{flalign}
+&amp;h\in Stab(y)\Leftrightarrow h\cdot y=y
+\\ &amp;\Leftrightarrow h\cdot(a\cdot x)=a\cdot x
+\\ &amp;\Leftrightarrow (ha)\cdot x=a\cdot x
+\\ &amp;\Leftrightarrow a^{-1}\cdot ((ha)\cdot x)=(a^{-1}\cdot (a\cdot
+x))
+\\ &amp;\Leftrightarrow (a^{-1}ha)\cdot x=x
+\\ &amp;\Leftrightarrow a^{-1}ha\in Stab(x)
+\\ &amp;\Leftrightarrow h\in a^{-1}Stab(x)a
+\end{flalign}
+\]</span></p>
+<p>注意到上述过程都是等价的，所以我们很快得到 <span
+class="math display">\[
+Stab(y)=a^{-1}Stab(x)a
+\]</span> <font color='green'>于是我们得到如下命题</font></p>
+<blockquote>
+<p>设有限群<span class="math inline">\(G\)</span>在有限集合<span
+class="math inline">\(S\)</span>上面有一个作用，那么同一个<span
+class="math inline">\(G\)</span>-轨道的点的稳定子群彼此共轭，从而它们彼此同构</p>
+</blockquote>
+<p>同构的群之间显然阶数相等，这也解答了我们刚刚的疑惑。</p>
+<p>现在再来重新审视一个轨道<span
+class="math inline">\(Orb(x_i)\)</span>,其内部所有元素的稳定子群的阶是相同的，那么内部所有元素的稳定子群的阶数之和就会等于
+<span class="math display">\[
+\sum |Stab(x_i)|=|Stab(x_i)||Orb(x_i|=|G|
+\]</span>
+那么<font color='red'>集合内部所有元素的稳定子群的阶之和就会等于</font>
+<span class="math display">\[
+\sum_{x\in S}|Stab(x)|=\sum_{i=1}^{r}
+|G|=r|G|\quad\quad\quad\quad\quad\quad(1)
+\]</span> 这启发我们用另一种方法来计算<span
+class="math inline">\(r\)</span>.只要能够得到<span
+class="math inline">\(\sum_{x\in S}|Stab(x)|\)</span>,再除以<span
+class="math inline">\(|G|\)</span>，就能得到<span
+class="math inline">\(r\)</span></p>
+<p>​---</p>
+<p>我们考虑<span class="math inline">\(G\cross S\)</span>的一个子集<span
+class="math inline">\(K=\{(a,x)|a\cdot x=x\}\)</span>,</p>
+<p>对于一个给定的<span class="math inline">\(x\in S\)</span>,以<span
+class="math inline">\(x\)</span>作为第二个值的有序对<span
+class="math inline">\((a,x)\)</span>的数量显然就是<span
+class="math inline">\(|Stab(x)|\)</span>,所以 <span
+class="math display">\[
+|K|=\sum_{x\in S}|Stab(x)|
+\]</span> 问题又转化成了求<span
+class="math inline">\(|K|\)</span>,不过我们离成功已经很近了。</p>
+<p>事实上将问题转化成求<span
+class="math inline">\(|K|\)</span>是很有好处的，因为我们可以以<span
+class="math inline">\(x\)</span>为关键字来看待它，当然也可以以<span
+class="math inline">\(a\)</span>为关键字来看。如此，对于一个给定的<span
+class="math inline">\(a\in G\)</span>,所有以<span
+class="math inline">\(a\)</span>为第一个值的有序对对应的x组成一个集合<span
+class="math inline">\(F_a=\{x|a\cdot x=x\}\)</span>,我们记其为<span
+class="math inline">\(a\)</span>的不动点集</p>
+<p>那么 <span class="math display">\[
+\sum_{x\in S}|Stab(x)|=|K|=\sum_{a\in G}|F_a|
+\]</span> 从而由<span class="math inline">\((1)\)</span>式可知 <span
+class="math display">\[
+r=\frac{\sum_{x\in S}|Stab(x)|}{|G|}=\frac{1}{|G|}\sum_{a\in G}|F_a|
+\]</span> <font color='green'>于是我们得到<span
+class="math inline">\(Burnside\)</span>引理如下：</font></p>
+<blockquote>
+<p>设有限群<span class="math inline">\(G\)</span>在有限集合<span
+class="math inline">\(S\)</span>上有一个群作用，那么<span
+class="math inline">\(S\)</span>的<span
+class="math inline">\(G\)</span>-轨道条数<span
+class="math inline">\(r\)</span>为 <span class="math display">\[
+r=\frac{1}{|G|}\sum_{a\in G}|F_a|
+\]</span></p>
+</blockquote>
+<p>这个引理的意义在于，原本单纯只跟集合<span
+class="math inline">\(S\)</span>有关的问题，我们可以借用群<span
+class="math inline">\(G\)</span>来解决了，而群<span
+class="math inline">\(G\)</span>在一些特定情况下有良好的性质能够帮助我们快速计算<span
+class="math inline">\(\sum_{a\in G}|F_a|\)</span></p>
+<h3 id="应用">应用</h3>
+<p>来个具体的例子</p>
+<blockquote>
+<p>给定一个大小为n的环，环上每一个点有m种染色方案。问总共可以染出多少个本质不同的环。这里环本质不同定义为无法通过旋转得到</p>
+</blockquote>
+<p>不妨记环上点的集合为<span
+class="math inline">\(B=\{b_1,b_2,...b_n\}\)</span>,染色方案集合为<span
+class="math inline">\(C=\{c_1,c_2,...c_m\}\)</span>,考虑集合 <span
+class="math display">\[
+S=B^C=\{X_i\},其中X_i=&lt;c_{i_1},c_{i_2},...c_{i_n}&gt;,1\leq i_j\leq m
+\]</span> <span
+class="math inline">\(S\)</span>的实际含义就是所有给<span
+class="math inline">\(B\)</span>中元素染色的方案的集合,每一个方案用一个n元排列表示,显然<span
+class="math inline">\(|S|=m^n\)</span></p>
+<p>现在考虑在集合<span class="math inline">\(B\)</span>上的置换群<span
+class="math inline">\(Perm(B)\)</span>的子群<span
+class="math inline">\(G=\{\bigl(\begin{smallmatrix} 1 &amp; 2 &amp; ...
+&amp; n-1 &amp; n\\ 2 &amp; 3 &amp; ...&amp; n &amp; 1
+\end{smallmatrix}\bigr),\bigl(\begin{smallmatrix}  1&amp; 2 &amp; 3
+&amp; ... &amp; n-1 &amp; n\\ 3 &amp; 4&amp; ...&amp; n &amp; 1 &amp; 2
+\end{smallmatrix}\bigr),...,(1)\}\)</span>,其中<span
+class="math inline">\(G_i=\bigl(\begin{smallmatrix}  1&amp;2 &amp;
+3&amp;4&amp;... &amp; n-1 &amp; n\\  i+1&amp; i+2 &amp; ... &amp; n
+&amp; 1 &amp;...&amp;i \end{smallmatrix}\bigr)\)</span>。显然<span
+class="math inline">\(|G|=n\)</span>。此外不难证明<span
+class="math inline">\(G\)</span>确实是一个群，这里就不证了。</p>
+<p><font color='red'><strong>至于为什么要这样定义，是因为<span
+class="math inline">\(G\)</span>中元素实际上代表的就是一个环的旋转（这一点不难发现）与题目给出的本质不同的定义相吻合。整个<span
+class="math inline">\(G\)</span>就恰好代表了环上的所有旋转操作，如果我们能证明有限群<span
+class="math inline">\(G\)</span>在集合<span
+class="math inline">\(S\)</span>上有一个作用,那么本质不同的环的数量不就是<span
+class="math inline">\(S\)</span>的<span
+class="math inline">\(G\)</span>-轨道条数了吗，从而可以用<span
+class="math inline">\(Burnside\)</span>引理求解</strong></font></p>
+<p>我们来证明有限群<span class="math inline">\(G\)</span>确实在集合<span
+class="math inline">\(S\)</span>上有一个作用</p>
+<p><strong><font color='orange'>证明：</font></strong></p>
+<p>考虑 <span class="math display">\[
+\phi:G\cross S\rightarrow S
+\\ (a,x)\mapsto a\cdot x
+\]</span> 这里<span class="math inline">\(a\)</span>是一个置换，<span
+class="math inline">\(x\)</span>是一个大小为<span
+class="math inline">\(n\)</span>的排列，那么此时<span
+class="math inline">\(a\cdot x\)</span>就是一个普通的
+置换在排列上的作用了，这样定义显然是合理的。</p>
+<p>要证明<span class="math inline">\(G\)</span>在<span
+class="math inline">\(S\)</span>上有群作用，我们只需要证明 <span
+class="math display">\[
+e\cdot x=x,\forall x\in S
+\\ (a\circ b)\cdot x=a\cdot (b\cdot x)
+\]</span> 第一点非常显然，<span
+class="math inline">\(G\)</span>中的<span
+class="math inline">\(e\)</span>就是恒等变换，它作用在一个排列上显然保持不变</p>
+<p>第二点其实就是置换的复合性质的描述，我们当然知道它是成立的</p>
+<p>从而<span class="math inline">\(G\)</span>确实在<span
+class="math inline">\(S\)</span>上有一个群作用，那么我们就可以用<span
+class="math inline">\(Burnside\)</span>引理来处理这个问题了。 <span
+class="math inline">\(\square\)</span></p>
+<p>我们要求本质不同的环的数量，也就是求<span
+class="math inline">\(S\)</span>的<span
+class="math inline">\(G\)</span>-轨道条数<span
+class="math inline">\(r\)</span>,从而 <span class="math display">\[
+r=\frac{1}{|G|}\sum_{a\in G}|F_a|=\frac{1}{n}\sum_{a\in G}|F_a|
+\]</span> 此时问题变成对于<span
+class="math inline">\(G\)</span>内的每一个置换，求其不动点集的阶</p>
+<p>​---</p>
+<p>不妨来看个简单版本，我们就令<span
+class="math inline">\(n=4\)</span>。此时总共有4个置换，</p>
+<ul>
+<li><span class="math inline">\(a_1=\bigl(\begin{smallmatrix} 1 &amp; 2
+&amp; 3 &amp; 4 \\ 2 &amp; 3 &amp;4 &amp; 1
+\end{smallmatrix}\bigr)\)</span>,此时显然需要<span
+class="math inline">\(x_i\)</span>内所有<span
+class="math inline">\(c_{i_j}\)</span>都相等，从而<span
+class="math inline">\(|F_{a_1}|=m\)</span></li>
+<li><span class="math inline">\(a_2=\bigl(\begin{smallmatrix} 1 &amp; 2
+&amp; 3 &amp; 4 \\ 3 &amp; 4 &amp; 1 &amp; 2
+\end{smallmatrix}\bigr)\)</span>,<span
+class="math inline">\(1,3\)</span>是一组，<span
+class="math inline">\(2,4\)</span>是一组，所以<span
+class="math inline">\(|F_{a_2}|=m^2\)</span></li>
+<li>同理可得<span class="math inline">\(|F_{a_3}|=m\)</span></li>
+<li><span class="math inline">\(a_4=(1)\)</span>,每一个排列在<span
+class="math inline">\(a_4\)</span>作用下都保持不变，元素对应的颜色自然也不变，从而<span
+class="math inline">\(|F_{a_4}|=|S|=m^n\)</span></li>
+</ul>
+<p>从而<span
+class="math inline">\(r=\frac{1}{n}(m^n+2m+m^2)\)</span></p>
+<p>​---</p>
+<p>但是当<span
+class="math inline">\(n\)</span>逐渐变大的时候,这种暴力枚举的方法将会变的寸步难行。这里再引入一个概念</p>
+<h3 id="置换群的轮换指标">置换群的轮换指标</h3>
+<p>置换型：如果<span class="math inline">\(n\)</span>元置换<span
+class="math inline">\(g\)</span>中有<span
+class="math inline">\(b_i\)</span>个长度为<span
+class="math inline">\(i\)</span>的轮换，那么<span
+class="math inline">\(g\)</span>的置换型为<span
+class="math inline">\({x_1}^{b_1}{x_2}^{b_2}...{x_n}^{b_n}\)</span>，其中<span
+class="math inline">\(\sum i*b_i=n\)</span>显然成立。这里<span
+class="math inline">\(x_i\)</span>只是一个形式</p>
+<blockquote>
+<p>设<span class="math inline">\((G,\circ)\)</span>是一个<span
+class="math inline">\(n\)</span>元置换群，那么它的轮换指标定义为 <span
+class="math display">\[
+P_G(x_1,x_2,...x_n)=\frac{1}{|G|}\sum_{g\in
+G}x_1^{b_1}x_2^{b_2}...x_{n}^{b_n}
+\]</span></p>
+</blockquote>
+<p><span class="math inline">\({x_i}^{b_i}\)</span>就表示在一个置换<span
+class="math inline">\(g\)</span>内有<span
+class="math inline">\(b_i\)</span>个<span
+class="math inline">\(i\)</span>-轮换，而对于一个轮换，其内所有点都是可以互相到达的，所以轮换内部的点的颜色一定得相同，从而这个轮换的染色方案就是<span
+class="math inline">\(m\)</span>,从而,对于置换<span
+class="math inline">\(g\)</span>,<span
+class="math inline">\(|F_g|=m^{b_1}m^{b_2}...m^{b_n}\)</span></p>
+<p>从而 <span class="math display">\[
+r=\frac{1}{|G|}\sum_{a\in G}|F_a|=\frac{1}{|G|}\sum_{a\in
+G}x_1^{b_1}x_2^{b_2}...x_{n}^{b_n}=P_G(x_1,x_2,...x_n)
+\]</span> 现在问题就变成了求置换群<span
+class="math inline">\(G\)</span>的轮换指标</p>
+<p>这里给出一些结论</p>
+<h4 id="正n边形的旋转群的轮换指标">正n边形的旋转群的轮换指标</h4>
+<p><span class="math display">\[
+P_G=\frac{1}{n}\sum_{d|n}\phi_d{x_d}^{\frac{n}{d}}
+\]</span></p>
+<p>这其实就是我们刚刚在研究的问题</p>
+<p>注意到正n边形的旋转群<span class="math inline">\(G\)</span>中，<span
+class="math inline">\(G_i\)</span>就表示旋转步长为<span
+class="math inline">\(i\)</span>的置换组成，我们有如下结论： <span
+class="math display">\[
+|F_{G_i}|=(n,i)
+\]</span> <strong><font color='orange'>证明：</font></strong></p>
+<ul>
+<li><span class="math inline">\(i|n\)</span>,每次走i步，<span
+class="math inline">\(n/i\)</span>次后回到原点，所以该置换可以拆成i个轮换，每一个轮换的阶为<span
+class="math inline">\(n/i\)</span>。显然有<span
+class="math inline">\(|F_{G_i}|=i=(n,i)\)</span></li>
+<li><span class="math inline">\(i\nmid n\)</span>,每次走<span
+class="math inline">\(i\)</span>步，回到原点需要<span
+class="math inline">\(lcm(n,i)\)</span>次，从而每一个轮换的阶为<span
+class="math inline">\(lcm(n,i)/i\)</span>,那么<span
+class="math inline">\(|F_{G_i}|=n/(lcm(n,i)/i)=ni/lcm(n,i)=(n,i)\)</span></li>
+</ul>
+<p><span class="math inline">\(\square\)</span></p>
+<p>未完待续</p>
 <p>不妨记环上点的集合为<span
 class="math inline">\(B=\{b_1,b_2,...b_n\}\)</span>,染色方案集合为<span
 class="math inline">\(C=\{c_1,c_2,...c_m\}\)</span>,考虑集合</p>
