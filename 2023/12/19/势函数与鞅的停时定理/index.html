@@ -18,25 +18,26 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="Burnside引理,Pólya定理及其应用 Burnside引理 书接上回，继续深入研究在群作用下集合的轨道与稳定子群的相关性质 现在我们想要研究这样一个问题： \[ 有限群G在有限集合S上面有一个作用，那么S的G-轨道条数是多少 \] 也就是在有限群\(G\)作用下集合\(S\)的等价类的数量 不妨设\(S\)有\(r\)条\(G\)-轨道条数，那么就有 \[ S&#x3D;\bigcup">
+    <meta name="description" content="势函数和鞅的停时定理 前置芝士 鞅： 鞅是一类特殊的随机过程，假设我们从一开始就在观察一场赌博游戏，现在已经得到了前t秒的观测值，那么当第t+1 秒观测值的期望等于第t秒的观测值时，我们称这是一个公平赌博游戏。 具体来说，对于一个随机过程\({A_1,A_2,...}\),如果\(E(A_{n+1}|A_0,A_2,..A_n)&#x3D;A_n\),我们称该随机过程为鞅。 鞅的停时定理： 设">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Burnside引理">
-<meta property="og:url" content="https://sophilex.github.io/2023/12/18/Burnside/index.html">
+<meta property="og:title" content="势函数与鞅的停时定理">
+<meta property="og:url" content="https://sophilex.github.io/2023/12/19/%E5%8A%BF%E5%87%BD%E6%95%B0%E4%B8%8E%E9%9E%85%E7%9A%84%E5%81%9C%E6%97%B6%E5%AE%9A%E7%90%86/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="Burnside引理,Pólya定理及其应用 Burnside引理 书接上回，继续深入研究在群作用下集合的轨道与稳定子群的相关性质 现在我们想要研究这样一个问题： \[ 有限群G在有限集合S上面有一个作用，那么S的G-轨道条数是多少 \] 也就是在有限群\(G\)作用下集合\(S\)的等价类的数量 不妨设\(S\)有\(r\)条\(G\)-轨道条数，那么就有 \[ S&#x3D;\bigcup">
+<meta property="og:description" content="势函数和鞅的停时定理 前置芝士 鞅： 鞅是一类特殊的随机过程，假设我们从一开始就在观察一场赌博游戏，现在已经得到了前t秒的观测值，那么当第t+1 秒观测值的期望等于第t秒的观测值时，我们称这是一个公平赌博游戏。 具体来说，对于一个随机过程\({A_1,A_2,...}\),如果\(E(A_{n+1}|A_0,A_2,..A_n)&#x3D;A_n\),我们称该随机过程为鞅。 鞅的停时定理： 设">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2023-12-18T07:38:53.270Z">
-<meta property="article:modified_time" content="2023-12-19T00:31:35.171Z">
+<meta property="article:published_time" content="2023-12-19T01:22:14.000Z">
+<meta property="article:modified_time" content="2023-12-19T01:22:49.219Z">
 <meta property="article:author" content="Sophilex">
+<meta property="article:tag" content="数学">
 <meta property="article:tag" content="学习笔记">
-<meta property="article:tag" content="抽象代数">
+<meta property="article:tag" content="鞅论">
 <meta name="twitter:card" content="summary_large_image">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>Burnside引理 - Sophilex‘s Blog</title>
+  <title>势函数与鞅的停时定理 - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -229,7 +230,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Burnside引理"></span>
+            <span id="subtitle" data-typed-text="势函数与鞅的停时定理"></span>
           
         </div>
 
@@ -245,8 +246,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2023-12-18 15:38" pubdate>
-          2023年12月18日 下午
+        <time datetime="2023-12-19 09:22" pubdate>
+          2023年12月19日 上午
         </time>
       </span>
     
@@ -313,255 +314,165 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">Burnside引理</h1>
+            <h1 id="seo-header">势函数与鞅的停时定理</h1>
             
             
               <div class="markdown-body">
                 
-                <h1
-id="burnside引理pólya定理及其应用">Burnside引理,Pólya定理及其应用</h1>
-<h2 id="burnside引理">Burnside引理</h2>
-<p>书接上回，继续深入研究在群作用下集合的轨道与稳定子群的相关性质</p>
-<p>现在我们想要研究这样一个问题： <span class="math display">\[
-有限群G在有限集合S上面有一个作用，那么S的G-轨道条数是多少
-\]</span> 也就是在有限群<span
-class="math inline">\(G\)</span>作用下集合<span
-class="math inline">\(S\)</span>的等价类的数量</p>
-<p>不妨设<span class="math inline">\(S\)</span>有<span
-class="math inline">\(r\)</span>条<span
-class="math inline">\(G\)</span>-轨道条数，那么就有 <span
-class="math display">\[
-S=\bigcup_{i=1}^{r}Orb(x_i)
-\]</span> 其中<span
-class="math inline">\(x_i\)</span>就是每一条轨道的代表元。注意到任意两条轨道交集为空，所以
-<span class="math display">\[
-|S|=\bigcup_{i=1}^{r}|Orb(x_i)|=\bigcup_{i=1}^{r}\frac{|G|}{|Stab(x_i)|}
-\]</span>
-这里有点怪，它似乎暗示我们<strong>同一个轨道的元素的不变子群的阶都是一样的</strong>。我们再仔细研究一下</p>
-<p><span class="math inline">\(\forall x,y\in S\)</span>,且<span
-class="math inline">\(x\)</span>,<span
-class="math inline">\(y\)</span>在同一条轨道里面，<span
-class="math inline">\(\exist a\in G,a\cdot x=y\)</span>。则 <span
-class="math display">\[
-\begin{flalign}
-&amp;h\in Stab(y)\Leftrightarrow h\cdot y=y
-\\ &amp;\Leftrightarrow h\cdot(a\cdot x)=a\cdot x
-\\ &amp;\Leftrightarrow (ha)\cdot x=a\cdot x
-\\ &amp;\Leftrightarrow a^{-1}\cdot ((ha)\cdot x)=(a^{-1}\cdot (a\cdot
-x))
-\\ &amp;\Leftrightarrow (a^{-1}ha)\cdot x=x
-\\ &amp;\Leftrightarrow a^{-1}ha\in Stab(x)
-\\ &amp;\Leftrightarrow h\in a^{-1}Stab(x)a
-\end{flalign}
-\]</span></p>
-<p>注意到上述过程都是等价的，所以我们很快得到 <span
-class="math display">\[
-Stab(y)=a^{-1}Stab(x)a
-\]</span> <font color='green'>于是我们得到如下命题</font></p>
-<blockquote>
-<p>设有限群<span class="math inline">\(G\)</span>在有限集合<span
-class="math inline">\(S\)</span>上面有一个作用，那么同一个<span
-class="math inline">\(G\)</span>-轨道的点的稳定子群彼此共轭，从而它们彼此同构</p>
-</blockquote>
-<p>同构的群之间显然阶数相等，这也解答了我们刚刚的疑惑。</p>
-<p>现在再来重新审视一个轨道<span
-class="math inline">\(Orb(x_i)\)</span>,其内部所有元素的稳定子群的阶是相同的，那么内部所有元素的稳定子群的阶数之和就会等于
-<span class="math display">\[
-\sum |Stab(x_i)|=|Stab(x_i)||Orb(x_i|=|G|
-\]</span>
-那么<font color='red'>集合内部所有元素的稳定子群的阶之和就会等于</font>
-<span class="math display">\[
-\sum_{x\in S}|Stab(x)|=\sum_{i=1}^{r}
-|G|=r|G|\quad\quad\quad\quad\quad\quad(1)
-\]</span> 这启发我们用另一种方法来计算<span
-class="math inline">\(r\)</span>.只要能够得到<span
-class="math inline">\(\sum_{x\in S}|Stab(x)|\)</span>,再除以<span
-class="math inline">\(|G|\)</span>，就能得到<span
-class="math inline">\(r\)</span></p>
-<hr />
-<p>我们考虑<span class="math inline">\(G\cross S\)</span>的一个子集<span
-class="math inline">\(K=\{(a,x)|a\cdot x=x\}\)</span>,</p>
-<p>对于一个给定的<span class="math inline">\(x\in S\)</span>,以<span
-class="math inline">\(x\)</span>作为第二个值的有序对<span
-class="math inline">\((a,x)\)</span>的数量显然就是<span
-class="math inline">\(|Stab(x)|\)</span>,所以 <span
-class="math display">\[
-|K|=\sum_{x\in S}|Stab(x)|
-\]</span> 问题又转化成了求<span
-class="math inline">\(|K|\)</span>,不过我们离成功已经很近了。</p>
-<p>事实上将问题转化成求<span
-class="math inline">\(|K|\)</span>是很有好处的，因为我们可以以<span
-class="math inline">\(x\)</span>为关键字来看待它，当然也可以以<span
-class="math inline">\(a\)</span>为关键字来看。如此，对于一个给定的<span
-class="math inline">\(a\in G\)</span>,所有以<span
-class="math inline">\(a\)</span>为第一个值的有序对对应的x组成一个集合<span
-class="math inline">\(F_a=\{x|a\cdot x=x\}\)</span>,我们记其为<span
-class="math inline">\(a\)</span>的不动点集</p>
-<p>那么 <span class="math display">\[
-\sum_{x\in S}|Stab(x)|=|K|=\sum_{a\in G}|F_a|
-\]</span> 从而由<span class="math inline">\((1)\)</span>式可知 <span
-class="math display">\[
-r=\frac{\sum_{x\in S}|Stab(x)|}{|G|}=\frac{1}{|G|}\sum_{a\in G}|F_a|
-\]</span> <font color='green'>于是我们得到<span
-class="math inline">\(Burnside\)</span>引理如下：</font></p>
-<blockquote>
-<p>设有限群<span class="math inline">\(G\)</span>在有限集合<span
-class="math inline">\(S\)</span>上有一个群作用，那么<span
-class="math inline">\(S\)</span>的<span
-class="math inline">\(G\)</span>-轨道条数<span
-class="math inline">\(r\)</span>为 <span class="math display">\[
-r=\frac{1}{|G|}\sum_{a\in G}|F_a|
-\]</span></p>
-</blockquote>
-<p>这个引理的意义在于，原本单纯只跟集合<span
-class="math inline">\(S\)</span>有关的问题，我们可以借用群<span
-class="math inline">\(G\)</span>来解决了，而群<span
-class="math inline">\(G\)</span>在一些特定情况下有良好的性质能够帮助我们快速计算<span
-class="math inline">\(\sum_{a\in G}|F_a|\)</span></p>
-<h3 id="应用">应用</h3>
-<p>来个具体的例子</p>
-<blockquote>
-<p>给定一个大小为n的环，环上每一个点有m种染色方案。问总共可以染出多少个本质不同的环。这里环本质不同定义为无法通过旋转得到</p>
-</blockquote>
-<p>不妨记环上点的集合为<span
-class="math inline">\(B=\{b_1,b_2,...b_n\}\)</span>,染色方案集合为<span
-class="math inline">\(C=\{c_1,c_2,...c_m\}\)</span>,考虑集合 <span
-class="math display">\[
-S=B^C=\{X_i\},其中X_i=&lt;c_{i_1},c_{i_2},...c_{i_n}&gt;,1\leq i_j\leq m
-\]</span> <span
-class="math inline">\(S\)</span>的实际含义就是所有给<span
-class="math inline">\(B\)</span>中元素染色的方案的集合,每一个方案用一个n元排列表示,显然<span
-class="math inline">\(|S|=m^n\)</span></p>
-<p>现在考虑在集合<span class="math inline">\(B\)</span>上的置换群<span
-class="math inline">\(Perm(B)\)</span>的子群<span
-class="math inline">\(G=\{\bigl(\begin{smallmatrix} 1 &amp; 2 &amp; ...
-&amp; n-1 &amp; n\\ 2 &amp; 3 &amp; ...&amp; n &amp; 1
-\end{smallmatrix}\bigr),\bigl(\begin{smallmatrix}  1&amp; 2 &amp; 3
-&amp; ... &amp; n-1 &amp; n\\ 3 &amp; 4&amp; ...&amp; n &amp; 1 &amp; 2
-\end{smallmatrix}\bigr),...,(1)\}\)</span>,其中<span
-class="math inline">\(G_i=\bigl(\begin{smallmatrix}  1&amp;2 &amp;
-3&amp;4&amp;... &amp; n-1 &amp; n\\  i+1&amp; i+2 &amp; ... &amp; n
-&amp; 1 &amp;...&amp;i \end{smallmatrix}\bigr)\)</span>。显然<span
-class="math inline">\(|G|=n\)</span>。此外不难证明<span
-class="math inline">\(G\)</span>确实是一个群，这里就不证了。</p>
-<p><font color='red'><strong>至于为什么要这样定义，是因为<span
-class="math inline">\(G\)</span>中元素实际上代表的就是一个环的旋转（这一点不难发现）与题目给出的本质不同的定义相吻合。整个<span
-class="math inline">\(G\)</span>就恰好代表了环上的所有旋转操作，如果我们能证明有限群<span
-class="math inline">\(G\)</span>在集合<span
-class="math inline">\(S\)</span>上有一个作用,那么本质不同的环的数量不就是<span
-class="math inline">\(S\)</span>的<span
-class="math inline">\(G\)</span>-轨道条数了吗，从而可以用<span
-class="math inline">\(Burnside\)</span>引理求解</strong></font></p>
-<p>我们来证明有限群<span class="math inline">\(G\)</span>确实在集合<span
-class="math inline">\(S\)</span>上有一个作用</p>
-<p><strong><font color='orange'>证明：</font></strong></p>
-<p>考虑 <span class="math display">\[
-\phi:G\cross S\rightarrow S
-\\ (a,x)\mapsto a\cdot x
-\]</span> 这里<span class="math inline">\(a\)</span>是一个置换，<span
-class="math inline">\(x\)</span>是一个大小为<span
-class="math inline">\(n\)</span>的排列，那么此时<span
-class="math inline">\(a\cdot x\)</span>就是一个普通的
-置换在排列上的作用了，这样定义显然是合理的。</p>
-<p>要证明<span class="math inline">\(G\)</span>在<span
-class="math inline">\(S\)</span>上有群作用，我们只需要证明 <span
-class="math display">\[
-e\cdot x=x,\forall x\in S
-\\ (a\circ b)\cdot x=a\cdot (b\cdot x)
-\]</span> 第一点非常显然，<span
-class="math inline">\(G\)</span>中的<span
-class="math inline">\(e\)</span>就是恒等变换，它作用在一个排列上显然保持不变</p>
-<p>第二点其实就是置换的复合性质的描述，我们当然知道它是成立的</p>
-<p>从而<span class="math inline">\(G\)</span>确实在<span
-class="math inline">\(S\)</span>上有一个群作用，那么我们就可以用<span
-class="math inline">\(Burnside\)</span>引理来处理这个问题了。 <span
-class="math inline">\(\square\)</span></p>
-<p>我们要求本质不同的环的数量，也就是求<span
-class="math inline">\(S\)</span>的<span
-class="math inline">\(G\)</span>-轨道条数<span
-class="math inline">\(r\)</span>,从而 <span class="math display">\[
-r=\frac{1}{|G|}\sum_{a\in G}|F_a|=\frac{1}{n}\sum_{a\in G}|F_a|
-\]</span> 此时问题变成对于<span
-class="math inline">\(G\)</span>内的每一个置换，求其不动点集的阶</p>
-<hr />
-<p>不妨来看个简单版本，我们就令<span
-class="math inline">\(n=4\)</span>。此时总共有4个置换，</p>
+                <h2 id="势函数和鞅的停时定理">势函数和鞅的停时定理</h2>
+<h3 id="前置芝士">前置芝士</h3>
+<p>鞅：</p>
+<p>鞅是一类特殊的随机过程，假设我们从一开始就在观察一场赌博游戏，现在已经得到了前t秒的观测值，那么当第t+1
+秒观测值的期望等于第t秒的观测值时，我们称这是一个公平赌博游戏。</p>
+<p>具体来说，对于一个随机过程<span
+class="math inline">\({A_1,A_2,...}\)</span>,如果<span
+class="math inline">\(E(A_{n+1}|A_0,A_2,..A_n)=A_n\)</span>,我们称该随机过程为鞅。</p>
+<p>鞅的停时定理：</p>
+<p>设时停时间（在<strong>不知道随机过程的中间状态下</strong>停止的时刻）为t，则<span
+class="math inline">\(E(t)=E(0)\)</span></p>
+<p>这个E到底是什么，由具体的情境而定，但是只要一个随机过程是一个鞅，它就有该结论</p>
+<h3 id="势函数">势函数</h3>
+<p>接下来我们考虑一个很常见的问题：</p>
+<p>对于一个随机过程<span
+class="math inline">\({A_1,A_2,...}\)</span>,如果<strong>其终止状态<span
+class="math inline">\(A_t\)</span>是确定的</strong>，求<span
+class="math inline">\(E[t]\)</span>,即时停时刻的期望（<strong>注意这里我们不要求该随机过程是一个鞅</strong>）</p>
+<p>为此，我们引入一个势函数<span
+class="math inline">\(\phi(X)\)</span></p>
+<p>并且<span class="math inline">\(\phi(x)\)</span>满足如下性质：</p>
 <ul>
-<li><span class="math inline">\(a_1=\bigl(\begin{smallmatrix} 1 &amp; 2
-&amp; 3 &amp; 4 \\ 2 &amp; 3 &amp;4 &amp; 1
-\end{smallmatrix}\bigr)\)</span>,​此时显然需要<span
-class="math inline">\(x_i\)</span>内所有<span
-class="math inline">\(c_{i_j}\)</span>都相等，从而<span
-class="math inline">\(|F_{a_1}|=m\)</span></li>
-<li><span class="math inline">\(a_2=\bigl(\begin{smallmatrix} 1 &amp; 2
-&amp; 3 &amp; 4 \\ 3 &amp; 4 &amp; 1 &amp; 2
-\end{smallmatrix}\bigr)\)</span>,<span
-class="math inline">\(1,3\)</span>是一组，<span
-class="math inline">\(2,4\)</span>是一组，所以<span
-class="math inline">\(|F_{a_2}|=m^2\)</span></li>
-<li>同理可得<span class="math inline">\(|F_{a_3}|=m\)</span></li>
-<li><span class="math inline">\(a_4=(1)\)</span>,每一个排列在<span
-class="math inline">\(a_4\)</span>作用下都保持不变，元素对应的颜色自然也不变，从而<span
-class="math inline">\(|F_{a_4}|=|S|=m^n\)</span></li>
+<li><span class="math inline">\(\forall n&lt;t,
+E(\phi(A_{n+1})-\phi(A_n)|A_0,A_1,...A_n)=-1\)</span>,即势能不断降低</li>
+<li><span class="math inline">\(E(\phi(A_t))=C\)</span>,是一个常值</li>
 </ul>
-<p>从而<span
-class="math inline">\(r=\frac{1}{n}(m^n+2m+m^2)\)</span></p>
+<p>那么如果我们令<span
+class="math inline">\(X_t=\phi(A_t)+t\)</span>,则<span
+class="math inline">\(E(X_{n+1}-X_n|x_0,x_1...x_n)=E(\phi(A_{n+1})-\phi(A_n)+1|x_0,x_1...x_n)=E(\phi(A_{n+1})-\phi(A_n)|x_0,x_1...x_n)+1=0\)</span></p>
+<p>我们发现随机过程<span
+class="math inline">\(X_t\)</span>就是一个鞅了</p>
+<p>那么由鞅的停时原理，<span
+class="math inline">\(E(X_t)=E(X_0)\)</span>,即<span
+class="math inline">\(E(\phi(A_t)+t)=E(\phi(A_0)+0)\)</span>,也即<span
+class="math inline">\(E(\phi(A_t))+E(t)=E(\phi(A_0))\)</span></p>
+<p>所以我们得到<strong><span
+class="math inline">\(E(t)=E(\phi(A_0))-E(\phi(A_t))\)</span></strong>,根据我们之前定义的性质，<span
+class="math inline">\(E(\phi)A_t\)</span>为一个常值，而<span
+class="math inline">\(E(\phi(A_0))\)</span>显然也是一个常值，所以只要能找到这个满足条件的势函数，就能很方便的求出<span
+class="math inline">\(E(t)\)</span></p>
+<p>这里我们只是在随机过程<span
+class="math inline">\(X_t\)</span>中应用了停时定理，对原本的随机过程<span
+class="math inline">\(A_t\)</span>并没有做什么限制</p>
+<p>接下来结合具体的题目来讨论一下如何构造这样的一个势函数</p>
+<p><a
+target="_blank" rel="noopener" href="https://codeforces.com/contest/1349/problem/D">CF1349D</a></p>
+<p>大意：</p>
+<p>有n个人在玩传球游戏，一开始第<span
+class="math inline">\(i\)</span>个人有<span
+class="math inline">\(a_i\)</span>个球。每一次传球，等概率随机<strong>选中一个球</strong>，设其当前拥有者为<span
+class="math inline">\(i\)</span>，<span
+class="math inline">\(i\)</span>将这个球等概率随机传给另一个人<span
+class="math inline">\(j(j\neq
+i)\)</span>。当某一个人拥有所有球时，停止游戏。问游戏停止时的期望传球次数。</p>
+<p>记球的总数为m</p>
+<p>不妨记状态<span
+class="math inline">\(A_t=(a_{t,1},a_{t,2}...a_{t,n})\)</span>,一个n维向量，分别表示
+在时刻t，第i个人手中球的数量，显然它唯一地表示了某一个时刻的全局状态</p>
+<p>也就是说，我们现在就把这个游戏过程抽象成了一个随机过程<span
+class="math inline">\(A_0,A_1....\)</span>,并且其停时为t。那么按照之前所说，我们需要去定义一个势函数<span
+class="math inline">\(\phi(A_t)\)</span>,为了计算方便，我们可以将<span
+class="math inline">\(\phi\)</span>具体到A的每一维向量，不妨记为<span
+class="math inline">\(\phi(A_t)=\sum_{i=1}^{n}f(a_{t,i})\)</span>,这里f是什么我们并不知道，但是如果我们知道了f，其实也就是相当于构造出了这个势能函数</p>
+<p>这里再把我们定义的<span
+class="math inline">\(\phi\)</span>的性质再放一下</p>
 <hr />
-<p>但是当<span
-class="math inline">\(n\)</span>逐渐变大的时候,这种暴力枚举的方法将会变的寸步难行。这里再引入一个概念</p>
-<h3 id="置换群的轮换指标">置换群的轮换指标</h3>
-<p>置换型：如果<span class="math inline">\(n\)</span>元置换<span
-class="math inline">\(g\)</span>中有<span
-class="math inline">\(b_i\)</span>个长度为<span
-class="math inline">\(i\)</span>的轮换，那么<span
-class="math inline">\(g\)</span>的置换型为<span
-class="math inline">\({x_1}^{b_1}{x_2}^{b_2}...{x_n}^{b_n}\)</span>，其中<span
-class="math inline">\(\sum i*b_i=n\)</span>显然成立。这里<span
-class="math inline">\(x_i\)</span>只是一个形式</p>
-<blockquote>
-<p>设<span class="math inline">\((G,\circ)\)</span>是一个<span
-class="math inline">\(n\)</span>元置换群，那么它的轮换指标定义为 <span
-class="math display">\[
-P_G(x_1,x_2,...x_n)=\frac{1}{|G|}\sum_{g\in
-G}x_1^{b_1}x_2^{b_2}...x_{n}^{b_n}
-\]</span></p>
-</blockquote>
-<p><span class="math inline">\({x_i}^{b_i}\)</span>就表示在一个置换<span
-class="math inline">\(g\)</span>内有<span
-class="math inline">\(b_i\)</span>个<span
-class="math inline">\(i\)</span>-轮换，而对于一个轮换，其内所有点都是可以互相到达的，所以轮换内部的点的颜色一定得相同，从而这个轮换的染色方案就是<span
-class="math inline">\(m\)</span>,从而,对于置换<span
-class="math inline">\(g\)</span>,<span
-class="math inline">\(|F_g|=m^{b_1}m^{b_2}...m^{b_n}\)</span></p>
-<p>从而 <span class="math display">\[
-r=\frac{1}{|G|}\sum_{a\in G}|F_a|=\frac{1}{|G|}\sum_{a\in
-G}x_1^{b_1}x_2^{b_2}...x_{n}^{b_n}=P_G(x_1,x_2,...x_n)
-\]</span> 现在问题就变成了求置换群<span
-class="math inline">\(G\)</span>的轮换指标</p>
-<p>这里给出一些结论</p>
-<h4 id="正n边形的旋转群的轮换指标">正n边形的旋转群的轮换指标</h4>
-<p><span class="math display">\[
-P_G=\frac{1}{n}\sum_{d|n}\phi_d{x_d}^{\frac{n}{d}}
-\]</span></p>
-<p>这其实就是我们刚刚在研究的问题</p>
-<p>注意到正n边形的旋转群<span class="math inline">\(G\)</span>中，<span
-class="math inline">\(G_i\)</span>就表示旋转步长为<span
-class="math inline">\(i\)</span>的置换组成，我们有如下结论： <span
-class="math display">\[
-|F_{G_i}|=(n,i)
-\]</span> <strong><font color='orange'>证明：</font></strong></p>
+<p><span class="math inline">\(\phi(x)\)</span>满足如下性质：</p>
 <ul>
-<li><span class="math inline">\(i|n\)</span>,每次走i步，<span
-class="math inline">\(n/i\)</span>次后回到原点，所以该置换可以拆成i个轮换，每一个轮换的阶为<span
-class="math inline">\(n/i\)</span>。显然有<span
-class="math inline">\(|F_{G_i}|=i=(n,i)\)</span></li>
-<li><span class="math inline">\(i\nmid n\)</span>,每次走<span
-class="math inline">\(i\)</span>步，回到原点需要<span
-class="math inline">\(lcm(n,i)\)</span>次，从而每一个轮换的阶为<span
-class="math inline">\(lcm(n,i)/i\)</span>,那么<span
-class="math inline">\(|F_{G_i}|=n/(lcm(n,i)/i)=ni/lcm(n,i)=(n,i)\)</span></li>
+<li><span class="math inline">\(\forall n&lt;t,
+E(\phi(A_{n+1})-\phi(A_n)|A_0,A_1,...A_n)=-1\)</span>,即势能不断降低</li>
+<li><span class="math inline">\(E(\phi(A_t))=C\)</span>,是一个常值</li>
 </ul>
-<p><span class="math inline">\(\square\)</span></p>
+<hr />
+<p>那么我们首先来考虑第一个性质，为了方便，不妨先考虑<span
+class="math inline">\(E(\phi(A_{n+1})|A_0,A_1,...A_n)\)</span></p>
+<p>发现传球过程就是一个<span
+class="math inline">\(Markov\)</span>过程，并且该时刻的状态只与上一个时刻的状态有关,所以<span
+class="math inline">\(E(\phi(A_{n+1})|A_0,A_1,...A_n)=E(\phi(A_{n+1})|A_n)\)</span></p>
+<p>考虑一次转移的所有可能</p>
+<p>i传球给j的概率是<span class="math inline">\(\Large
+\frac{a_{t,i}}{m}\frac{1}{n-1}\)</span></p>
+<p><span class="math inline">\(\large
+E(\phi(A_{n+1})|A_n)=\sum_{i=1}^{n}\sum_{j\neq
+i}\frac{a_{t,i}}{m}\frac{1}{n-1}[f(a_{t,i}-1)+f(a_{t,j}+1)+\sum_{k\notin(i,j)}f(a_{t,k})]\)</span></p>
+<p><span class="math inline">\(\large
+=\sum_{i=1}^{n}\frac{a_{t,i}}{m}f(a_{t,i}-1)+\frac{m-a_{t,i}}{m(n-1)}f(a_{t,i}+1)+\frac{(m-a_{t,i})(n-2)}{m(n-1)}f(a_{t,i})\)</span></p>
+<p>根据我们定义的性质<span
+class="math inline">\(E(\phi(A_{n+1})-\phi(A_n)|A_0,A_1,...A_n)=-1\)</span></p>
+<p><span
+class="math inline">\(E(\phi(A_{n+1})-\phi(A_n)|A_0,A_1,...A_n)=E(\phi(A_{n+1})-\phi(A_n)|A_n)\)</span></p>
+<p><span class="math inline">\(\large
+=(\sum_{i=1}^{n}\frac{a_{t,i}}{m}f(a_{t,i}-1)+\frac{m-a_{t,i}}{m(n-1)}f(a_{t,i}+1)+\frac{(m-a_{t,i})(n-2)}{m(n-1)}f(a_{t,i}))-\sum
+f(a_{t,i})=-1\)</span></p>
+<p>所以<span class="math inline">\(\large \sum
+f(a_{t,i})=(\sum_{i=1}^{n}\frac{a_{t,i}}{m}f(a_{t,i}-1)+\frac{m-a_{t,i}}{m(n-1)}f(a_{t,i}+1)+\frac{(m-a_{t,i})(n-2)}{m(n-1)}f(a_{t,i}))+1\)</span></p>
+<p>那么我们可以把末尾的1分配到每一个和式里面去，这样左右的形式就统一了</p>
+<p>所以<span class="math inline">\(\large \sum
+f(a_{t,i})=\sum_{i=1}^{n}[\frac{a_{t,i}}{m}f(a_{t,i}-1)+\frac{m-a_{t,i}}{m(n-1)}f(a_{t,i}+1)+\frac{(m-a_{t,i})(n-2)}{m(n-1)}f(a_{t,i})+\frac{a_{t,i}}{m}]\)</span></p>
+<p>那么不妨记<span class="math inline">\(\large
+f(a)=\frac{a}{m}f(a-1)+\frac{m-a}{m(n-1)}f(a+1)+\frac{(m-a)(n-2)}{m(n-1)}f(a)+\frac{a}{m}\)</span></p>
+<p>这样和式还是成立的，我们也成功抽象出了f函数</p>
+<p>再转化一下，<span class="math inline">\(\large
+f(a+1)=\frac{m+an-2a}{m-a}f(a)-\frac{a(n-1)}{m-a}(f(a-1)+1)\)</span></p>
+<p>代入边界条件<span class="math inline">\(a=0\)</span>时，有<span
+class="math inline">\(f(1)=f(0)\)</span>,所以我们可以设<span
+class="math inline">\(f(1)=f(0)=0\)</span>,毕竟势函数的初值并不重要</p>
+<p>这样就得到了f，也就是相当于得到了势函数<span
+class="math inline">\(\phi(x_t)=\sum_{i}f(x_{t,i})\)</span></p>
+<p>然后考虑势函数的第二个性质：<span
+class="math inline">\(E(\phi(A_t))=C\)</span>是一个常值</p>
+<p>显然<span
+class="math inline">\(E(\phi(A_t))=\sum_{i}f(a_{t,i})=f(m)+(n-1)f(0)\)</span>是一个常值</p>
+<p>所以根据我们的结论，<span
+class="math inline">\(E(t)=E(\phi(A_0))-E(\phi(A_t))=\sum_{i}f(a_{0,i})-f(m)-(n-1)f(0)=\sum_{i}f(a_{0,i})-f(m)\)</span></p>
+<p>这样我们就非常方便的得到了停时的期望</p>
+<p>不妨来看一个近一点的例子</p>
+<p><a
+target="_blank" rel="noopener" href="http://acm.hdu.edu.cn/contest/problem?cid=1102&amp;pid=1008">杭电多校09
+Coins</a></p>
+<p>大意：</p>
+<p>n个人，每个人手中初始有<span
+class="math inline">\(a_i\)</span>个硬币，每次随机选择两个人，第一个人给第二个人一个硬币，如果某个人手中没有硬币了，则立即退出游戏，不再回来。当某一个人拥有全部硬币时，游戏结束</p>
+<p>问停时的期望</p>
+<p>题意与上一题十分相像，但是该题存在人数不固定的情况，所以我们描述游戏局面的时候要稍微改变一下</p>
+<p>还是令<span class="math inline">\(m=\sum a_i\)</span></p>
+<p>令<span
+class="math inline">\(A_t=(a_{t,1},a_{t,2}...a_{t,h_t})\)</span>来描述第t个时刻的局面，其中<span
+class="math inline">\(h_t\)</span>表示当前的剩余人数，显然它不是一个固定的值。但是我们能保证<span
+class="math inline">\(\forall i\leq h_t,a_{t,i}&gt;0\)</span></p>
+<p>仿照上一题的思路，我们令<span
+class="math inline">\(\phi(A_t)=\sum_{i=1}^{n}f(a_{t,i})\)</span>作为势函数，尝试确定f</p>
+<p><span class="math inline">\(\large
+E(\phi(A_{n+1})|A_n)=\sum_{i=1}^{h_t}\sum_{j\neq
+i}\frac{1}{h_t(h_t-1)}[f(a_{t,i}-1)+f(a_{t,j}+1)+\sum_{k\notin(i,j)}f(a_{t,k})]\)</span></p>
+<p><span class="math inline">\(\large
+=\sum_{i=1}^{h_t}\frac{1}{h_t}f(a_{t,i}-1)+\frac{1}{h_t}f(a_{t,i}+1)+\frac{h_t}{h_t-2}f(a_{t,i})\)</span></p>
+<p>代入<span class="math inline">\(\large
+E(\phi(A_{n+1})-\phi(A_n)|A_0,A_1,...A_n)=-1\)</span>,也就是<span
+class="math inline">\(\large
+E(\phi(A_{n+1})-\phi(A_n)|A_n)=-1\)</span>(显然这里当前局面也只与上一个局面有关)，有</p>
+<p><span class="math inline">\(\large \sum_{i=1}^{h_t}
+f(a_{t,i})=[\sum_{i=1}^{h_t}\frac{1}{h_t}f(a_{t,i}-1)+\frac{1}{h_t}f(a_{t,i}+1)+\frac{h_t}{h_t-2}f(a_{t,i})]+1\)</span></p>
+<p><span class="math inline">\(\large
+=\sum_{i=1}^{h_t}(\frac{1}{h_t}f(a_{t,i}-1)+\frac{1}{h_t}f(a_{t,i}+1)+\frac{h_t}{h_t-2}f(a_{t,i})+\frac{1}{h_t})\)</span></p>
+<p>抽象出<span class="math inline">\(\large
+f(a)=\frac{1}{h}f(a-1)+\frac{1}{h}f(a+1)+\frac{h}{h-2}f(a)+\frac{1}{h}\)</span></p>
+<p><span class="math inline">\(f(a+1)-f(a)=f(a)-f(a-1)-1\)</span></p>
+<p>令<span
+class="math inline">\(g(a)=f(a)-f(a-1),有g(a)=g(0)-a\)</span>，则<span
+class="math inline">\(f(a)=f(0)+ag(0)-\frac{a(a+1)}{2}\)</span></p>
+<p>取<span class="math inline">\(f(0)=g(0)=0\)</span>,则<span
+class="math inline">\(f(a)=-\frac{a(a+1)}{2}\)</span></p>
+<p>所以<span
+class="math inline">\(E(t)=E(\phi(A_0))-E(\phi(A_t))=\sum_{i=1}^{n}f(a_{0,i})-f(m)\)</span></p>
 <p>未完待续</p>
 
                 
@@ -575,9 +486,11 @@ class="math inline">\(|F_{G_i}|=n/(lcm(n,i)/i)=ni/lcm(n,i)=(n,i)\)</span></li>
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
+        <a href="/tags/%E6%95%B0%E5%AD%A6/" class="print-no-link">#数学</a>
+      
         <a href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" class="print-no-link">#学习笔记</a>
       
-        <a href="/tags/%E6%8A%BD%E8%B1%A1%E4%BB%A3%E6%95%B0/" class="print-no-link">#抽象代数</a>
+        <a href="/tags/%E9%9E%85%E8%AE%BA/" class="print-no-link">#鞅论</a>
       
     </div>
   
@@ -589,8 +502,8 @@ class="math inline">\(|F_{G_i}|=n/(lcm(n,i)/i)=ni/lcm(n,i)=(n,i)\)</span></li>
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Burnside引理</div>
-      <div>https://sophilex.github.io/2023/12/18/Burnside/</div>
+      <div>势函数与鞅的停时定理</div>
+      <div>https://sophilex.github.io/2023/12/19/势函数与鞅的停时定理/</div>
     </div>
     <div class="license-meta">
       
@@ -602,7 +515,7 @@ class="math inline">\(|F_{G_i}|=n/(lcm(n,i)/i)=ni/lcm(n,i)=(n,i)\)</span></li>
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2023年12月18日</div>
+          <div>2023年12月19日</div>
         </div>
       
       
@@ -634,15 +547,21 @@ class="math inline">\(|F_{G_i}|=n/(lcm(n,i)/i)=ni/lcm(n,i)=(n,i)\)</span></li>
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2023/12/19/%E7%BE%A4%E4%BD%9C%E7%94%A8/" title="群作用">
+                      <a href="/2023/12/19/Prufer%E5%BA%8F%E5%88%97%E4%B8%8ELGV%E5%BC%95%E7%90%86/" title="树与图上计数问题：Prufer序列与LGV引理">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">群作用</span>
+                        <span class="hidden-mobile">树与图上计数问题：Prufer序列与LGV引理</span>
                         <span class="visible-mobile">上一篇</span>
                       </a>
                     
                   </article>
                   <article class="post-next col-6">
                     
+                    
+                      <a href="/2023/12/19/%E4%BA%8C%E5%88%86%E5%9B%BE%E5%8D%9A%E5%BC%88%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="二分图博弈学习笔记">
+                        <span class="hidden-mobile">二分图博弈学习笔记</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
                     
                   </article>
                 </div>
