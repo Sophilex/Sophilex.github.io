@@ -18,27 +18,27 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="注意力机制，借鉴了实际生活中的注意力的概念，还是有点意思的">
+    <meta name="description" content="在NGCF上的一些改进，简化了模型的基础上提高了推荐的性能">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Attention-Machanism">
-<meta property="og:url" content="https://sophilex.github.io/2024/03/13/Attention-Machanism/index.html">
+<meta property="og:title" content="LightGCN:简化和增强图卷积网络的推荐">
+<meta property="og:url" content="https://sophilex.github.io/2024/04/01/%C2%96%C2%96%C2%96LightGCN-%E7%AE%80%E5%8C%96%E5%92%8C%E5%A2%9E%E5%BC%BA%E5%9B%BE%E5%8D%B7%E7%A7%AF%E7%BD%91%E7%BB%9C%E7%9A%84%E6%8E%A8%E8%8D%90/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="注意力机制，借鉴了实际生活中的注意力的概念，还是有点意思的">
+<meta property="og:description" content="在NGCF上的一些改进，简化了模型的基础上提高了推荐的性能">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/house.png">
-<meta property="article:published_time" content="2024-03-13T10:18:57.000Z">
-<meta property="article:modified_time" content="2024-03-16T12:50:02.888Z">
+<meta property="og:image" content="https://sophilex.github.io/img/h1.png">
+<meta property="article:published_time" content="2024-04-01T01:59:20.000Z">
+<meta property="article:modified_time" content="2024-04-01T02:02:14.517Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="学习笔记">
 <meta property="article:tag" content="Machine Learning">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/house.png">
+<meta name="twitter:image" content="https://sophilex.github.io/img/h1.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>Attention-Machanism - Sophilex‘s Blog</title>
+  <title>LightGCN:简化和增强图卷积网络的推荐 - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -226,13 +226,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/house.png') no-repeat center center; background-size: cover;">
+     style="background: url('/img/h1.png') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Attention-Machanism"></span>
+            <span id="subtitle" data-typed-text="LightGCN:简化和增强图卷积网络的推荐"></span>
           
         </div>
 
@@ -248,8 +248,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2024-03-13 18:18" pubdate>
-          2024年3月13日 晚上
+        <time datetime="2024-04-01 09:59" pubdate>
+          2024年4月1日 上午
         </time>
       </span>
     
@@ -260,7 +260,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.2k 字
+          2.5k 字
         
       </span>
     
@@ -271,7 +271,7 @@
         
         
         
-          19 分钟
+          22 分钟
         
       </span>
     
@@ -316,191 +316,152 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">Attention-Machanism</h1>
+            <h1 id="seo-header">LightGCN:简化和增强图卷积网络的推荐</h1>
             
             
               <div class="markdown-body">
                 
-                <h1 id="attention-mechanism">Attention Mechanism</h1>
-<p>现在给定一组数据，假设包含若干个 特征-值 对 <span
-class="math inline">\((Key,Value)\)</span>,那么现在我们拿着一个特征
-<span
-class="math inline">\(Query\)</span>,要如何利用这组数据确定一个合理的<span
-class="math inline">\(value\)</span>?
-有一些比较naive的想法，比如取最近邻的对应<span
-class="math inline">\(Value\)</span>,或者取较近的几个<span
-class="math inline">\(Key\)</span>,再拿它们的<span
-class="math inline">\(Value\)</span>做个平均啥的。这些想法有其合理性，并且都蕴含一个核心点就是：
-&gt;我们在尽可能地将注意力集中在与<span
-class="math inline">\(Query\)</span>相近的<span
-class="math inline">\(Key\)</span>对应的<span
-class="math inline">\(Value\)</span>上，因为这些<span
-class="math inline">\(Value\)</span>更大概率会与我们要确定的值更加接近</p>
-<p>所以就有了<span
-class="math inline">\(Attention\  Mechanism\)</span></p>
-<h2 id="低维">低维</h2>
-<p>我们首先在一维空间<span
-class="math inline">\(\mathbb{R}\)</span>下讨论这件事情。下面是一个非常直观的过程.
-我们有若干组<span
-class="math inline">\((Key_i,Value_i)\)</span>,以及一个查询<span
-class="math inline">\(Query\)</span>,我们的目标是得到<span
-class="math inline">\(Output\)</span>.首先我们会让<span
-class="math inline">\(Query\)</span>与各个<span
-class="math inline">\(Key_i\)</span>做一个<span
-class="math inline">\(a\)</span>运算，得到结果<span
-class="math inline">\(a(Query,Key_i)\)</span>,它表示<span
-class="math inline">\(Query\)</span>与<span
-class="math inline">\(Key_i\)</span>的相似程度，显然它与我们之后要在<span
-class="math inline">\(Key_i,Value_i\)</span>上投入的注意力大小成正比，我们就记为注意力评分函数(attention
-scoring function).然后我们就拿<span
-class="math inline">\(a_i=a(Query,Key_i)\)</span>转换成概率分布<span
-class="math inline">\(s_i\)</span>,再与<span
-class="math inline">\(Value_i\)</span>相乘并求和得到 <span
-class="math display">\[
-Output = \sum_i s_iValue_i
-\]</span> 这就是最后的结果了。 这里<span
-class="math inline">\(a_i\)</span>到<span
-class="math inline">\(s_i\)</span>我们简单点，可以直接取 <span
-class="math display">\[
-s_i=\frac{a_i}{\sum_{j=1}^{n} a_j}
+                <h1
+id="lightgcn简化和增强图卷积网络的推荐">LightGCN:简化和增强图卷积网络的推荐</h1>
+<h2 id="abstract">Abstract</h2>
+<p>图卷积网络 (GCN)
+已成为协同过滤的最新技术。然而，它推荐有效性的原因并没有得到很好的理解。该工作还发现
+GCN
+中最常见的两种设计——<strong>特征变换和非线性激活</strong>——对协同过滤的性能贡献不大，并且还增加了训练的难度，降低了推荐性能。
+在这项工作中，作者提出了一种新的模型LightGCN，只包含GCN中最基本的组件——<strong>邻域聚合</strong>。具体来说，LightGCN
+通过在用户-项目交互图上线性传播来学习用户和项目嵌入，并使用所有层学习到的嵌入的<strong>加权和</strong>作为最终嵌入。这种简单、线性和整洁的模型更容易实现和训练，与同一个组之前提出的NGCF相比，有明显的改进（平均约
+16.0% 的相对改进）。最后对LightGCN的合理性进行了分析。 本文的主要贡献：
+* 通过实验说明GCN中的非线性激活以及特征变换对协同过滤没有积极影响 *
+提出了LightGCN，结构更加简洁，并且性能更好 * 对LightGCN的合理性进行分析
+## NGCF 先简单介绍一下NGCF。
+NGCF主张在协同过滤中加入对user-item对信息的编码，而不仅仅是只考虑user，item的emmbedding，从而能够获得更多信息，进而进行推荐。实际场景中user-item对的信息很多，所以它借鉴了GCN中的领域聚合的思想，仿照GCN的结构，每一层聚合周围邻居的信息，从而在多层之后实现对多跳邻居的信息的收集。
+具体来说，每一层的信息传播公式为 <span class="math display">\[
+m_{u\leftarrow
+i}^{(l)}=\frac{1}{\sqrt{|N_u||N_i|}}(W_1^{(l)}e_i^{(l-1)}+W_2^{(l)}(e_i^{(l-1)}⊙e_u^{(l-1)}))
+\]</span> <span class="math display">\[
+m_{u\leftarrow u}^{(l)}=W_1^{(l)}e_u^{(l-1)}
+\]</span></p>
+<p>这是对user而言的，item的传播公式同理 其中<span
+class="math inline">\(m_{u\leftarrow i}\)</span>表示<span
+class="math inline">\(item_i\)</span>与<span
+class="math inline">\(user_u\)</span>之间的协作信息，<span
+class="math inline">\(\frac{1}{\sqrt{|N_u||N_i|}}\)</span>借鉴了GCN的思路，不过作者在文中把它理解为信息的衰减系数，也就是当前信息应该随着层的传播而比重变小。考虑到自己到自己的信息不用衰减，所以第二个式子没有乘上对称归一化的系数。<span
+class="math inline">\(W_1,W_2\)</span>是可训练系数，<span
+class="math inline">\(e_i,e_u\)</span>就是item和user的当前特征embedding，最后加了一个<span
+class="math inline">\(e_i⊙e_u\)</span>,也就是两者的哈达玛积，用来编码两者的信息交互（有点像attention？）
+最后得到每一层的新的特征表示： <span class="math display">\[
+e_u^{(l)} = LeakyReLU(m_{u\leftarrow u}^{(l)}+\sum_{i\in
+N_u}m_{u\leftarrow i}^{(l)})
 \]</span>
-可以看到这个求法还是有一定的合理性的，因为它不仅考虑到了注意力要偏向重点，还考虑到了整体的数据，而不是像之前那样只关注一小部分。接下来还剩下一个问题，就是我们的注意力评分函数<span
-class="math inline">\(a(Query,Key_i)\)</span>要怎么算。一个方法就是可以使用核回归：
-这里我们核函数选择<span class="math inline">\(Gauss\)</span>核函数 <span
+这是NGCF的基本结构。首先在embedding层获得每一个user，item的embedding，这里展示了<span
+class="math inline">\(e_{u_1}^{(0)}\)</span>以及<span
+class="math inline">\(e_{i_4}^{(0)}\)</span>的embedding。然后逐层传播并更新每一层的embedding，在最后一层将每一层的embedding进行<strong>拼接</strong>，然后拿去做预测。
+这里拼接应该也是为了进行特征增强，不过后面LightGCN也还是改掉了。
+<img src="https://s2.loli.net/2024/03/28/HnMszK8L3F6bJag.png" srcset="/img/loadings.gif" lazyload alt="image.png|475" style="zoom:67%;" /></p>
+<h2 id="lightgcn">LightGCN</h2>
+<p>可以看到NGCF其实大量借鉴了GCN的结构，但是其中也有一些操作是毫无理由就搬上来了。所以作者对其进行了大量的消融分析，包括对非线性激活和特征变化结构的质疑。
+作者建立了四个模型进行比较，分别是 * NGCF,也就是原模型 * NGCF-n
+去掉了特征变换，也就是上一节中的<span
+class="math inline">\(W_1,W_2\)</span>参数矩阵的NGCF * NGCF-f
+去掉了非线性激活的NGCF * NGCF-fn 去掉了特征变换以及非线性激活的NGCF
+然后在<span class="math inline">\(Gowalla\)</span>和<span
+class="math inline">\(Amazon-Book\)</span>数据集上进行测试，得到结果如下：
+<img src="https://s2.loli.net/2024/03/28/fIGPmyxuSr2KU1O.png" srcset="/img/loadings.gif" lazyload alt="image.png|850" style="zoom:150%;" />
+可以看出NGCF-fn的性能是远好于NGCF的，作者将这一点归因于特征变换以及非线性激活操作加大了训练的难度，从而提出对其进行简化，得到如下的传播公式
+<span class="math display">\[
+e_{u}^{(k+1)}=\sum_{i\in N_u}\frac{1}{\sqrt{|N_u||N_i|}}e_i^{(k+1)}\\
+e_{i}^{(k+1)}=\sum_{u\in N_i}\frac{1}{\sqrt{|N_u||N_i|}}e_u^{(k+1)}
+\]</span> 在最后一层进行每一层特征的加权求和得到最终特征 <span
 class="math display">\[
-K(u)=\frac{1}{\sqrt{2\pi}}exp(-\frac{u^2}{2})
-\]</span> 从而<span class="math inline">\(u\)</span>就取<span
-class="math inline">\(Query-Key_i\)</span>,得到 <span
+e_u=\sum_{k=0}^{K}\alpha_ke_u^{(k)}\\
+e_i=\sum_{k=0}^{K}\alpha_ke_i^{(k)}
+\]</span> 最终得到user-item项目的最终得分为 <span
 class="math display">\[
-Output = \sum_i\frac{exp(-\frac{1}{2}(Query-Key_i)^2)}{\sum_j
-exp(-\frac{1}{2}(Query-Key_j)^2)}Value_i
-\]</span> 注意到第一个求和号里面其实就是一个softmax，从而 <span
-class="math display">\[
-Output = \sum_i softmax(-\frac{1}{2}(Query-Key_i)^2)Value_i
-\]</span>
-为了给整个模型加入一点可学习的东西，我们可以在softmax里面加入一个参数<span
-class="math inline">\(w\)</span>,得到 <span class="math display">\[
-Output = \sum_i softmax(-\frac{1}{2}(Query-Key_i)^2w)Value_i
-\]</span> 这就是最终结果了。</p>
-<h2 id="高维">高维</h2>
-<p>现在不管是<span class="math inline">\(Query,Key\)</span>还是<span
-class="math inline">\(Value\)</span>,都从原本的一维数据变成了高维的向量，然后我们再重新审视这个问题。下面这张图是非常形象的。
-<img src="https://s2.loli.net/2024/03/13/XigM7pTvh8AH2bu.png" srcset="/img/loadings.gif" lazyload
-alt="image-20240313151037340" /> 用一个函数<span
-class="math inline">\(f\)</span>来形式化地描述整个过程。有<span
-class="math inline">\(n\)</span>个键值对<span
-class="math inline">\(\boldsymbol{k_i}\in
-\mathbb{R}^k,\boldsymbol{v_i}\in \mathbb{R}^v\)</span>,给定一个查询<span
-class="math inline">\(\boldsymbol{q}\in \mathbb{R}^q:\)</span> <span
-class="math display">\[
-Output =
-f(\boldsymbol{q},(\boldsymbol{k_1},\boldsymbol{v_1}),\cdots,(\boldsymbol{k_n},\boldsymbol{v_n}))=\sum_{i=1}^{n}\alpha(\boldsymbol{q},\boldsymbol{k_i})\boldsymbol{v_i}\in
-\mathbb{R}^v
-\]</span> 其中 <span class="math display">\[
-\alpha(\boldsymbol{q,k_i})=\frac{exp(a(\boldsymbol{q,k_i}))}{\sum_{j=1}^{n}exp(a(\boldsymbol{q,k_j}))}
-\]</span>
-由于把核函数的一部分抽象成了softmax操作，所以在低维情况下我们的<span
-class="math inline">\(a(q,k_i)\)</span>函数实际对应的是<span
-class="math inline">\(-\frac{1}{2}(q-k_i)^2\)</span>
-而在高维向量情况下，我们有对<span
-class="math inline">\(a\)</span>一般有两种处理方式</p>
-<h3 id="加性注意力">加性注意力</h3>
-<p>一般来说，当查询和键<font color='red'>是不同长度的矢量时</font>，可以使用加性注意力作为评分函数。此时给定<span
-class="math inline">\(\boldsymbol{q}\in \mathbb{R}^q,\boldsymbol{k}\in
-\mathbb{R}^k\)</span>,有 <span class="math display">\[
-a(\boldsymbol{q,k})=\boldsymbol{w}_v^T\
-tanh(\boldsymbol{W}_q\boldsymbol{q+\boldsymbol{W}_k\boldsymbol{k}})
-\]</span> 其中<span class="math inline">\(\boldsymbol{W}_q\in
-\mathbb{R}^{h\times q},\boldsymbol{W}_k\in \mathbb{R}^{h\times
-k},\boldsymbol{w}_v\in \mathbb{R}^{h}\)</span>都是可学习的参数，而<span
-class="math inline">\(h\)</span>是作为一个可以调整的超参数，tanh就是一个激活函数。仔细观察一下就是，括号里面将<span
-class="math inline">\(\boldsymbol{q}\)</span>和<span
-class="math inline">\(\boldsymbol{k}\)</span>都转化成了一个<span
-class="math inline">\(h\)</span>维向量，然后再与外面的<span
-class="math inline">\(\boldsymbol{w}_v^T\)</span>一乘，就得到了一个实数作为最终结果</p>
-<h3 id="缩放点积注意力">缩放点积注意力</h3>
-<p>当查询和键的长度相同时，我们就可以不必这么麻烦，把它们统一转化成一个长度的向量了。我们可以直接做向量内积，从而有<span
-class="math inline">\(\boldsymbol{q,k}\in \mathbb{R}^d\)</span>, <span
-class="math display">\[
-a(\boldsymbol{q},\boldsymbol{k})=\boldsymbol{q}^T\boldsymbol{k}
-\]</span> 但是这样其实有一个问题。因为我们的结果<span
-class="math inline">\(a(\boldsymbol{q},\boldsymbol{k})\)</span>是要拿去做softmax的，而softmax由于是由指数函数实现的，当指数差距过大时，概率的偏差就会变的极大，从而失去参考价值。所以我们可以统一除以一个<span
-class="math inline">\(\sqrt{d}\)</span>来减少差距,至于为什么是<span
-class="math inline">\(\sqrt{d}\)</span>,等我以后再细细研究...</p>
-<p>以上都是考虑样本数为1的情况，实际情况中有多个样本，多个数据,记为查询<span
-class="math inline">\(\boldsymbol{Q}\in \mathbb{R}^{m\times
-d}\)</span>,键值<span class="math inline">\(\boldsymbol{K}\in
-\mathbb{R}^{n\times d},\boldsymbol{V}\in \mathbb{R}^{n\times
-v}\)</span>,就有</p>
-<p><span class="math display">\[
-f=softmax(\frac{\boldsymbol{QK}^T}{\sqrt{d}})\boldsymbol{V}\in
-\mathbb{R}^{m \times v}
-\]</span> 这里softmax操作就是对每一行进行softmax操作的意思
-总体可以用这一张图表示 <img
-src="https://s2.loli.net/2024/03/13/heWdDc7K4BqrwiL.png" srcset="/img/loadings.gif" lazyload
-alt="image.png|170" /> 首先<span
-class="math inline">\(\boldsymbol{Q,K}\)</span>做内积，然后放缩(除以<span
-class="math inline">\(\sqrt{d}\)</span>)，然后做softmax，最后与<span
-class="math inline">\(\boldsymbol{V}\)</span>点乘</p>
-<h1 id="self-attention-mechanism">Self-Attention Mechanism</h1>
-<p>说是叫self-attention，不过我觉得这里的self更多的应该是指一个集合本身，而不是集合中的某一个元素
-回忆一下Attention Mechanism：有<span
-class="math inline">\(m\)</span>个长度为<span
-class="math inline">\(d\)</span>的查询向量<span
-class="math inline">\(\boldsymbol{q_1,q_2,...q_n}\)</span>,就记为行向量好了，它们组成一个矩阵<span
-class="math inline">\(\boldsymbol{Q\in \mathbb{R}^{m\times
-d}}\)</span>,同理有n个键行向量组成的矩阵<span
-class="math inline">\(\boldsymbol{K}\in \mathbb{R}^{n\times
-d}\)</span>,以及<span
-class="math inline">\(n\)</span>个值行向量组成的矩阵<span
-class="math inline">\(\boldsymbol{V}\in \mathbb{R}^{n\times v}\)</span>
-&gt;（这里为了方便我们就只讨论查询向量与键值向量的长度相等的情况了，然后就直接用Scaled
-Dot-Product Attention来处理了，另一种情况的处理显然也会是类似的）</p>
-<p>然后就有结果矩阵 <span class="math display">\[
-f=softmax(\frac{\boldsymbol{QK}^T}{\sqrt{d}})\boldsymbol{V}\in
-\mathbb{R}^{m \times v}
-\]</span> 这里有几点要指出： * f的行大小是与<span
-class="math inline">\(Q\)</span>相同的，它相当于是对每一个询问行向量<span
-class="math inline">\(q_i\)</span>的所有特征进行了一个回答 *
-任意两个询问行向量<span
-class="math inline">\(q_i,q_j\)</span>之间是可以没有任何关系的，相当于<span
-class="math inline">\(m\)</span>次互不影响的询问</p>
-<p>那么自注意力机制就是在此基础上做的改进</p>
+\hat{y}_{ui}=e_u^{T}e_i
+\]</span> 上面的式子不方便实现，我们将其转换为矩阵形式 假设user有<span
+class="math inline">\(N\)</span>个，item有<span
+class="math inline">\(M\)</span>个，每一个user/item的特征长度为<span
+class="math inline">\(T\)</span>,那么定义邻接矩阵<span
+class="math inline">\(A\in
+R^{(N+M)\times(N+M)}\)</span>表示user-item的邻接矩阵，矩阵<span
+class="math inline">\(E\in R^{(N+M)\times
+T}\)</span>表示每一个user/item的embedding，显然<span
+class="math inline">\(E^{0}\)</span>就表示了大家的初始embedding。再定义矩阵<span
+class="math inline">\(D\in R^{(N+M)\times(N+M)}\)</span>表示度数矩阵。
+从而得到传播公式为 <span class="math display">\[
+E^{k+1} = (D^{-\frac{1}{2}}AD^{-\frac{1}{2}})E^{k}
+\]</span> 最终每一个user/item的embedding为 <span class="math display">\[
+E =
+\alpha_0E^{0}+\alpha_1E^{1}+....+\alpha_KE^{K}=\alpha_0E^{0}+\alpha_1\tilde{A}E^{0}+....+\alpha_K\tilde{A}^{K}E^{0}=\sum_{i=0}^{K}\alpha_i\tilde{A}^iE^0
+\]</span> 其中<span
+class="math inline">\(\tilde{A}=D^{-\frac{1}{2}}AD^{-\frac{1}{2}}\)</span></p>
 <hr />
-<p>我们现在有<span
-class="math inline">\(m\)</span>个事物，它们是一个整体，<span
-class="math inline">\(m\)</span>个事物之间有可能某个集合的事物之间是包含一定的关系的。如果我们想只用这<span
-class="math inline">\(m\)</span>个事物的当前特征去做attention，得到一些信息，那么显然我们的查询矩阵<span
-class="math inline">\(\boldsymbol{Q}\)</span>的每一行就要取对应事物的特征。那么<span
-class="math inline">\(\boldsymbol{K,V}\)</span>呢?我们还是取这个集合内每一个事物的对应信息。相当于从集合内部的事物之间的隐含的关系来找到信息
-从而我们的<span
-class="math inline">\(\boldsymbol{Q,K,V}\)</span>的第<span
-class="math inline">\(i\)</span>个行向量来自第<span
-class="math inline">\(i\)</span>个事物的信息。为此我们需要引入<span
-class="math inline">\(\boldsymbol{W_q,W_k,W_v}\in \mathbb{R}^{d\times
-b}\)</span>三个矩阵来提取信息，当然它们是可学习的,而这<span
-class="math inline">\(m\)</span>个事物本身的信息可以写成一个<span
-class="math inline">\(\boldsymbol{X}\in \mathbb{R}^{m\times
-d}\)</span>,从而， <span class="math display">\[
-\boldsymbol{Q=XW_q,K=XW_k,V=XW_v}
-\]</span> 最后套用原本的attention机制，我们得到 <span
+<p>与NGCF的式子进行对比，可以发现LightGCN总共去掉了如下几个构造： *
+<strong>特征变换，非线性激活</strong> * <strong>自连接</strong> *
+<strong>user-item的哈达玛积</strong>
+对于哈达玛积的移除作者没有详细介绍，只是在后面实验时提了一嘴LightGCN效果比NGCF-fn效果更好，所以可能也没啥用，就移掉了。
+除此之外，在实现细节上，LightGCN相比GCN还有如下变化 *
+<strong>在最后一层将每一层特征的concat操作变成了加权求和</strong> *
+<strong>去掉了每一层的dropout操作</strong> ## 模型分析
+分析一下每一个操作的合理性 ### 加权求和与去除自连接
+作者去除自连接的原因与最后一步的加权求和有关系。注意到最后的特征表示为
+<span class="math display">\[
+E =\sum_{i=0}^{K}\alpha_i\tilde{A}^iE^0
+\]</span>
+这与之前的一些工作具有相同的形式，所以作者指出该模型同样可以享用它们的优点
+#### SGCN
+这是之前的一篇简化GCN的工作，它同样是去除了非线性激活函数，并且将每一层的权重矩阵简化成了一个，其传播公式为
+<span class="math display">\[
+E^{(k+1)}=(D+I)^{-\frac{1}{2}}(A+I)(D+I)^{-\frac{1}{2}}E^{k}
+\]</span>
+它包含了自连接操作，我们将其在式子中提取出来了，然后进行化简，得到 <span
 class="math display">\[
-f=softmax(\frac{\boldsymbol{QK}^T}{\sqrt{d}})\boldsymbol{V}\in
-\mathbb{R}^{m \times d}
-\]</span> <span
-class="math inline">\(f\)</span>的每一个行向量就是第<span
-class="math inline">\(i\)</span>个事物从这n个事物当中提取到的信息了
-注意到自注意力机制与普通的注意力机制的区别就在于：它的信息来源是一个固定的集合，集合的每一个元素既为其它元素提供信息，也从其它元素那里提取信息。所以我在这一节的一开始说，<strong>self更多的应该是指一个集合本身，而不是集合中的某一个元素</strong>
-这样做的意义是：对于集合中的每一个元素<span
-class="math inline">\(a\)</span>,它可以从与它相近的其它元素中得到更多信息，而不仅仅是只有自己的信息</p>
-<h1 id="multi-head-attention-mechanism">Multi-head Attention
-Mechanism</h1>
-<p>注意到之前对于每一个事物，我们只用了一组矩阵<span
-class="math inline">\(W_q,Q_k,Q_v\)</span>来提取其特征。一个很自然的问题：这样提取够吗？会不会导致提取的信息不足？
-解决方案也很简单，那就多用几组<span
-class="math inline">\(W_q,Q_k,Q_v\)</span>来提取就好了，然后再把它们的结果放到一起，再拼在一起就可以啦。第<span
-class="math inline">\(i\)</span>组用的矩阵就是<span
-class="math inline">\(W_{q_i},Q_{k_i},Q_{v_i}\)</span>,不同组之间显然是可以并行计算的，互不影响。</p>
+E^{(k)}=(\tilde{A}+(D+I)^{-1})E^{k-1}=(\tilde{A}+(D+I)^{-1})^KE^{0}=(\tilde{A}+\tilde{D})^KE^0
+\]</span> 其中 <span class="math display">\[
+\tilde{A}=D^{-\frac{1}{2}}AD^{-\frac{1}{2}},\tilde{D}=(D+I)^{-1}
+\]</span> 对前面的系数二项展开，得到 <span class="math display">\[
+E^{(k)}=\binom{K}{0}\tilde{D}^KE^{0}+\binom{K}{1}\tilde{D}^{K-1}AE^{0}+...+\binom{K}{K}A^KE^{0}=\sum_{i=0}^{K}\binom{K}{i}\tilde{D}^{K-i}\tilde{A}^iE^0
+\]</span>
+没错，与LightGCN的式子相比还多了一个对角矩阵，形式上是不一样的。原文是用另一个方法推导的，省略了<span
+class="math inline">\((D+I)^{-\frac{1}{2}}\)</span>,理由是它只缩放了embedding，但是个人认为每一维的缩放系数不同，不能直接这样忽略。这里存疑。
+总之作者在这里得到结论是两个模型在结构上相同，所以没有添加自环也没有关系，实际效果上已经添加了。
+#### APPNP
+这个工作宣称可以在没有过度平滑的风险的情况下传播远程，其传播公式为 <span
+class="math display">\[
+E^{K}=\beta E^0+(1-\beta)\tilde{A}E^{K-1}
+\]</span> 显然这是一个可以求通项的式子，化简得到 <span
+class="math display">\[
+E^{K}=\beta E^0+(1-\beta)\tilde{A}E^{K-1}\\
+=\beta E^0+\beta(1-\beta)\tilde{A}E^{0}+(1-\beta)^2\tilde{A}^2E^{K-2}\\
+=\beta
+E^0+\beta(1-\beta)\tilde{A}E^{0}+(1-\beta)^2\tilde{A}^2E^{0}+...+(1-\beta)^K\tilde{A}^KE^0
+\]</span></p>
+<p>注意到该式子与LightGCN的传播公式也就只有系数差别，所以LightGCN在减少过拟合方面有较好的效果，后面的实验也佐证了这一点</p>
+<h3 id="去除哈达玛积">去除哈达玛积</h3>
+<p>作者引入它是为了强调user-item的交互，有点类似attention，但是个人感觉模型已经是在gcn的基础上做改进了，而gcn的一个最大特点就是逐层聚合邻域信息，这一点本身就已经在实现信息的交互了，所以可能这也是在LightGCN中将其移除的原因吧</p>
+<h3 id="去除dropout">去除dropout</h3>
+<p>注意到LightGCN整个模型其实已经只有初始化embedding的一些矩阵参数了，每一层传播的时候是没有参数的了，所以也没有做dropout的必要了，<span
+class="math inline">\(L_2\)</span>正则化就足够保证避免过拟合了</p>
+<h3 id="嵌入的平滑性">嵌入的平滑性</h3>
+<p>我们考虑两个共享同一个item的节点的信息传递</p>
+<p><span class="math display">\[
+e_u^{(2)}=\sum_{i\in N_u}\frac{1}{\sqrt{|N_u||N_i|}}e_i^{(1)}=\sum_{i\in
+N_u}\frac{1}{|N_i|}\sum_{v\in N_i}\frac{1}{\sqrt{|N_u||N_v|}}e_v^{(0)}
+\]</span> 注意到<span class="math inline">\(user_v\)</span>与<span
+class="math inline">\(user_u\)</span>之间的信息传递的系数为 <span
+class="math display">\[
+c_{v\rightarrow u}\frac{1}{\sqrt{|N_u||N_v|}}\sum_{i\in N_u\cap
+N_v}\frac{1}{|N_i|}
+\]</span> 这一系数符合很多直观的想法，二阶邻居 v 对 u 的影响由 1)
+共同交互项目的数量、越大； 2)
+共同交互项目的流行程度越低（即更能指示用户个性化偏好）越大； 3) v
+的活动，越大越活跃。 这种可解释性很好地满足了 CF 在测量用户相似度
+中的假设，并证明了 LightGCN 的合理性。</p>
+<h2 id="留的坑">留的坑</h2>
+<p>作者在文末指出对<span
+class="math inline">\(\alpha_i\)</span>的个性化调节，即稀疏用户可能需要更多来自高阶邻居的信号，而活动用户只需要更少</p>
+<h2 id="总结">总结</h2>
+<p>总体来说，LightGCN在NGCF的基础上，指出特征变换与非线性激活在推荐模型上的冗余性，充分简化了其模型结构，并且提高了性能。但是这是建立在推荐的场景下，原始的GCN是用于节点分类的，此时每一个节点包含更多信息，而不是只有id信息，所以还是需要非线性激活与特征变换的。</p>
 
                 
               </div>
@@ -548,8 +509,8 @@ class="math inline">\(W_{q_i},Q_{k_i},Q_{v_i}\)</span>,不同组之间显然是�
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Attention-Machanism</div>
-      <div>https://sophilex.github.io/2024/03/13/Attention-Machanism/</div>
+      <div>LightGCN:简化和增强图卷积网络的推荐</div>
+      <div>https://sophilex.github.io/2024/04/01/LightGCN-简化和增强图卷积网络的推荐/</div>
     </div>
     <div class="license-meta">
       
@@ -561,7 +522,7 @@ class="math inline">\(W_{q_i},Q_{k_i},Q_{v_i}\)</span>,不同组之间显然是�
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2024年3月13日</div>
+          <div>2024年4月1日</div>
         </div>
       
       
@@ -593,18 +554,12 @@ class="math inline">\(W_{q_i},Q_{k_i},Q_{v_i}\)</span>,不同组之间显然是�
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2024/04/01/%C2%96%C2%96%C2%96LightGCN-%E7%AE%80%E5%8C%96%E5%92%8C%E5%A2%9E%E5%BC%BA%E5%9B%BE%E5%8D%B7%E7%A7%AF%E7%BD%91%E7%BB%9C%E7%9A%84%E6%8E%A8%E8%8D%90/" title="LightGCN:简化和增强图卷积网络的推荐">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">LightGCN:简化和增强图卷积网络的推荐</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2024/01/03/%E7%8E%AF%E8%AE%BA/" title="环论">
-                        <span class="hidden-mobile">环论</span>
+                      <a href="/2024/03/13/Attention-Machanism/" title="Attention-Machanism">
+                        <span class="hidden-mobile">Attention-Machanism</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
