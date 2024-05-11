@@ -27,7 +27,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://sophilex.github.io/img/jaychou.png">
 <meta property="article:published_time" content="2024-05-11T03:52:05.000Z">
-<meta property="article:modified_time" content="2024-05-11T04:21:43.316Z">
+<meta property="article:modified_time" content="2024-05-11T04:26:36.238Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="数学">
 <meta property="article:tag" content="Machine Learning">
@@ -260,7 +260,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          342 字
+          352 字
         
       </span>
     
@@ -349,12 +349,14 @@ P(S_j)=\frac{cnt_j}{\sum_t cnt_t}
 \]</span> 后面部分是一个范德蒙德卷积，从而 <span class="math display">\[
 \sum_t cnt_t=(i-1)!\binom{n}{i-1}
 \]</span> 从而 <span class="math display">\[
-ans=\frac{1}{(i-1)!\binom{n}{i-1}}\sum_{j=0}^{k}cnt_jP(A|S_j)\\
-=\frac{1}{(i-1)!\binom{n}{i-1}}\sum_{j=0}^{k}\binom{k}{j}\binom{n-k}{i-1-j}(i-1)!\frac{k-j}{n-i+1}\\
-=\frac{k}{(n-i+1)\binom{n}{i-1}}\sum_{j=0}^{k}\binom{k-1}{j}\binom{n-k}{i-1-j}\\
-=\frac{k}{(n-i+1)\binom{n}{i-1}}\binom{n-1}{i-1}\\
-=\frac{k}{n-i+1}\frac{(i-1)!(n-i+1)!}{n!}\frac{(n-1)!}{(i-1)!(n-i)!}\\
-=\frac{k}{n}
+\begin{flalign}
+ans=&amp;\frac{1}{(i-1)!\binom{n}{i-1}}\sum_{j=0}^{k}cnt_jP(A|S_j)\\
+&amp;=\frac{1}{(i-1)!\binom{n}{i-1}}\sum_{j=0}^{k}\binom{k}{j}\binom{n-k}{i-1-j}(i-1)!\frac{k-j}{n-i+1}\\
+&amp;=\frac{k}{(n-i+1)\binom{n}{i-1}}\sum_{j=0}^{k}\binom{k-1}{j}\binom{n-k}{i-1-j}\\
+&amp;=\frac{k}{(n-i+1)\binom{n}{i-1}}\binom{n-1}{i-1}\\
+&amp;=\frac{k}{n-i+1}\frac{(i-1)!(n-i+1)!}{n!}\frac{(n-1)!}{(i-1)!(n-i)!}\\
+&amp;=\frac{k}{n}
+\end{flalign}
 \]</span> 从而中奖概率确实与抽奖顺序无关</p>
 <p>over</p>
 <p>（久违的推式子环节，真是太舒服了~)</p>
