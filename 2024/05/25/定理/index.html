@@ -18,27 +18,28 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="一点小小的推导">
+    <meta name="description" content="这是一个关于偏序集的定理，事实上它也可以扩展到图论，dp等中，是一个很有意思的东西">
 <meta property="og:type" content="article">
-<meta property="og:title" content="杂想-抽奖问题平凡解">
-<meta property="og:url" content="https://sophilex.github.io/2024/05/11/%E6%9D%82%E6%83%B3-%E6%8A%BD%E5%A5%96%E9%97%AE%E9%A2%98%E5%B9%B3%E5%87%A1%E8%A7%A3/index.html">
+<meta property="og:title" content="Dilworth 定理">
+<meta property="og:url" content="https://sophilex.github.io/2024/05/25/%E5%AE%9A%E7%90%86/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="一点小小的推导">
+<meta property="og:description" content="这是一个关于偏序集的定理，事实上它也可以扩展到图论，dp等中，是一个很有意思的东西">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/jaychou.png">
-<meta property="article:published_time" content="2024-05-11T03:52:05.000Z">
-<meta property="article:modified_time" content="2024-05-21T02:30:10.325Z">
+<meta property="og:image" content="https://sophilex.github.io/img/j11.jpg">
+<meta property="article:published_time" content="2024-05-25T04:13:18.000Z">
+<meta property="article:modified_time" content="2024-05-25T04:19:28.888Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="数学">
-<meta property="article:tag" content="Machine Learning">
+<meta property="article:tag" content="学习笔记">
+<meta property="article:tag" content="组合数学">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/jaychou.png">
+<meta name="twitter:image" content="https://sophilex.github.io/img/j11.jpg">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>杂想-抽奖问题平凡解 - Sophilex‘s Blog</title>
+  <title>Dilworth 定理 - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -226,13 +227,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/jaychou.png') no-repeat center center; background-size: cover;">
+     style="background: url('/img/j11.jpg') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="杂想-抽奖问题平凡解"></span>
+            <span id="subtitle" data-typed-text="Dilworth 定理"></span>
           
         </div>
 
@@ -248,8 +249,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2024-05-11 11:52" pubdate>
-          2024年5月11日 中午
+        <time datetime="2024-05-25 12:13" pubdate>
+          2024年5月25日 中午
         </time>
       </span>
     
@@ -260,7 +261,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          646 字
+          1.9k 字
         
       </span>
     
@@ -271,7 +272,7 @@
         
         
         
-          6 分钟
+          16 分钟
         
       </span>
     
@@ -316,77 +317,198 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">杂想-抽奖问题平凡解</h1>
+            <h1 id="seo-header">Dilworth 定理</h1>
             
             
               <div class="markdown-body">
                 
-                <h2 id="background">Background</h2>
-<p>复习概率论的时候看到了对抽奖问题的讨论，突然就想推一下平凡解</p>
-<p>总共有<span class="math inline">\(n\)</span>张票，其中有<span
-class="math inline">\(k\)</span>张中奖，问第<span
-class="math inline">\(i\)</span>个来抽奖的人中奖的概率。</p>
-<p>这应该算是一个最平凡的情形了吧</p>
-<h2 id="solution">Solution</h2>
-<p>整个概率空间可以被划分为<span
-class="math inline">\(k+1\)</span>个部分，第<span
-class="math inline">\(j\)</span>个部分<span
-class="math inline">\(S_j\)</span>表示前<span
-class="math inline">\(i-1\)</span>个人中了<span
-class="math inline">\(j\)</span>张</p>
-<p>那么 <span class="math display">\[
-ans=\sum_{j=0}^{k} P(S_j)P(A|S_j)
-\]</span> 其中<span class="math inline">\(P(A)\)</span>表示第<span
-class="math inline">\(i\)</span>个人中奖</p>
-<p>对于前<span class="math inline">\(i-1\)</span>个人中了<span
-class="math inline">\(j\)</span>张的情况，有方案数为 <span
+                <h2 id="偏序集">偏序集</h2>
+<p>偏序集是由集合<span
+class="math inline">\(S\)</span>以及其上的一个偏序关系<span
+class="math inline">\(R\)</span>定义的，记为<span
+class="math inline">\((S,R)\)</span></p>
+<h3 id="偏序关系">偏序关系：</h3>
+<p>对于一个二元关系<span class="math inline">\(R\subset S\times
+S\)</span>,如果其满足： * <span class="math inline">\(\forall x\in
+S,xRx\)</span> <strong>自反性</strong> * <span
+class="math inline">\(\forall x,y\in S\)</span>,若<span
+class="math inline">\(xRy\)</span>且<span
+class="math inline">\(yRx\)</span>,则<span
+class="math inline">\(x=y\)</span> <strong>反对称性</strong> * <span
+class="math inline">\(xRy,yRz\rightarrow xRz\)</span>
+<strong>传递性</strong> 显然自然数集<span
+class="math inline">\(N\)</span>以及最常见的小于等于关系<span
+class="math inline">\(\leq\)</span>,<span
+class="math inline">\((N,\leq)\)</span>就构成了一个偏序集 事实上<span
+class="math inline">\((N^*,|)\)</span>也是一个偏序集，其中<span
+class="math inline">\(|\)</span>表示正整数的整除关系</p>
+<p>以下为了讨论方便，我们将<span
+class="math inline">\(R\)</span>简记为<span
+class="math inline">\(\leq\)</span>,当然它可以指代小于等于关系之外的其它关系</p>
+<p>此外，<span class="math inline">\(\forall x,y\in S\)</span>,如果<span
+class="math inline">\(x\leq y\)</span>或<span
+class="math inline">\(y\leq
+x\)</span>，那么我们就说它们是<strong>可比</strong>的，否则说它们是<strong>不可比</strong>的</p>
+<p>定义完了偏序集，我们可以从图上来看看它具体的样子</p>
+<h2 id="哈斯图hasse-图">哈斯图(Hasse 图)</h2>
+<p>考虑一个偏序集<span class="math inline">\((S,\leq)\)</span>,<span
+class="math inline">\(\forall x,y\in S\)</span>,如果<span
+class="math inline">\(x\leq y\)</span>且不存在<span
+class="math inline">\(z\ S.T. \ x\leq z\leq y\)</span>,我们称为<span
+class="math inline">\(y\)</span>覆盖<span
+class="math inline">\(x\)</span>,那么此时我们就连一条从<span
+class="math inline">\(x\)</span>指向<span
+class="math inline">\(y\)</span>的有向边，最后得到的图就称为这个偏序集<span
+class="math inline">\((S,\leq)\)</span>的Hasse图</p>
+<p>比如下图是<span
+class="math inline">\({x,y,z}\)</span>的幂集关于包含关系得到的Hasse图
+<img src="https://s2.loli.net/2024/05/24/RbtO1csLZlwU3me.png" srcset="/img/loadings.gif" lazyload
+alt="image.png|370" /></p>
+<p>由于偏序关系满足了反对称性，所以Hasse图里面一定没有自环（否则就会合并成一个点），所以我们可以说<strong>Hasse图一定是一张DAG</strong></p>
+<h2 id="其它偏序集的前置芝士">其它偏序集的前置芝士</h2>
+<p>还是记我们要讨论的偏序集为<span
+class="math inline">\((S,\leq)\)</span></p>
+<p><strong>链</strong>： 偏序集中的一个全序子集。形式化地说，若集合<span
+class="math inline">\(C\subset S\)</span>,且<span
+class="math inline">\(\forall a,b\in C\)</span>,<span
+class="math inline">\(a,b\)</span>是可比的，那么<span
+class="math inline">\(C\)</span>就是<span
+class="math inline">\(S\)</span>的一个链
+链这个名字起的就很有水平，因为我们不难发现，偏序集中的一个全序子集，其在Hasse图中<strong>似乎</strong>就一定表现为一条链。比如上图中的<span
+class="math inline">\(\{\{x,y,z\},\{x,z\},\{x\},\{\phi\}\}\)</span>就是一个全序子集，在图中刚好也表现成一条链。但我没有严格证明，这边搁置。
+类似地，我们定义一个反链 <strong>反链</strong>： 若集合<span
+class="math inline">\(C\subset S\)</span>,且<span
+class="math inline">\(\forall a,b\in C\)</span>,<span
+class="math inline">\(a,b\)</span>是不可比的，那么<span
+class="math inline">\(C\)</span>就是<span
+class="math inline">\(S\)</span>的一个反链 在图上看的话，<span
+class="math inline">\(\{\{x\},\{y\},\{z\}\}\)</span>就是一个反链</p>
+<p><strong>深度</strong>: 最长链大小</p>
+<p><strong>宽度</strong>： 最长反链大小</p>
+<p>以上两个定义也是相当的形象。因为我们不难发现，如果把Hasse图按照偏序关系从低到高排列的话，链在图中往往就是一条竖着的，而反链是横着的，由此给出如上定义</p>
+<p><strong>最小链划分</strong>： 将集合<span
+class="math inline">\(S\)</span>划分为最少的若干个不相交的链</p>
+<p><strong>最小反链划分</strong>： 将集合<span
+class="math inline">\(S\)</span>划分为最少的若干个不相交的反链</p>
+<h2 id="dilworth-定理">Dilworth 定理</h2>
+<p>现在可以给出Dilworth 定理的具体内容了</p>
+<blockquote>
+<p>Lemma1
+对于任意<font color='red'>有限</font>偏序集，其<strong>最长反链大小</strong>必等于<strong>最小链划分中链的数目</strong>
+其对偶形式也成立： Lemma2
+对于任意<font color='red'>有限</font>偏序集，其<strong>最长链大小</strong>必等于其<strong>最小反链划分中反链的数目</strong></p>
+</blockquote>
+<p><strong>以下讨论均假定偏序集有限</strong></p>
+<p>总结以下： 最小链划分 = 最长反链大小 = 偏序集宽度 最小反链划分 =
+最长链大小 = 偏序集深度</p>
+<p><font color='green'>先来证Lemma2：</font></p>
+<p>记定理中的最长链大小为n，我们对n做数学归纳法 显然n=1时定理成立
+若n=k时定理成立，我们来证 n=k+1时定理成立
+此时偏序集中的最长链长度为k+1,我们取出集合<span
+class="math inline">\(S\)</span>的所有极大元，组成集合<span
+class="math inline">\(M\)</span>,显然<span
+class="math inline">\(M\)</span>是一个反链，并且考虑<span
+class="math inline">\(S-M\)</span>,其最大链长一定为k（因为取出了所有的极大元），根据之前的归纳假设，<span
+class="math inline">\(S-M\)</span>的最小反链划分数目为
+k，再加上M自己是一个反链，从而此时S的最小反链划分数为 k+1 = 最长链长度
+<span class="math inline">\(\square\)</span></p>
+<p><font color='green'>再来看Lemma1：</font></p>
+<p>考虑偏序集<span class="math inline">\((S,\leq)\)</span>,记<span
+class="math inline">\(|S|=m\)</span>，我们对m进行归纳 <span
+class="math inline">\(m=1\)</span>时Lemma1显然成立 若<span
+class="math inline">\(m=k\)</span>时定理成立，我们来证<span
+class="math inline">\(m=k+1\)</span>时定理成立:</p>
+<p>设<span class="math inline">\(A\)</span>是集合<span
+class="math inline">\(S\)</span>的一条最长反链，记为 <span
 class="math display">\[
-cnt_j=\binom{k}{j}\binom{n-k}{i-1-j}(i-1)!
-\]</span> 所以 <span class="math display">\[
-P(S_j)=\frac{cnt_j}{\sum_t cnt_t}
-\]</span> 其中 <span class="math display">\[
-\sum_t cnt_t=(i-1)!\sum_t \binom{k}{j}\binom{n-k}{i-1-j}
-\]</span> 后面部分是一个范德蒙德卷积，从而 <span class="math display">\[
-\sum_t cnt_t=(i-1)!\binom{n}{i-1}
-\]</span> 从而 <span class="math display">\[
-\begin{flalign}
-ans=&amp;\frac{1}{(i-1)!\binom{n}{i-1}}\sum_{j=0}^{k}cnt_jP(A|S_j)\\
-&amp;=\frac{1}{(i-1)!\binom{n}{i-1}}\sum_{j=0}^{k}\binom{k}{j}\binom{n-k}{i-1-j}(i-1)!\frac{k-j}{n-i+1}\\
-&amp;=\frac{k}{(n-i+1)\binom{n}{i-1}}\sum_{j=0}^{k}\binom{k-1}{j}\binom{n-k}{i-1-j}\\
-&amp;=\frac{k}{(n-i+1)\binom{n}{i-1}}\binom{n-1}{i-1}\\
-&amp;=\frac{k}{n-i+1}\frac{(i-1)!(n-i+1)!}{n!}\frac{(n-1)!}{(i-1)!(n-i)!}\\
-&amp;=\frac{k}{n}
-\end{flalign}
-\]</span> 从而中奖概率确实与抽奖顺序无关</p>
-<p>over</p>
-<p>（久违的推式子环节，真是太舒服了~)</p>
-<p>update：</p>
-<p>队友给出了一个更加优雅的解法：</p>
-<p>考虑数学归纳法：</p>
-<p>第一个人中奖的概率显然为<span
-class="math inline">\(\frac{k}{n}\)</span></p>
-<p>假设对于第<span
-class="math inline">\(j\)</span>个人，他中奖的概率也为<span
-class="math inline">\(\frac{k}{n}\)</span>,我们来证对于第<span
-class="math inline">\(j+1\)</span>个人，其中奖的概率也为<span
-class="math inline">\(\frac{k}{n}\)</span></p>
-<p>其中奖的概率为 <span class="math display">\[
-P_{j+1}=\sum_{i=0}^{p}\binom{p}{i}(\frac{k}{n})^i(\frac{n-k}{n})^{p-i}\frac{k-i}{n-j}\\
-其中p=min(k,j)
-\]</span> 这里将<span class="math inline">\(p\)</span>与<span
-class="math inline">\(j\)</span>做区分是因为中奖的人数最多只能有<span
-class="math inline">\(k\)</span>个</p>
-<p>注意到式子中的<span
-class="math inline">\(\sum_{i=0}^{p}\binom{p}{i}(\frac{k}{n})^i(\frac{n-k}{n})^{p-i}\)</span>实际上就是一个伯努利分布，所以我们可以化为
-<span class="math display">\[
-\begin{flalign}
-P_{j+1}&amp;=\frac{k}{n-j}\sum_{i=0}^{p}\binom{p}{i}(\frac{k}{n})^i(\frac{n-k}{n})^{p-i}-\frac{1}{n-j}\sum_{i=0}^{p}\binom{p}{i}(\frac{k}{n})^i(\frac{n-k}{n})^{p-i}i\\
-&amp;=\frac{k}{n-j}-\frac{1}{n-j}\frac{k}{n}j\\
-&amp;=\frac{k}{n}
-\end{flalign}
-\]</span> 其中第二个式子实际上就是伯努利分布的期望</p>
-<p>比我的证法短多了，思路也更加清晰。优雅，太优雅了！</p>
-<p>over</p>
+A = \{a_1,a_2,...a_w\}
+\]</span> 其中<span class="math inline">\(|A|=w\)</span> 我们取 <span
+class="math display">\[
+D(A) = \{x\notin A|\exists \alpha \in S,x\leq a\}
+\]</span> <span class="math display">\[
+U(A) = \{x\notin A|\exists \alpha \in S,a\leq x\}
+\]</span> 显然<span class="math inline">\(D(A)\bigcup U(A)\bigcup A =
+S\)</span></p>
+<p>若存在最长反链<span class="math inline">\(A\)</span>使得<span
+class="math inline">\(D(A),U(A)\)</span>均非空： <span
+class="math inline">\(A\)</span>是<span
+class="math inline">\(S\)</span>的最长反链，故<span
+class="math inline">\(A\)</span>也是<span class="math inline">\(A\bigcup
+D(A)\)</span>的一个最长反链。注意到<span
+class="math inline">\(|U(A)|\geq 1\)</span>,故<span
+class="math inline">\(|A\bigcup D(A)|\leq
+k\)</span>，从而由归纳假设，<span class="math inline">\(A\bigcup
+U(A)\)</span>可以划分为<span class="math inline">\(w\)</span>条链<span
+class="math inline">\(c_1,c_2,...c_w\)</span>，其中<span
+class="math inline">\(c_i\)</span>的极大元是<span
+class="math inline">\(a_i\)</span>.(这一点显然) 同理，<span
+class="math inline">\(A\bigcup D(A)\)</span>也可以划分为<span
+class="math inline">\(w\)</span>条链<span
+class="math inline">\(d_1,d_2,...d_w\)</span>,其中<span
+class="math inline">\(d_i\)</span>的极小元是<span
+class="math inline">\(a_i\)</span> 从而，我们就可以将<span
+class="math inline">\(S\)</span>划分为<span
+class="math inline">\(w\)</span>条链：<span
+class="math inline">\(c_1\cup d_1,....c_w\cup d_w\)</span></p>
+<p>若对于任意最长反链<span class="math inline">\(A\)</span>,都有<span
+class="math inline">\(D(A)=\phi\)</span>或<span
+class="math inline">\(U(A)=\phi\)</span> 由假设，任一条反链<span
+class="math inline">\(A\)</span>必定构成全上界或者全下界。在<span
+class="math inline">\(S\)</span>中选一个极大元<span
+class="math inline">\(y\)</span>,再选一个极小元<span
+class="math inline">\(x\)</span>满足<span class="math inline">\(x\leq
+y\)</span>,<span class="math inline">\(\{x,y\}\)</span>构成一条链<span
+class="math inline">\(C\)</span>,从而在集合<span
+class="math inline">\(S-C\)</span>中，任一条最长反链的大小为<span
+class="math inline">\(w-1\)</span>（必定去除了一个元素），从而根据归纳假设，<span
+class="math inline">\(S-C\)</span>的最小链划分数为<span
+class="math inline">\(w-1\)</span>,再加上<span
+class="math inline">\(C\)</span>自己是一条链，故<span
+class="math inline">\(S\)</span>的最小链划分数为<span
+class="math inline">\(w\)</span></p>
+<p><span class="math inline">\(\square\)</span> ### 应用举例</p>
+<p>求一个序列的最大非递增序列长度以及其最少可以划分为多少个非递增序列</p>
+<p>考虑由(位置，元素大小)这个二元组组成的集合，再定义一个偏序关系<span
+class="math inline">\(&lt;\)</span>: <span
+class="math inline">\(a&lt;b\)</span>当且仅当 <span
+class="math inline">\(a\)</span>的位置&lt;<span
+class="math inline">\(b\)</span>的位置且<span
+class="math inline">\(a\)</span>的值<span
+class="math inline">\(&lt;b\)</span>的值</p>
+<p>从而这就构成了一个偏序集<span
+class="math inline">\((s,&lt;)\)</span>,并且要求的分别就是集合的最长反链以及最小反链划分数
+第一个问题可以直接dp即可，第二个问题，根据Dilworth
+定理，实际上就是求偏序集的最长链大小，实际上也就是序列的LIS，非常妙的一个转化。</p>
+<h2 id="与dag">与DAG</h2>
+<p>之前说过，Hasse图就是一个DAG，而反过来，我们将DAG的点作为集合<span
+class="math inline">\(S\)</span>的元素，将偏序关系<span
+class="math inline">\(\leq\)</span>定义为点之间的可达性，就定义了一个偏序集<span
+class="math inline">\((S,\leq)\)</span>
+从而DAG上的最小可重路径覆盖（要求覆盖所有点）就等价于偏序集<span
+class="math inline">\((S,\leq)\)</span>上的最小链覆盖</p>
+<p>同理，将DAG上的有向边作为集合<span
+class="math inline">\(T\)</span>的元素，将偏序关系<span
+class="math inline">\(\leq&#39;\)</span>定义为边之间的可达性，就得到的另一个偏序集<span
+class="math inline">\((T,\leq&#39;)\)</span>
+从而DAG上的最小可重路径覆盖(要求覆盖所有<strong>边</strong>)就等价于偏序集<span
+class="math inline">\((T,\leq&#39;)\)</span>上的最小链覆盖</p>
+<h2 id="erdősszekeres-定理">Erdős–Szekeres 定理</h2>
+<p>含至少<span class="math inline">\(rs+1\)</span>个元素的实数序列<span
+class="math inline">\(\{a\}\)</span>要么有一个长为<span
+class="math inline">\(r+1\)</span>的不下降子序列，要么有一个长为<span
+class="math inline">\(s+1\)</span> 的不上升子序列
+<font color='orange'>Proof:</font> 设序列长度为<span
+class="math inline">\(n\geq rs+1\)</span>,定义偏序集<span
+class="math inline">\(\{(i,a_i)\}_{i=1}^{n}\)</span>,其上的偏序关系<span
+class="math inline">\(\leq\)</span>定义为： <span
+class="math display">\[
+(i,a_i)\leq (j,a_i)\Leftrightarrow (i\leq j \ \wedge \ a_i\leq a_j)
+\]</span> 假设该偏序集的宽度<span class="math inline">\(\leq
+s\)</span>,则由Dilllworth定理可知其最小链覆盖数<span
+class="math inline">\(\leq s\)</span>,若这些链的长度都<span
+class="math inline">\(\leq r\)</span>,则总元素数<span
+class="math inline">\(\leq rs&lt; rs+1\leq n\)</span> 矛盾。 <span
+class="math inline">\(\square\)</span></p>
 
                 
               </div>
@@ -405,7 +527,7 @@ P_{j+1}&amp;=\frac{k}{n-j}\sum_{i=0}^{p}\binom{p}{i}(\frac{k}{n})^i(\frac{n-k}{n
     
       <span class="category-chain">
         
-  <a href="/categories/%E6%9D%82%E6%83%B3/" class="category-chain-item">杂想</a>
+  <a href="/categories/%E7%BB%84%E5%90%88%E6%95%B0%E5%AD%A6/" class="category-chain-item">组合数学</a>
   
   
 
@@ -422,7 +544,9 @@ P_{j+1}&amp;=\frac{k}{n-j}\sum_{i=0}^{p}\binom{p}{i}(\frac{k}{n})^i(\frac{n-k}{n
       
         <a href="/tags/%E6%95%B0%E5%AD%A6/" class="print-no-link">#数学</a>
       
-        <a href="/tags/Machine-Learning/" class="print-no-link">#Machine Learning</a>
+        <a href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" class="print-no-link">#学习笔记</a>
+      
+        <a href="/tags/%E7%BB%84%E5%90%88%E6%95%B0%E5%AD%A6/" class="print-no-link">#组合数学</a>
       
     </div>
   
@@ -434,8 +558,8 @@ P_{j+1}&amp;=\frac{k}{n-j}\sum_{i=0}^{p}\binom{p}{i}(\frac{k}{n})^i(\frac{n-k}{n
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>杂想-抽奖问题平凡解</div>
-      <div>https://sophilex.github.io/2024/05/11/杂想-抽奖问题平凡解/</div>
+      <div>Dilworth 定理</div>
+      <div>https://sophilex.github.io/2024/05/25/定理/</div>
     </div>
     <div class="license-meta">
       
@@ -447,7 +571,7 @@ P_{j+1}&amp;=\frac{k}{n-j}\sum_{i=0}^{p}\binom{p}{i}(\frac{k}{n})^i(\frac{n-k}{n
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2024年5月11日</div>
+          <div>2024年5月25日</div>
         </div>
       
       
@@ -479,18 +603,12 @@ P_{j+1}&amp;=\frac{k}{n-j}\sum_{i=0}^{p}\binom{p}{i}(\frac{k}{n})^i(\frac{n-k}{n
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2024/05/25/%E5%AE%9A%E7%90%86/" title="Dilworth 定理">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Dilworth 定理</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2024/04/01/%C2%96%C2%96%C2%96LightGCN-%E7%AE%80%E5%8C%96%E5%92%8C%E5%A2%9E%E5%BC%BA%E5%9B%BE%E5%8D%B7%E7%A7%AF%E7%BD%91%E7%BB%9C%E7%9A%84%E6%8E%A8%E8%8D%90/" title="LightGCN:简化和增强图卷积网络的推荐">
-                        <span class="hidden-mobile">LightGCN:简化和增强图卷积网络的推荐</span>
+                      <a href="/2024/05/11/%E6%9D%82%E6%83%B3-%E6%8A%BD%E5%A5%96%E9%97%AE%E9%A2%98%E5%B9%B3%E5%87%A1%E8%A7%A3/" title="杂想-抽奖问题平凡解">
+                        <span class="hidden-mobile">杂想-抽奖问题平凡解</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
