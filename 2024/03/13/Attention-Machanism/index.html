@@ -27,7 +27,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://sophilex.github.io/img/house.png">
 <meta property="article:published_time" content="2024-03-13T10:18:57.000Z">
-<meta property="article:modified_time" content="2024-05-14T03:25:33.045Z">
+<meta property="article:modified_time" content="2024-05-26T06:40:58.999Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="Machine Learning">
 <meta name="twitter:card" content="summary_large_image">
@@ -259,7 +259,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.2k 字
+          2.6k 字
         
       </span>
     
@@ -270,7 +270,7 @@
         
         
         
-          19 分钟
+          22 分钟
         
       </span>
     
@@ -422,7 +422,7 @@ a(\boldsymbol{q},\boldsymbol{k})=\boldsymbol{q}^T\boldsymbol{k}
 \]</span> 但是这样其实有一个问题。因为我们的结果<span
 class="math inline">\(a(\boldsymbol{q},\boldsymbol{k})\)</span>是要拿去做softmax的，而softmax由于是由指数函数实现的，当指数差距过大时，概率的偏差就会变的极大，从而失去参考价值。所以我们可以统一除以一个<span
 class="math inline">\(\sqrt{d}\)</span>来减少差距,至于为什么是<span
-class="math inline">\(\sqrt{d}\)</span>,等我以后再细细研究...</p>
+class="math inline">\(\sqrt{d}\)</span>,我们在最后讨论一下</p>
 <p>以上都是考虑样本数为1的情况，实际情况中有多个样本，多个数据,记为查询<span
 class="math inline">\(\boldsymbol{Q}\in \mathbb{R}^{m\times
 d}\)</span>,键值<span class="math inline">\(\boldsymbol{K}\in
@@ -495,6 +495,39 @@ class="math inline">\(W_q,Q_k,Q_v\)</span>来提取其特征。一个很自然�
 class="math inline">\(W_q,Q_k,Q_v\)</span>来提取就好了，然后再把它们的结果放到一起，再拼在一起就可以啦。第<span
 class="math inline">\(i\)</span>组用的矩阵就是<span
 class="math inline">\(W_{q_i},Q_{k_i},Q_{v_i}\)</span>,不同组之间显然是可以并行计算的，互不影响。</p>
+<h1 id="关于缩放系数sqrtd">关于缩放系数<span
+class="math inline">\(\sqrt{d}\)</span></h1>
+<p>前面讲到了，attention操作最后需要做一个softmax，而softmax里面含有指数运算，如果数据的方差过大的话，最后得到的分布就会非常接近一个one
+hot分布，从而导致严重的梯度消失，为此我们需要对点积进行放缩。但是为什么放缩的系数是<span
+class="math inline">\(\sqrt{d}\)</span>呢？（其中<span
+class="math inline">\(d\)</span>是向量的长度）</p>
+<p>我们考虑 <span class="math display">\[
+softmax(\frac{\boldsymbol{QK}^T}{\sqrt{d}})\boldsymbol{V}\in
+\mathbb{R}^{m \times v}
+\]</span> 中的任意两个<span class="math inline">\(d\)</span>维向量<span
+class="math inline">\(q,k\)</span>,假设它们采样自均值为0，方差为1的分布，那么它们内积的二阶矩为
+<span class="math display">\[
+\begin{flalign}
+\mathbb{E}[(q\cdot k)^2] &amp;= \mathbb{E}[(\sum_{i=1}^{d}q_ik_i)^2] =
+\mathbb{E}[(\sum_{i=1}^{d}q_ik_i)\cdot (\sum_{j=1}^{d}q_jk_j)]\\
+&amp;=
+\mathbb{E}[\sum_{i,j}^{d}(q_iq_j)(k_ik_j)]=\sum_{i,j}\mathbb{E}[q_iq_j]\mathbb{E}[k_ik_j]
+\\&amp;
+=\sum_{i,j}\mathbb{E}[q_i]^2\mathbb{E}[k_i]^2 = d
+\end{flalign}
+\]</span></p>
+<p>又<span class="math inline">\(\mathbb{E}[q\cdot
+k]^2=0\)</span>，从而<span class="math inline">\(\mathbb{V}ar[q\cdot
+k]=d\)</span> 根据正态分布的3<span
+class="math inline">\(\sigma\)</span>原则，我们不妨假定<span
+class="math inline">\(q\cdot k\)</span>分布在<span
+class="math inline">\([-3\sqrt{d},3\sqrt{d}]\)</span>中,那么在softmax做指数运算之后，数据分布在<span
+class="math inline">\([e^{-3\sqrt{d}},e^{3\sqrt{d}}]\)</span>中，一般来说<span
+class="math inline">\(d\)</span>都是一个较大的值，从而左界实在是太小了，所以求梯度的时候很容易导致梯度消失，，为此我们经验性地除上一个<span
+class="math inline">\(\sqrt{d}\)</span>,使得<span
+class="math inline">\(\mathbb{V}ar[q\cdot
+k]=1\)</span>，这会使得最后的区间大致分布在<span
+class="math inline">\([e^{-3},e^3]\)</span>,这是一个相对来说可以接受的区间，会有效缓解该问题，让网络能够更加稳定地更新。</p>
 
                 
               </div>
