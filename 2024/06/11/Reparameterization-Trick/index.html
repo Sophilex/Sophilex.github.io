@@ -18,28 +18,26 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="这是一个关于偏序集的定理，事实上它也可以扩展到图论，dp等中，是一个很有意思的东西">
+    <meta name="description" content="从正态分布到Gumbel Softmax">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Dilworth 定理">
-<meta property="og:url" content="https://sophilex.github.io/2024/05/25/%E5%AE%9A%E7%90%86/index.html">
+<meta property="og:title" content="Reparameterization-Trick">
+<meta property="og:url" content="https://sophilex.github.io/2024/06/11/Reparameterization-Trick/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="这是一个关于偏序集的定理，事实上它也可以扩展到图论，dp等中，是一个很有意思的东西">
+<meta property="og:description" content="从正态分布到Gumbel Softmax">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/j11.jpg">
-<meta property="article:published_time" content="2024-05-25T04:13:18.000Z">
-<meta property="article:modified_time" content="2024-05-25T04:19:28.888Z">
+<meta property="og:image" content="https://sophilex.github.io/img/j7.jpg">
+<meta property="article:published_time" content="2024-06-11T12:54:19.000Z">
+<meta property="article:modified_time" content="2024-06-11T12:56:37.911Z">
 <meta property="article:author" content="Sophilex">
-<meta property="article:tag" content="数学">
-<meta property="article:tag" content="学习笔记">
-<meta property="article:tag" content="组合数学">
+<meta property="article:tag" content="Machine Learning">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/j11.jpg">
+<meta name="twitter:image" content="https://sophilex.github.io/img/j7.jpg">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>Dilworth 定理 - Sophilex‘s Blog</title>
+  <title>Reparameterization-Trick - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -227,13 +225,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/j11.jpg') no-repeat center center; background-size: cover;">
+     style="background: url('/img/j7.jpg') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Dilworth 定理"></span>
+            <span id="subtitle" data-typed-text="Reparameterization-Trick"></span>
           
         </div>
 
@@ -249,8 +247,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2024-05-25 12:13" pubdate>
-          2024年5月25日 中午
+        <time datetime="2024-06-11 20:54" pubdate>
+          2024年6月11日 晚上
         </time>
       </span>
     
@@ -261,7 +259,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.9k 字
+          2.1k 字
         
       </span>
     
@@ -272,7 +270,7 @@
         
         
         
-          16 分钟
+          18 分钟
         
       </span>
     
@@ -317,198 +315,230 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">Dilworth 定理</h1>
+            <h1 id="seo-header">Reparameterization-Trick</h1>
             
             
               <div class="markdown-body">
                 
-                <h2 id="偏序集">偏序集</h2>
-<p>偏序集是由集合<span
-class="math inline">\(S\)</span>以及其上的一个偏序关系<span
-class="math inline">\(R\)</span>定义的，记为<span
-class="math inline">\((S,R)\)</span></p>
-<h3 id="偏序关系">偏序关系：</h3>
-<p>对于一个二元关系<span class="math inline">\(R\subset S\times
-S\)</span>,如果其满足： * <span class="math inline">\(\forall x\in
-S,xRx\)</span> <strong>自反性</strong> * <span
-class="math inline">\(\forall x,y\in S\)</span>,若<span
-class="math inline">\(xRy\)</span>且<span
-class="math inline">\(yRx\)</span>,则<span
-class="math inline">\(x=y\)</span> <strong>反对称性</strong> * <span
-class="math inline">\(xRy,yRz\rightarrow xRz\)</span>
-<strong>传递性</strong> 显然自然数集<span
-class="math inline">\(N\)</span>以及最常见的小于等于关系<span
-class="math inline">\(\leq\)</span>,<span
-class="math inline">\((N,\leq)\)</span>就构成了一个偏序集 事实上<span
-class="math inline">\((N^*,|)\)</span>也是一个偏序集，其中<span
-class="math inline">\(|\)</span>表示正整数的整除关系</p>
-<p>以下为了讨论方便，我们将<span
-class="math inline">\(R\)</span>简记为<span
-class="math inline">\(\leq\)</span>,当然它可以指代小于等于关系之外的其它关系</p>
-<p>此外，<span class="math inline">\(\forall x,y\in S\)</span>,如果<span
-class="math inline">\(x\leq y\)</span>或<span
-class="math inline">\(y\leq
-x\)</span>，那么我们就说它们是<strong>可比</strong>的，否则说它们是<strong>不可比</strong>的</p>
-<p>定义完了偏序集，我们可以从图上来看看它具体的样子</p>
-<h2 id="哈斯图hasse-图">哈斯图(Hasse 图)</h2>
-<p>考虑一个偏序集<span class="math inline">\((S,\leq)\)</span>,<span
-class="math inline">\(\forall x,y\in S\)</span>,如果<span
-class="math inline">\(x\leq y\)</span>且不存在<span
-class="math inline">\(z\ S.T. \ x\leq z\leq y\)</span>,我们称为<span
-class="math inline">\(y\)</span>覆盖<span
-class="math inline">\(x\)</span>,那么此时我们就连一条从<span
-class="math inline">\(x\)</span>指向<span
-class="math inline">\(y\)</span>的有向边，最后得到的图就称为这个偏序集<span
-class="math inline">\((S,\leq)\)</span>的Hasse图</p>
-<p>比如下图是<span
-class="math inline">\({x,y,z}\)</span>的幂集关于包含关系得到的Hasse图
-<img src="https://s2.loli.net/2024/05/24/RbtO1csLZlwU3me.png" srcset="/img/loadings.gif" lazyload
-alt="image.png|370" /></p>
-<p>由于偏序关系满足了反对称性，所以Hasse图里面一定没有自环（否则就会合并成一个点），所以我们可以说<strong>Hasse图一定是一张DAG</strong></p>
-<h2 id="其它偏序集的前置芝士">其它偏序集的前置芝士</h2>
-<p>还是记我们要讨论的偏序集为<span
-class="math inline">\((S,\leq)\)</span></p>
-<p><strong>链</strong>： 偏序集中的一个全序子集。形式化地说，若集合<span
-class="math inline">\(C\subset S\)</span>,且<span
-class="math inline">\(\forall a,b\in C\)</span>,<span
-class="math inline">\(a,b\)</span>是可比的，那么<span
-class="math inline">\(C\)</span>就是<span
-class="math inline">\(S\)</span>的一个链
-链这个名字起的就很有水平，因为我们不难发现，偏序集中的一个全序子集，其在Hasse图中<strong>似乎</strong>就一定表现为一条链。比如上图中的<span
-class="math inline">\(\{\{x,y,z\},\{x,z\},\{x\},\{\phi\}\}\)</span>就是一个全序子集，在图中刚好也表现成一条链。但我没有严格证明，这边搁置。
-类似地，我们定义一个反链 <strong>反链</strong>： 若集合<span
-class="math inline">\(C\subset S\)</span>,且<span
-class="math inline">\(\forall a,b\in C\)</span>,<span
-class="math inline">\(a,b\)</span>是不可比的，那么<span
-class="math inline">\(C\)</span>就是<span
-class="math inline">\(S\)</span>的一个反链 在图上看的话，<span
-class="math inline">\(\{\{x\},\{y\},\{z\}\}\)</span>就是一个反链</p>
-<p><strong>深度</strong>: 最长链大小</p>
-<p><strong>宽度</strong>： 最长反链大小</p>
-<p>以上两个定义也是相当的形象。因为我们不难发现，如果把Hasse图按照偏序关系从低到高排列的话，链在图中往往就是一条竖着的，而反链是横着的，由此给出如上定义</p>
-<p><strong>最小链划分</strong>： 将集合<span
-class="math inline">\(S\)</span>划分为最少的若干个不相交的链</p>
-<p><strong>最小反链划分</strong>： 将集合<span
-class="math inline">\(S\)</span>划分为最少的若干个不相交的反链</p>
-<h2 id="dilworth-定理">Dilworth 定理</h2>
-<p>现在可以给出Dilworth 定理的具体内容了</p>
-<blockquote>
-<p>Lemma1
-对于任意<font color='red'>有限</font>偏序集，其<strong>最长反链大小</strong>必等于<strong>最小链划分中链的数目</strong>
-其对偶形式也成立： Lemma2
-对于任意<font color='red'>有限</font>偏序集，其<strong>最长链大小</strong>必等于其<strong>最小反链划分中反链的数目</strong></p>
-</blockquote>
-<p><strong>以下讨论均假定偏序集有限</strong></p>
-<p>总结以下： 最小链划分 = 最长反链大小 = 偏序集宽度 最小反链划分 =
-最长链大小 = 偏序集深度</p>
-<p><font color='green'>先来证Lemma2：</font></p>
-<p>记定理中的最长链大小为n，我们对n做数学归纳法 显然n=1时定理成立
-若n=k时定理成立，我们来证 n=k+1时定理成立
-此时偏序集中的最长链长度为k+1,我们取出集合<span
-class="math inline">\(S\)</span>的所有极大元，组成集合<span
-class="math inline">\(M\)</span>,显然<span
-class="math inline">\(M\)</span>是一个反链，并且考虑<span
-class="math inline">\(S-M\)</span>,其最大链长一定为k（因为取出了所有的极大元），根据之前的归纳假设，<span
-class="math inline">\(S-M\)</span>的最小反链划分数目为
-k，再加上M自己是一个反链，从而此时S的最小反链划分数为 k+1 = 最长链长度
-<span class="math inline">\(\square\)</span></p>
-<p><font color='green'>再来看Lemma1：</font></p>
-<p>考虑偏序集<span class="math inline">\((S,\leq)\)</span>,记<span
-class="math inline">\(|S|=m\)</span>，我们对m进行归纳 <span
-class="math inline">\(m=1\)</span>时Lemma1显然成立 若<span
-class="math inline">\(m=k\)</span>时定理成立，我们来证<span
-class="math inline">\(m=k+1\)</span>时定理成立:</p>
-<p>设<span class="math inline">\(A\)</span>是集合<span
-class="math inline">\(S\)</span>的一条最长反链，记为 <span
+                <p>之前在学蒸馏的时候接触了gumbel-softmax，顺势了解了一下重参数技巧，还是很有意思的一个东西</p>
+<h1 id="引入">引入</h1>
+<p>重参数技巧主要是尝试对这样形式的一个东西<strong>求梯度</strong> <span
 class="math display">\[
-A = \{a_1,a_2,...a_w\}
-\]</span> 其中<span class="math inline">\(|A|=w\)</span> 我们取 <span
+\large L_{\theta} = E_{z\textasciitilde p_{\theta}(z)}[f_{\theta}(z)]
+\quad \quad(1)
+\]</span> 其中<span class="math inline">\(z\textasciitilde
+p_{\theta}(z)\)</span>表示随机变量<span
+class="math inline">\(z\)</span>服从概率密度函数<span
+class="math inline">\(p_{\theta}(z)\)</span>,<strong>显然这个密度函数是跟模型参数<span
+class="math inline">\(\theta\)</span>有关的</strong>；<span
+class="math inline">\(f_{\theta}(z)\)</span>一般可以表示模型某一层关于变量<span
+class="math inline">\(z\)</span>的输出,显然它也跟模型参数<span
+class="math inline">\(\theta\)</span>有关</p>
+<p>不妨先来想想这个式子要如何处理。一个非常naive的思路：采样估计。但是如果直接采样的话，每次采样我们只能获得<span
+class="math inline">\(\nabla_\theta
+f_\theta(z)\)</span>,而不同样本之间的信息是无法共用的，我们也就无从得到<span
+class="math inline">\(\nabla_\theta
+L_\theta\)</span>。所以我们想想看，有没有什么好的处理方法，能在估计出<span
+class="math inline">\((1)\)</span>式的同时还能保留梯度信息</p>
+<p>不妨先来做一个简化，我们先假设<span
+class="math inline">\(p_{\theta}(z)\)</span>是一个跟<span
+class="math inline">\(\theta\)</span>无关的概率密度函数，简记为<span
+class="math inline">\(p(z)\)</span>,我们很快注意到现在是可以采样估计梯度了：
+<span class="math display">\[
+\begin{flalign}
+\nabla_{\theta} L_{\theta} &amp;= \nabla_{\theta}E_{z\textasciitilde
+p(z)}[f_{\theta}(z)] = \nabla_{\theta}[\int_z p(z)f_{\theta}(z)dz]\\
+&amp;=\int_z p(z)\nabla_{\theta}f_{\theta}(z)dz\\
+&amp;=E_{z\textasciitilde p(z)}[\nabla_{\theta}f_{\theta}(z)]
+\end{flalign}
+\]</span> 从而 <span class="math display">\[
+\large \nabla_{\theta} L_{\theta} \approx \frac{1}{n}\sum_{i=1}^{n}
+\nabla_{\theta}f_{\theta}(z_i),z_i\textasciitilde p(z)
+\]</span> 这是因为求梯度的操作成功转移到了<span
+class="math inline">\(f_\theta(z)\)</span>上面
+上述过程可以用一句话来总结：期望的梯度等于梯度的期望</p>
+<p>那我们回到<span
+class="math inline">\(p_\theta(z)\)</span>,并尝试类似的步骤： <span
 class="math display">\[
-D(A) = \{x\notin A|\exists \alpha \in S,x\leq a\}
-\]</span> <span class="math display">\[
-U(A) = \{x\notin A|\exists \alpha \in S,a\leq x\}
-\]</span> 显然<span class="math inline">\(D(A)\bigcup U(A)\bigcup A =
-S\)</span></p>
-<p>若存在最长反链<span class="math inline">\(A\)</span>使得<span
-class="math inline">\(D(A),U(A)\)</span>均非空： <span
-class="math inline">\(A\)</span>是<span
-class="math inline">\(S\)</span>的最长反链，故<span
-class="math inline">\(A\)</span>也是<span class="math inline">\(A\bigcup
-D(A)\)</span>的一个最长反链。注意到<span
-class="math inline">\(|U(A)|\geq 1\)</span>,故<span
-class="math inline">\(|A\bigcup D(A)|\leq
-k\)</span>，从而由归纳假设，<span class="math inline">\(A\bigcup
-U(A)\)</span>可以划分为<span class="math inline">\(w\)</span>条链<span
-class="math inline">\(c_1,c_2,...c_w\)</span>，其中<span
-class="math inline">\(c_i\)</span>的极大元是<span
-class="math inline">\(a_i\)</span>.(这一点显然) 同理，<span
-class="math inline">\(A\bigcup D(A)\)</span>也可以划分为<span
-class="math inline">\(w\)</span>条链<span
-class="math inline">\(d_1,d_2,...d_w\)</span>,其中<span
-class="math inline">\(d_i\)</span>的极小元是<span
-class="math inline">\(a_i\)</span> 从而，我们就可以将<span
-class="math inline">\(S\)</span>划分为<span
-class="math inline">\(w\)</span>条链：<span
-class="math inline">\(c_1\cup d_1,....c_w\cup d_w\)</span></p>
-<p>若对于任意最长反链<span class="math inline">\(A\)</span>,都有<span
-class="math inline">\(D(A)=\phi\)</span>或<span
-class="math inline">\(U(A)=\phi\)</span> 由假设，任一条反链<span
-class="math inline">\(A\)</span>必定构成全上界或者全下界。在<span
-class="math inline">\(S\)</span>中选一个极大元<span
-class="math inline">\(y\)</span>,再选一个极小元<span
-class="math inline">\(x\)</span>满足<span class="math inline">\(x\leq
-y\)</span>,<span class="math inline">\(\{x,y\}\)</span>构成一条链<span
-class="math inline">\(C\)</span>,从而在集合<span
-class="math inline">\(S-C\)</span>中，任一条最长反链的大小为<span
-class="math inline">\(w-1\)</span>（必定去除了一个元素），从而根据归纳假设，<span
-class="math inline">\(S-C\)</span>的最小链划分数为<span
-class="math inline">\(w-1\)</span>,再加上<span
-class="math inline">\(C\)</span>自己是一条链，故<span
-class="math inline">\(S\)</span>的最小链划分数为<span
-class="math inline">\(w\)</span></p>
-<p><span class="math inline">\(\square\)</span> ### 应用举例</p>
-<p>求一个序列的最大非递增序列长度以及其最少可以划分为多少个非递增序列</p>
-<p>考虑由(位置，元素大小)这个二元组组成的集合，再定义一个偏序关系<span
-class="math inline">\(&lt;\)</span>: <span
-class="math inline">\(a&lt;b\)</span>当且仅当 <span
-class="math inline">\(a\)</span>的位置&lt;<span
-class="math inline">\(b\)</span>的位置且<span
-class="math inline">\(a\)</span>的值<span
-class="math inline">\(&lt;b\)</span>的值</p>
-<p>从而这就构成了一个偏序集<span
-class="math inline">\((s,&lt;)\)</span>,并且要求的分别就是集合的最长反链以及最小反链划分数
-第一个问题可以直接dp即可，第二个问题，根据Dilworth
-定理，实际上就是求偏序集的最长链大小，实际上也就是序列的LIS，非常妙的一个转化。</p>
-<h2 id="与dag">与DAG</h2>
-<p>之前说过，Hasse图就是一个DAG，而反过来，我们将DAG的点作为集合<span
-class="math inline">\(S\)</span>的元素，将偏序关系<span
-class="math inline">\(\leq\)</span>定义为点之间的可达性，就定义了一个偏序集<span
-class="math inline">\((S,\leq)\)</span>
-从而DAG上的最小可重路径覆盖（要求覆盖所有点）就等价于偏序集<span
-class="math inline">\((S,\leq)\)</span>上的最小链覆盖</p>
-<p>同理，将DAG上的有向边作为集合<span
-class="math inline">\(T\)</span>的元素，将偏序关系<span
-class="math inline">\(\leq&#39;\)</span>定义为边之间的可达性，就得到的另一个偏序集<span
-class="math inline">\((T,\leq&#39;)\)</span>
-从而DAG上的最小可重路径覆盖(要求覆盖所有<strong>边</strong>)就等价于偏序集<span
-class="math inline">\((T,\leq&#39;)\)</span>上的最小链覆盖</p>
-<h2 id="erdősszekeres-定理">Erdős–Szekeres 定理</h2>
-<p>含至少<span class="math inline">\(rs+1\)</span>个元素的实数序列<span
-class="math inline">\(\{a\}\)</span>要么有一个长为<span
-class="math inline">\(r+1\)</span>的不下降子序列，要么有一个长为<span
-class="math inline">\(s+1\)</span> 的不上升子序列
-<font color='orange'>Proof:</font> 设序列长度为<span
-class="math inline">\(n\geq rs+1\)</span>,定义偏序集<span
-class="math inline">\(\{(i,a_i)\}_{i=1}^{n}\)</span>,其上的偏序关系<span
-class="math inline">\(\leq\)</span>定义为： <span
+\large \begin{flalign}
+\nabla_{\theta} L_{\theta} &amp;= \nabla_{\theta}E_{z\textasciitilde
+p_\theta(z)}[f_{\theta}(z)] = \nabla_{\theta}[\int_z
+p_\theta(z)f_{\theta}(z)dz]\\
+&amp;=\int_z p_\theta(z)\nabla_{\theta}f_{\theta}(z)dz+\int_z
+\nabla_{\theta}p_\theta(z)f_{\theta}(z)dz\\
+&amp;=E_{z\textasciitilde
+p_\theta(z)}[\nabla_{\theta}f_{\theta}(z)]+\underbrace{\int_z
+\nabla_{\theta}p_\theta(z)f_{\theta}(z)dz}_{???}
+\end{flalign}
+\]</span>
+前面一块还是可以仿照之前的处理的，但是后者就显得比较诡异了，求梯度操作转移到<span
+class="math inline">\(p_\theta(z)\)</span>上面去，也就意味着我们无法将其整理成正常的关于某个东西的期望的形式。或许我们可以将<span
+class="math inline">\(\nabla_{\theta}p_\theta(z)\)</span>求出来，但在大部分情况下这是不现实的。</p>
+<p>此时就可以引入重参数技巧了</p>
+<h1 id="重参数">重参数</h1>
+<p>顾名思义，我们需要引入新的参数来处理上述问题： 考虑一个新的无参数分布
+<span class="math display">\[
+\large \epsilon\textasciitilde{q(\epsilon)}
+\]</span> 以及变换 <span class="math display">\[
+\large z = g_\theta(\epsilon)
+\]</span> 保证变换之后得到的<span
+class="math inline">\(z\)</span>服从<span
+class="math inline">\(p_\theta\)</span> 那么对<span
+class="math inline">\((1)\)</span>式求梯度可以变成： <span
 class="math display">\[
-(i,a_i)\leq (j,a_i)\Leftrightarrow (i\leq j \ \wedge \ a_i\leq a_j)
-\]</span> 假设该偏序集的宽度<span class="math inline">\(\leq
-s\)</span>,则由Dilllworth定理可知其最小链覆盖数<span
-class="math inline">\(\leq s\)</span>,若这些链的长度都<span
-class="math inline">\(\leq r\)</span>,则总元素数<span
-class="math inline">\(\leq rs&lt; rs+1\leq n\)</span> 矛盾。 <span
-class="math inline">\(\square\)</span></p>
+\large \begin{flalign}
+\nabla_{\theta} L_{\theta} &amp;= \nabla_{\theta}E_{z\textasciitilde
+p_\theta(z)}[f_{\theta}(z)] \\
+&amp;= E_{\epsilon\textasciitilde
+q(\epsilon)}[f_\theta(g_\theta(\epsilon))]\quad \quad (a)\\
+&amp;=E_{\epsilon\textasciitilde
+q(\epsilon)}[\nabla_{\theta}f_\theta(g_\theta(\epsilon))]\ \ \ (b)
+\end{flalign}
+\]</span> 从而 <span class="math display">\[
+\large \nabla_{\theta} L_{\theta} \approx \frac{1}{n}\sum_{i=1}^{n}
+\nabla_{\theta}f_\theta(g_\theta(\epsilon_i)),\epsilon_i\textasciitilde
+q(\epsilon)
+\]</span></p>
+<p>我们就成功实现了在采样的同时保持了梯度</p>
+<p>注意，在这个过程中最重要的一步转化就是： <span
+class="math display">\[
+\large L_\theta = E_{\epsilon\textasciitilde
+q(\epsilon)}[f_\theta(g_\theta(\epsilon))]
+\]</span> 它将随机性从参数<span
+class="math inline">\(\theta\)</span>转移到了内部无参数的<span
+class="math inline">\(\epsilon\)</span>上面，从而可以利用我们之前讨论过的对无参数分布（或者说无可变参数）而言成立的“期望的梯度等于梯度的期望”这一性质来处理</p>
+<h2 id="例子">例子</h2>
+<p>不妨就取<span
+class="math inline">\(p_\theta(z)\)</span>是一个正态分布，即 <span
+class="math display">\[
+\large p_\theta(z) = N(\mu_\theta,\sigma_\theta^2)
+\]</span> 那么<span
+class="math inline">\(q(\epsilon)\)</span>我们就取标准正态分布 <span
+class="math display">\[
+\large q(\epsilon) = N(0,1)
+\]</span> 那么显然有 <span class="math display">\[
+\large \sigma_\theta\epsilon+\mu_\theta \textasciitilde
+N(\mu_\theta,\sigma_\theta^2)
+\]</span> 所以我们就取 <span class="math display">\[
+\large g_\theta(\epsilon) = \sigma_\theta\epsilon+\mu_\theta
+\]</span> 最后有 <span class="math display">\[
+\large E_{z\textasciitilde N(\mu_\theta,\sigma_\theta^2)}[f_{\theta}(z)]
+=
+E_{\epsilon\textasciitilde
+N(0,1)}[f_\theta(\sigma_\theta\epsilon+\mu_\theta)]
+\]</span></p>
+<h1 id="离散情况的重参数处理">离散情况的重参数处理</h1>
+<p>上述过程处理的是分布为连续密度函数的情况，但我们也经常遇到离散分布的情况，这种该如何处理？
+为做区分，我们换一种写法： <span class="math display">\[
+\large L_{\theta} = E_{y\textasciitilde p_{\theta}(y)}[f_{\theta}(y)] =
+\sum_{y}p_\theta(y)f_\theta(y) \quad \quad (2)
+\]</span> 一般来说，此时<span
+class="math inline">\(y\)</span>是可枚举的，它在大部分情况下都对应了一个k分类问题，也就是说，<span
+class="math inline">\(y\)</span>可以表示为 <span class="math display">\[
+\large p_\theta(y) = softmax(o_1,o_2,...o_k)_y = \frac{1}{\sum
+e^{o_i}}e^{o_y}\quad \quad(3)
+\]</span> 其中<span
+class="math inline">\(o_i\)</span>一般就是模型的logits，它当然也是关于参数<span
+class="math inline">\(\theta\)</span>的函数</p>
+<p>还是同一个问题，<span
+class="math inline">\((2)\)</span>式直接用求和的形式是没法计算梯度的，我们还是得试试重参数方法。</p>
+<p>所以现在问题就变成了： &gt;找到一个合适的无参数分布<span
+class="math inline">\(q(\epsilon)\)</span>以及对应的变换<span
+class="math inline">\(g_\theta(\epsilon)\)</span>保证它服从<span
+class="math inline">\(p_\theta\)</span>这个分布</p>
+<p>事实上也确实已经有对应的成果了，它叫做</p>
+<h2 id="gumbel-max">Gumbel Max</h2>
+<p>取 <span class="math display">\[
+\large \epsilon\textasciitilde U(0,1)
+\]</span> 对应的<span
+class="math inline">\(q_{\theta}(\epsilon)\)</span>为： <span
+class="math display">\[
+\large argmax_i(log p_i-log(-log \epsilon_i))_{i=1}^{k}\quad \quad (4)
+\]</span> 这里第<span
+class="math inline">\(p_{\theta}(i)\)</span>简记为<span
+class="math inline">\(p_i\)</span>了 我们只需证明<span
+class="math inline">\((3)\)</span>式与<span
+class="math inline">\((4)\)</span>式是同一个分布，即<span
+class="math inline">\((4)\)</span>式输出数字<span
+class="math inline">\(i\)</span>的概率为<span
+class="math inline">\(p_i\)</span></p>
+<p>不失一般性地，我们考虑<span
+class="math inline">\((4)\)</span>式输出数字1的概率： 此时意味着<span
+class="math inline">\(log p_1-log(-log \epsilon_1)\)</span>是<span
+class="math inline">\(1-k\)</span>中最大的，即 <span
+class="math display">\[
+\large log p_1-log(-log \epsilon_1)\geq log p_i-log(-log \epsilon_i)
+,\forall i\in (1,k]
+\]</span> 得到 <span class="math display">\[
+\large \epsilon_i\leq \epsilon_1^{p_i/p_1}\leq 1,\forall i\in (1,k]
+\]</span> 又<span class="math inline">\(e_i\textasciitilde
+U(0,1)\)</span>,从而 <span class="math display">\[
+\large P(\epsilon_i\leq
+\epsilon_1^{p_i/p_1})=\epsilon_1^{p_i/p_1},\forall i\in (1,k]
+\]</span> 从而<span class="math inline">\((4)\)</span>式输出1的概率为
+<span class="math display">\[
+\large P(\epsilon_2\leq \epsilon_1^{p_2/p_1},\epsilon_3\leq
+\epsilon_1^{p_3/p_1},...\epsilon_k\leq \epsilon_1^{p_k/p_1}) =
+\prod_{i=2}^{k}\epsilon_1^{p_i/p_1}=\epsilon_1^{(1-p_1)/p_1}
+\]</span> 对<span
+class="math inline">\(\epsilon_1\)</span>的所有情况求个平均，得到 <span
+class="math display">\[
+\large \int_0^1 \epsilon_1^{(1-p_1)/p_1}d\epsilon_1 = p_1
+\]</span> 这就是<span
+class="math inline">\((4)\)</span>式输出1的概率，它恰好为<span
+class="math inline">\(p_1\)</span> 从而我们证明了<span
+class="math inline">\((4)\)</span>式与<span
+class="math inline">\((3)\)</span>式确实是同分布，所以我们就成功找到了合理的无参数分布<span
+class="math inline">\(q(\epsilon)\)</span>以及对应的变换<span
+class="math inline">\(g_\theta(\epsilon)\)</span> <span
+class="math inline">\(\square\)</span>
+那么所有过程似乎到这里就圆满结束了。</p>
+<p><strong>但是</strong>！但是，这里还是有点问题：<font color='red'>argmax这个运算本身也是无法求导的...</font>
+也就是说，我们将求梯度运算转移到了<span
+class="math inline">\(argmax\)</span>运算上面，结果它还是没有办法求梯度？
+不过没关系，这一步其实并不是很难处理。我们知道<span
+class="math inline">\(argmax\)</span>其实可以扩展成<span
+class="math inline">\(one\_hot(argmax)\)</span>,而后者的一个光滑近似就是<span
+class="math inline">\(softmax\)</span>:对于这一点，我相信接触过蒸馏的同学肯定是很清楚的，我们只需要调整蒸馏的温度就能使得<span
+class="math inline">\(softmax\)</span>无限趋近于<span
+class="math inline">\(ont\_hot\)</span> 而<span
+class="math inline">\(softmax\)</span>显然是可以求梯度的，我们就顺利解决了这个遗留的问题。
+这种策略被称为 ## Gumbel Softmax</p>
+<p>具体来说，我们的<span
+class="math inline">\(g_\theta(\epsilon)\)</span>要改成： <span
+class="math display">\[
+\large softmax_i((log p_i-log(-log \epsilon_i))/\tau)_{i=1}^{k}\quad
+\quad (5)
+\]</span> 其中<span
+class="math inline">\(\tau\)</span>就是蒸馏的温度，当<span
+class="math inline">\(\tau\rightarrow 0\)</span>的时候，<span
+class="math inline">\(softmax\)</span>就可以看成<span
+class="math inline">\(ont\_hot\)</span>,当然此时梯度消失现象也会很严重。
+由此我们也可以得到训练策略：对参数<span
+class="math inline">\(\tau\)</span>进行退火，最后得到接近于<span
+class="math inline">\(ont\_hot\)</span>形式对应的结果。常见的一个退火策略为：
+<span class="math display">\[
+\large \tau_p = \tau_0(\tau_p/\tau_0)^{p/P}
+\]</span> 其中<span class="math inline">\(\tau_p\)</span>是第<span
+class="math inline">\(p\)</span>次训练的温度，<span
+class="math inline">\(\tau_0\)</span>是初始温度，<span
+class="math inline">\(P\)</span>是总轮数。</p>
+<hr />
+<p>总结一下，对于总体的<span
+class="math inline">\(k\)</span>个情况，我们从0到1的均匀分布中取<span
+class="math inline">\(k\)</span>个值，利用Gumbel softmax得到一个<span
+class="math inline">\(k\)</span>维向量<span
+class="math inline">\(\tilde{p}\)</span>, 那么 <span
+class="math display">\[
+\sum_y \tilde{p}_yf_\theta(y)
+\]</span> 就是<span
+class="math inline">\(L_\theta\)</span>的一个良好估计，并且它成功保留了梯度信息</p>
+<p>需要指出的是，Gumbel Max是原式的等价形式，但是Gumbel
+Softmax并不是，它是Gumbel Max的一个光滑近似，当<span
+class="math inline">\(\tau\)</span>足够小的时候，它可以近似看成Gumbel
+Max</p>
+<h1 id="总结">总结</h1>
+<p>以上就是重参数在连续和离散两个场景的应用了，它最初也是最多的应用应该是在VAE里面，我以后应该也会接触，到时候也许会对这篇文章加以补充。</p>
 
                 
               </div>
@@ -527,7 +557,7 @@ class="math inline">\(\square\)</span></p>
     
       <span class="category-chain">
         
-  <a href="/categories/%E7%BB%84%E5%90%88%E6%95%B0%E5%AD%A6/" class="category-chain-item">组合数学</a>
+  <a href="/categories/Machine-Learning/" class="category-chain-item">Machine Learning</a>
   
   
 
@@ -542,11 +572,7 @@ class="math inline">\(\square\)</span></p>
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/%E6%95%B0%E5%AD%A6/" class="print-no-link">#数学</a>
-      
-        <a href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" class="print-no-link">#学习笔记</a>
-      
-        <a href="/tags/%E7%BB%84%E5%90%88%E6%95%B0%E5%AD%A6/" class="print-no-link">#组合数学</a>
+        <a href="/tags/Machine-Learning/" class="print-no-link">#Machine Learning</a>
       
     </div>
   
@@ -558,8 +584,8 @@ class="math inline">\(\square\)</span></p>
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Dilworth 定理</div>
-      <div>https://sophilex.github.io/2024/05/25/定理/</div>
+      <div>Reparameterization-Trick</div>
+      <div>https://sophilex.github.io/2024/06/11/Reparameterization-Trick/</div>
     </div>
     <div class="license-meta">
       
@@ -571,7 +597,7 @@ class="math inline">\(\square\)</span></p>
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2024年5月25日</div>
+          <div>2024年6月11日</div>
         </div>
       
       
@@ -603,18 +629,12 @@ class="math inline">\(\square\)</span></p>
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2024/06/11/Reparameterization-Trick/" title="Reparameterization-Trick">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Reparameterization-Trick</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2024/05/11/%E6%9D%82%E6%83%B3-%E6%8A%BD%E5%A5%96%E9%97%AE%E9%A2%98%E5%B9%B3%E5%87%A1%E8%A7%A3/" title="杂想-抽奖问题平凡解">
-                        <span class="hidden-mobile">杂想-抽奖问题平凡解</span>
+                      <a href="/2024/05/25/%E5%AE%9A%E7%90%86/" title="Dilworth 定理">
+                        <span class="hidden-mobile">Dilworth 定理</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
