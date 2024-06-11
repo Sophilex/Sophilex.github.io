@@ -27,7 +27,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://sophilex.github.io/img/j7.jpg">
 <meta property="article:published_time" content="2024-06-11T12:54:19.000Z">
-<meta property="article:modified_time" content="2024-06-11T13:50:27.150Z">
+<meta property="article:modified_time" content="2024-06-11T13:52:12.258Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="Machine Learning">
 <meta name="twitter:card" content="summary_large_image">
@@ -536,9 +536,9 @@ class="math inline">\(L_\theta\)</span>的一个良好估计，并且它成功�
 Softmax并不是，它是Gumbel Max的一个光滑近似，当<span
 class="math inline">\(\tau\)</span>足够小的时候，它可以近似看成Gumbel
 Max</p>
-<p>顺便提一嘴这个东西为啥叫<strong>Gumbel</strong>
-Max/Softmax，我们仔细观察<span class="math inline">\((5)\)</span>式：
-<span class="math display">\[
+<p>顺便提一嘴这个东西为啥叫<strong>Gumbel</strong> Max/Softmax:</p>
+<p>我们仔细观察<span class="math inline">\((5)\)</span>式： <span
+class="math display">\[
 \large softmax_i((log p_i-log(-log \epsilon_i))/\tau)_{i=1}^{k}
 \]</span> 按照原本的思路，我们可以先从均匀分布里采样<span
 class="math inline">\(\epsilon\)</span>，然后再做log运算，再做log运算，再与<span
