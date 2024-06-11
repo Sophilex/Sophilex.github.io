@@ -27,7 +27,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://sophilex.github.io/img/j7.jpg">
 <meta property="article:published_time" content="2024-06-11T12:54:19.000Z">
-<meta property="article:modified_time" content="2024-06-11T13:11:56.973Z">
+<meta property="article:modified_time" content="2024-06-11T13:50:27.150Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="Machine Learning">
 <meta name="twitter:card" content="summary_large_image">
@@ -259,7 +259,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.1k 字
+          2.5k 字
         
       </span>
     
@@ -270,7 +270,7 @@
         
         
         
-          18 分钟
+          21 分钟
         
       </span>
     
@@ -501,6 +501,7 @@ class="math inline">\(softmax\)</span>无限趋近于<span
 class="math inline">\(ont\_hot\)</span> 而<span
 class="math inline">\(softmax\)</span>显然是可以求梯度的，我们就顺利解决了这个遗留的问题。
 这种策略被称为</p>
+<p>​</p>
 <h2 id="gumbel-softmax">Gumbel Softmax</h2>
 <p>具体来说，我们的<span
 class="math inline">\(g_\theta(\epsilon)\)</span>要改成： <span
@@ -535,6 +536,51 @@ class="math inline">\(L_\theta\)</span>的一个良好估计，并且它成功�
 Softmax并不是，它是Gumbel Max的一个光滑近似，当<span
 class="math inline">\(\tau\)</span>足够小的时候，它可以近似看成Gumbel
 Max</p>
+<p>顺便提一嘴这个东西为啥叫<strong>Gumbel</strong>
+Max/Softmax，我们仔细观察<span class="math inline">\((5)\)</span>式：
+<span class="math display">\[
+\large softmax_i((log p_i-log(-log \epsilon_i))/\tau)_{i=1}^{k}
+\]</span> 按照原本的思路，我们可以先从均匀分布里采样<span
+class="math inline">\(\epsilon\)</span>，然后再做log运算，再做log运算，再与<span
+class="math inline">\(logp_i\)</span>做差，不过实际上实际从一个<span
+class="math inline">\(-log(-log
+\epsilon)\)</span>服从的分布里直接采样也是完全OK的，那我们就来看看这个分布长什么样子：
+记 <span class="math display">\[
+x = -log(-log \epsilon)
+\]</span> 那么 <span class="math display">\[
+F_X(x) = P_X(X\leq x) = P_\epsilon(-log(-log \epsilon)\leq x) =
+P_\epsilon(e^{-e^{-x}}) = F_\epsilon(e^{-e^{-x}})
+\]</span> 从而 <span class="math display">\[
+F_X(x) = exp(-exp(-x))
+\]</span>
+这就是这个分布的累积分布函数，它就被称为<strong>Gumbel分布</strong>。实际上Gumbel分布还带有另外两个参数
+<span class="math display">\[
+F_X(x,\mu,\beta) = exp(-exp(-\frac{x-\mu}{\beta}))
+\]</span> 也就是说这里是<span
+class="math inline">\(\mu=\beta=0\)</span>的特殊情况。不过这一点不必细讲，感兴趣的读者可以再去了解一下。</p>
+<p>最后讲一个实现细节： 在求原分布<span
+class="math inline">\(q_\theta\)</span>的时候，我们需要从<span
+class="math inline">\(\{o_i\}\)</span>出发做softmax得到<span
+class="math inline">\(\{p_i\}\)</span>,但是实际上<span
+class="math inline">\((5)\)</span>式可以直接替换为 <span
+class="math display">\[
+\large softmax_i((o_i-log(-log \epsilon_i))/\tau)_{i=1}^{k}
+\]</span> 那么我们就不必去做softmax了 至于证明其实也很简单： <span
+class="math display">\[
+\large log p_i = log(softmax(o_i)) = log(\frac{e^{o_i}}{\sum_j e^{o_j}})
+\]</span> 从而 <span class="math display">\[
+logp_i = o_i-C
+\]</span> 从而 <span class="math display">\[
+softmax((logp_i+g_i)/\tau) = \frac{e^{(logp_i+g_i)/\tau}}{\sum_j
+e^{(logp_j+g_j)/\tau}} = \frac{e^{(o_i-C+g_i)/\tau}}{\sum_j
+e^{(o_j-C+g_j)/\tau}}
+\]</span> 显然可以将常数<span
+class="math inline">\(C\)</span>对应的部分提出来 <span
+class="math display">\[
+= \frac{e^{(o_i+g_i)/\tau}}{\sum_j e^{(o_j+g_j)/\tau}} =
+softmax((o_i+g_i)/\tau)
+\]</span> 这里<span
+class="math inline">\(g_i\)</span>就指之前讲的Gumbel分布</p>
 <h1 id="总结">总结</h1>
 <p>以上就是重参数在连续和离散两个场景的应用了，它最初也是最多的应用应该是在VAE里面，我以后应该也会接触，到时候也许会对这篇文章加以补充。</p>
 
