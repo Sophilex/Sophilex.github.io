@@ -2,6 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://sophilex.github.io/posts/3917039e/</loc>
+    
+    <lastmod>2024-12-31</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://sophilex.github.io/posts/65344c49/</loc>
     
     <lastmod>2024-12-31</lastmod>
@@ -302,6 +311,20 @@
     <priority>0.2</priority>
   </url>
   
+  <url>
+    <loc>https://sophilex.github.io/tags/LLM/</loc>
+    <lastmod>2024-12-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://sophilex.github.io/tags/RL/</loc>
+    <lastmod>2024-12-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
 
   
   <url>
@@ -362,6 +385,13 @@
   
   <url>
     <loc>https://sophilex.github.io/categories/%E9%9A%8F%E7%AC%94/</loc>
+    <lastmod>2024-12-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://sophilex.github.io/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/</loc>
     <lastmod>2024-12-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
