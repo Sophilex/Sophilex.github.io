@@ -18,27 +18,27 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="在NGCF上的一些改进，简化了模型的基础上提高了推荐的性能">
+    <meta name="description" content="第一段实习还是有必要记录一下滴~">
 <meta property="og:type" content="article">
-<meta property="og:title" content="LightGCN:简化和增强图卷积网络的推荐">
-<meta property="og:url" content="https://sophilex.github.io/posts/92a96c01/index.html">
+<meta property="og:title" content="字节实习总结">
+<meta property="og:url" content="https://sophilex.github.io/posts/65344c49/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="在NGCF上的一些改进，简化了模型的基础上提高了推荐的性能">
+<meta property="og:description" content="第一段实习还是有必要记录一下滴~">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/j6.jpg">
-<meta property="article:published_time" content="2024-04-01T01:59:20.000Z">
-<meta property="article:modified_time" content="2024-12-31T04:17:26.021Z">
+<meta property="og:image" content="https://sophilex.github.io/img/wlq1.jpg">
+<meta property="article:published_time" content="2024-12-31T04:19:47.000Z">
+<meta property="article:modified_time" content="2024-12-31T17:20:22.013Z">
 <meta property="article:author" content="Sophilex">
-<meta property="article:tag" content="学习笔记">
-<meta property="article:tag" content="Machine Learning">
+<meta property="article:tag" content="随笔">
+<meta property="article:tag" content="总结">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/j6.jpg">
+<meta name="twitter:image" content="https://sophilex.github.io/img/wlq1.jpg">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>LightGCN:简化和增强图卷积网络的推荐 - Sophilex‘s Blog</title>
+  <title>字节实习总结 - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -238,13 +238,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/j6.jpg') no-repeat center center; background-size: cover;">
+     style="background: url('/img/wlq1.jpg') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="LightGCN:简化和增强图卷积网络的推荐"></span>
+            <span id="subtitle" data-typed-text="字节实习总结"></span>
           
         </div>
 
@@ -260,8 +260,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2024-04-01 09:59" pubdate>
-          2024年4月1日 上午
+        <time datetime="2024-12-31 12:19" pubdate>
+          2024年12月31日 中午
         </time>
       </span>
     
@@ -272,7 +272,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.5k 字
+          557 字
         
       </span>
     
@@ -283,7 +283,7 @@
         
         
         
-          22 分钟
+          5 分钟
         
       </span>
     
@@ -328,168 +328,22 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">LightGCN:简化和增强图卷积网络的推荐</h1>
+            <h1 id="seo-header">字节实习总结</h1>
             
             
               <div class="markdown-body">
                 
-                <h1
-id="lightgcn简化和增强图卷积网络的推荐">LightGCN:简化和增强图卷积网络的推荐</h1>
-<h2 id="abstract">Abstract</h2>
-<p>图卷积网络 (GCN)
-已成为协同过滤的最新技术。然而，它推荐有效性的原因并没有得到很好的理解。该工作还发现
-GCN
-中最常见的两种设计——<strong>特征变换和非线性激活</strong>——对协同过滤的性能贡献不大，并且还增加了训练的难度，降低了推荐性能。
-在这项工作中，作者提出了一种新的模型LightGCN，只包含GCN中最基本的组件——<strong>邻域聚合</strong>。具体来说，LightGCN
-通过在用户-项目交互图上线性传播来学习用户和项目嵌入，并使用所有层学习到的嵌入的<strong>加权和</strong>作为最终嵌入。这种简单、线性和整洁的模型更容易实现和训练，与同一个组之前提出的NGCF相比，有明显的改进（平均约
-16.0% 的相对改进）。最后对LightGCN的合理性进行了分析。
-本文的主要贡献：</p>
-<ul>
-<li>通过实验说明GCN中的非线性激活以及特征变换对协同过滤没有积极影响<br />
-</li>
-<li>提出了LightGCN，结构更加简洁，并且性能更好<br />
-</li>
-<li>对LightGCN的合理性进行分析</li>
-</ul>
-<h2 id="ngcf">NGCF</h2>
-<p>先简单介绍一下NGCF。
-NGCF主张在协同过滤中加入对user-item对信息的编码，而不仅仅是只考虑user，item的emmbedding，从而能够获得更多信息，进而进行推荐。实际场景中user-item对的信息很多，所以它借鉴了GCN中的领域聚合的思想，仿照GCN的结构，每一层聚合周围邻居的信息，从而在多层之后实现对多跳邻居的信息的收集。
-具体来说，每一层的信息传播公式为 <span class="math display">\[
-m_{u\leftarrow
-i}^{(l)}=\frac{1}{\sqrt{|N_u||N_i|}}(W_1^{(l)}e_i^{(l-1)}+W_2^{(l)}(e_i^{(l-1)}⊙e_u^{(l-1)}))
-\]</span> <span class="math display">\[
-m_{u\leftarrow u}^{(l)}=W_1^{(l)}e_u^{(l-1)}
-\]</span></p>
-<p>这是对user而言的，item的传播公式同理 其中<span
-class="math inline">\(m_{u\leftarrow i}\)</span>表示<span
-class="math inline">\(item_i\)</span>与<span
-class="math inline">\(user_u\)</span>之间的协作信息，<span
-class="math inline">\(\frac{1}{\sqrt{|N_u||N_i|}}\)</span>借鉴了GCN的思路，不过作者在文中把它理解为信息的衰减系数，也就是当前信息应该随着层的传播而比重变小。考虑到自己到自己的信息不用衰减，所以第二个式子没有乘上对称归一化的系数。<span
-class="math inline">\(W_1,W_2\)</span>是可训练系数，<span
-class="math inline">\(e_i,e_u\)</span>就是item和user的当前特征embedding，最后加了一个<span
-class="math inline">\(e_i⊙e_u\)</span>,也就是两者的哈达玛积，用来编码两者的信息交互（有点像attention？）
-最后得到每一层的新的特征表示： <span class="math display">\[
-e_u^{(l)} = LeakyReLU(m_{u\leftarrow u}^{(l)}+\sum_{i\in
-N_u}m_{u\leftarrow i}^{(l)})
-\]</span>
-这是NGCF的基本结构。首先在embedding层获得每一个user，item的embedding，这里展示了<span
-class="math inline">\(e_{u_1}^{(0)}\)</span>以及<span
-class="math inline">\(e_{i_4}^{(0)}\)</span>的embedding。然后逐层传播并更新每一层的embedding，在最后一层将每一层的embedding进行<strong>拼接</strong>，然后拿去做预测。
-这里拼接应该也是为了进行特征增强，不过后面LightGCN也还是改掉了。
-<img src="https://s2.loli.net/2024/03/28/HnMszK8L3F6bJag.png" srcset="/img/loadings.gif" lazyload alt="image.png|475" style="zoom:67%;" /></p>
-<h2 id="lightgcn">LightGCN</h2>
-<p>可以看到NGCF其实大量借鉴了GCN的结构，但是其中也有一些操作是毫无理由就搬上来了。所以作者对其进行了大量的消融分析，包括对非线性激活和特征变化结构的质疑。
-作者建立了四个模型进行比较，分别是</p>
-<ul>
-<li><p>NGCF,也就是原模型</p></li>
-<li><p>NGCF-n 去掉了特征变换，也就是上一节中的<span
-class="math inline">\(W_1,W_2\)</span>参数矩阵的NGCF</p></li>
-<li><p>NGCF-f 去掉了非线性激活的NGCF</p></li>
-<li><p>NGCF-fn 去掉了特征变换以及非线性激活的NGCF</p>
-<p>然后在<span class="math inline">\(Gowalla\)</span>和<span
-class="math inline">\(Amazon-Book\)</span>数据集上进行测试，得到结果如下：
-<img src="https://s2.loli.net/2024/03/28/fIGPmyxuSr2KU1O.png" srcset="/img/loadings.gif" lazyload alt="image.png|850" style="zoom:150%;" />
-可以看出NGCF-fn的性能是远好于NGCF的，作者将这一点归因于特征变换以及非线性激活操作加大了训练的难度，从而提出对其进行简化，得到如下的传播公式
-<span class="math display">\[
-e_{u}^{(k+1)}=\sum_{i\in N_u}\frac{1}{\sqrt{|N_u||N_i|}}e_i^{(k+1)}\\
-e_{i}^{(k+1)}=\sum_{u\in N_i}\frac{1}{\sqrt{|N_u||N_i|}}e_u^{(k+1)}
-\]</span> 在最后一层进行每一层特征的加权求和得到最终特征 <span
-class="math display">\[
-e_u=\sum_{k=0}^{K}\alpha_ke_u^{(k)}\\
-e_i=\sum_{k=0}^{K}\alpha_ke_i^{(k)}
-\]</span> 最终得到user-item项目的最终得分为 <span
-class="math display">\[
-\hat{y}_{ui}=e_u^{T}e_i
-\]</span> 上面的式子不方便实现，我们将其转换为矩阵形式 假设user有<span
-class="math inline">\(N\)</span>个，item有<span
-class="math inline">\(M\)</span>个，每一个user/item的特征长度为<span
-class="math inline">\(T\)</span>,那么定义邻接矩阵<span
-class="math inline">\(A\in
-R^{(N+M)\times(N+M)}\)</span>表示user-item的邻接矩阵，矩阵<span
-class="math inline">\(E\in R^{(N+M)\times
-T}\)</span>表示每一个user/item的embedding，显然<span
-class="math inline">\(E^{0}\)</span>就表示了大家的初始embedding。再定义矩阵<span
-class="math inline">\(D\in R^{(N+M)\times(N+M)}\)</span>表示度数矩阵。
-从而得到传播公式为 <span class="math display">\[
-E^{k+1} = (D^{-\frac{1}{2}}AD^{-\frac{1}{2}})E^{k}
-\]</span> 最终每一个user/item的embedding为 <span class="math display">\[
-E =
-\alpha_0E^{0}+\alpha_1E^{1}+....+\alpha_KE^{K}=\alpha_0E^{0}+\alpha_1\tilde{A}E^{0}+....+\alpha_K\tilde{A}^{K}E^{0}=\sum_{i=0}^{K}\alpha_i\tilde{A}^iE^0
-\]</span> 其中<span
-class="math inline">\(\tilde{A}=D^{-\frac{1}{2}}AD^{-\frac{1}{2}}\)</span></p></li>
-</ul>
-<hr />
-<p>与NGCF的式子进行对比，可以发现LightGCN总共去掉了如下几个构造：</p>
-<ul>
-<li><strong>特征变换，非线性激活</strong></li>
-<li><strong>自连接</strong></li>
-<li><strong>user-item的哈达玛积</strong>
-对于哈达玛积的移除作者没有详细介绍，只是在后面实验时提了一嘴LightGCN效果比NGCF-fn效果更好，所以可能也没啥用，就移掉了。
-除此之外，在实现细节上，LightGCN相比GCN还有如下变化</li>
-<li><strong>在最后一层将每一层特征的concat操作变成了加权求和</strong></li>
-<li><strong>去掉了每一层的dropout操作</strong></li>
-</ul>
-<h2 id="模型分析">模型分析</h2>
-<p>分析一下每一个操作的合理性<br />
-### 加权求和与去除自连接<br />
-作者去除自连接的原因与最后一步的加权求和有关系。注意到最后的特征表示为
-<span class="math display">\[
-E =\sum_{i=0}^{K}\alpha_i\tilde{A}^iE^0
-\]</span>
-这与之前的一些工作具有相同的形式，所以作者指出该模型同样可以享用它们的优点
-#### SGCN<br />
-这是之前的一篇简化GCN的工作，它同样是去除了非线性激活函数，并且将每一层的权重矩阵简化成了一个，其传播公式为
-<span class="math display">\[
-E^{(k+1)}=(D+I)^{-\frac{1}{2}}(A+I)(D+I)^{-\frac{1}{2}}E^{k}
-\]</span>
-它包含了自连接操作，我们将其在式子中提取出来了，然后进行化简，得到 <span
-class="math display">\[
-E^{(k)}=(\tilde{A}+(D+I)^{-1})E^{k-1}=(\tilde{A}+(D+I)^{-1})^KE^{0}=(\tilde{A}+\tilde{D})^KE^0
-\]</span> 其中 <span class="math display">\[
-\tilde{A}=D^{-\frac{1}{2}}AD^{-\frac{1}{2}},\tilde{D}=(D+I)^{-1}
-\]</span> 对前面的系数二项展开，得到 <span class="math display">\[
-E^{(k)}=\binom{K}{0}\tilde{D}^KE^{0}+\binom{K}{1}\tilde{D}^{K-1}AE^{0}+...+\binom{K}{K}A^KE^{0}=\sum_{i=0}^{K}\binom{K}{i}\tilde{D}^{K-i}\tilde{A}^iE^0
-\]</span>
-没错，与LightGCN的式子相比还多了一个对角矩阵，形式上是不一样的。原文是用另一个方法推导的，省略了<span
-class="math inline">\((D+I)^{-\frac{1}{2}}\)</span>,理由是它只缩放了embedding，但是个人认为每一维的缩放系数不同，不能直接这样忽略。这里存疑。
-总之作者在这里得到结论是两个模型在结构上相同，所以没有添加自环也没有关系，实际效果上已经添加了。
-#### APPNP<br />
-这个工作宣称可以在没有过度平滑的风险的情况下传播远程，其传播公式为 <span
-class="math display">\[
-E^{K}=\beta E^0+(1-\beta)\tilde{A}E^{K-1}
-\]</span> 显然这是一个可以求通项的式子，化简得到 <span
-class="math display">\[
-E^{K}=\beta E^0+(1-\beta)\tilde{A}E^{K-1}\\
-=\beta E^0+\beta(1-\beta)\tilde{A}E^{0}+(1-\beta)^2\tilde{A}^2E^{K-2}\\
-=\beta
-E^0+\beta(1-\beta)\tilde{A}E^{0}+(1-\beta)^2\tilde{A}^2E^{0}+...+(1-\beta)^K\tilde{A}^KE^0
-\]</span></p>
-<p>注意到该式子与LightGCN的传播公式也就只有系数差别，所以LightGCN在减少过拟合方面有较好的效果，后面的实验也佐证了这一点</p>
-<h3 id="去除哈达玛积">去除哈达玛积</h3>
-<p>作者引入它是为了强调user-item的交互，有点类似attention，但是个人感觉模型已经是在gcn的基础上做改进了，而gcn的一个最大特点就是逐层聚合邻域信息，这一点本身就已经在实现信息的交互了，所以可能这也是在LightGCN中将其移除的原因吧</p>
-<h3 id="去除dropout">去除dropout</h3>
-<p>注意到LightGCN整个模型其实已经只有初始化embedding的一些矩阵参数了，每一层传播的时候是没有参数的了，所以也没有做dropout的必要了，<span
-class="math inline">\(L_2\)</span>正则化就足够保证避免过拟合了</p>
-<h3 id="嵌入的平滑性">嵌入的平滑性</h3>
-<p>我们考虑两个共享同一个item的节点的信息传递</p>
-<p><span class="math display">\[
-e_u^{(2)}=\sum_{i\in N_u}\frac{1}{\sqrt{|N_u||N_i|}}e_i^{(1)}=\sum_{i\in
-N_u}\frac{1}{|N_i|}\sum_{v\in N_i}\frac{1}{\sqrt{|N_u||N_v|}}e_v^{(0)}
-\]</span> 注意到<span class="math inline">\(user_v\)</span>与<span
-class="math inline">\(user_u\)</span>之间的信息传递的系数为 <span
-class="math display">\[
-c_{v\rightarrow u}\frac{1}{\sqrt{|N_u||N_v|}}\sum_{i\in N_u\cap
-N_v}\frac{1}{|N_i|}
-\]</span> 这一系数符合很多直观的想法，二阶邻居 v 对 u 的影响由 1)
-共同交互项目的数量、越大； 2)
-共同交互项目的流行程度越低（即更能指示用户个性化偏好）越大； 3) v
-的活动，越大越活跃。 这种可解释性很好地满足了 CF 在测量用户相似度
-中的假设，并证明了 LightGCN 的合理性。</p>
-<h2 id="留的坑">留的坑</h2>
-<p>作者在文末指出对<span
-class="math inline">\(\alpha_i\)</span>的个性化调节，即稀疏用户可能需要更多来自高阶邻居的信号，而活动用户只需要更少</p>
-<h2 id="总结">总结</h2>
-<p>总体来说，LightGCN在NGCF的基础上，指出特征变换与非线性激活在推荐模型上的冗余性，充分简化了其模型结构，并且提高了性能。但是这是建立在推荐的场景下，原始的GCN是用于节点分类的，此时每一个节点包含更多信息，而不是只有id信息，所以还是需要非线性激活与特征变换的。</p>
+                <h1 id="字节实习总结">字节实习总结</h1>
+<p>说起来，去字节实习还是一件非常巧合的事情。</p>
+<p>这学期，也就是大四上，按照要求我需要找一家专业对口的公司完成实习任务。其实本来想的是在学校附近随便找一家公司混混就可以了，事实上大部分同学也都是这么做的。但是出乎意料的是，学校周围找了几家居然连收实习生的打算都没有。。。于是我开始在boss直聘上找机会。</p>
+<p>不过既然已经上了boss直聘，自然会尝试去投投看一些有含金量的岗位。说来有趣，因为骑行川藏线的计划，我对成都这座陌生的城市有了一丝向往，于是很儿戏地在boss上投了几个成都的岗位，当然当时主要还是希望在魔都/杭州等城市实习的，毕竟方便一点。而刚好字节在那段时间开了一个prompt实习岗，我很巧合地投进去了。</p>
+<p>最终愿意让我面试的有两家公司，一个是字节的prompt岗，还有一个是杭州一家初创公司，叫百应科技的算法岗，主要是推荐相关。非常幸运，两家的面试我最终都过了，不过在抉择的时候我其实也还是有点纠结的。因为我的研究生方向是推荐系统，事实上跟百应的实习岗位比较相关，那边的业务leader和HRBP也认为我与他们非常契合。但也许是因为本科只是个双非的缘故，我对title这件事，内心其实还是看的比较重的，当然也不可避免的也带有一些虚荣心的元素。总之，虽然字节的实习岗只是写prompt，但一来它是大厂，二来对当时什么也不懂的我来说，prompt也是一个足够新奇，值得我去探索的事物了。所以我选了字节。</p>
+<p>于是我非常随性地投的一个岗，成了我接下来三个月的去处。</p>
+<p><img src="https://s2.loli.net/2024/12/31/dW76NgP8TwbB1qY.jpg" srcset="/img/loadings.gif" lazyload ></p>
+<center>
+<font size="2" face="黑体">第一次离开南方，在中西部长住。</font>
+</center>
+<p>待续...</p>
 
                 
               </div>
@@ -508,7 +362,7 @@ class="math inline">\(\alpha_i\)</span>的个性化调节，即稀疏用户可�
     
       <span class="category-chain">
         
-  <a href="/categories/Machine-Learning/" class="category-chain-item">Machine Learning</a>
+  <a href="/categories/%E9%9A%8F%E7%AC%94/" class="category-chain-item">随笔</a>
   
   
 
@@ -523,9 +377,9 @@ class="math inline">\(\alpha_i\)</span>的个性化调节，即稀疏用户可�
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" class="print-no-link">#学习笔记</a>
+        <a href="/tags/%E9%9A%8F%E7%AC%94/" class="print-no-link">#随笔</a>
       
-        <a href="/tags/Machine-Learning/" class="print-no-link">#Machine Learning</a>
+        <a href="/tags/%E6%80%BB%E7%BB%93/" class="print-no-link">#总结</a>
       
     </div>
   
@@ -537,8 +391,8 @@ class="math inline">\(\alpha_i\)</span>的个性化调节，即稀疏用户可�
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>LightGCN:简化和增强图卷积网络的推荐</div>
-      <div>https://sophilex.github.io/posts/92a96c01/</div>
+      <div>字节实习总结</div>
+      <div>https://sophilex.github.io/posts/65344c49/</div>
     </div>
     <div class="license-meta">
       
@@ -550,7 +404,7 @@ class="math inline">\(\alpha_i\)</span>的个性化调节，即稀疏用户可�
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2024年4月1日</div>
+          <div>2024年12月31日</div>
         </div>
       
       
@@ -582,18 +436,12 @@ class="math inline">\(\alpha_i\)</span>的个性化调节，即稀疏用户可�
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/19a8f88a/" title="杂想-抽奖问题平凡解">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">杂想-抽奖问题平凡解</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/8370aead/" title="Attention-Machanism">
-                        <span class="hidden-mobile">Attention-Machanism</span>
+                      <a href="/posts/5d8a3079/" title="SGD收敛性学习笔记">
+                        <span class="hidden-mobile">SGD收敛性学习笔记</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
