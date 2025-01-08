@@ -4,6 +4,33 @@
   
   
   <entry>
+    <title>服务器炼丹手册</title>
+    <link href="/posts/de558e84/"/>
+    <url>/posts/de558e84/</url>
+    
+    <content type="html"><![CDATA[<h1 id="服务器炼丹手册">服务器炼丹手册</h1><p>从0开始完成ssh连接以及各种配置，边学边补充</p><h2 id="连接服务器">连接服务器</h2><h3 id="ssh远程连接服务器">ssh远程连接服务器</h3><ol type="1"><li>vscode安装Remote-SSH扩展</li><li>打开用户目录下配置文件<code>C:\Users\username\.ssh\config</code></li><li>在其中添加以下内容（如果之前有内容的话写在下面即可，不用覆盖）</li></ol><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs xml">Host <span class="hljs-tag">&lt;<span class="hljs-name">NickName</span>&gt;</span><br><br>    HostName  <span class="hljs-tag">&lt;<span class="hljs-name">服务器IP地址</span>&gt;</span><br><br>    User <span class="hljs-tag">&lt;<span class="hljs-name">username</span>&gt;</span><br></code></pre></td></tr></table></figure><p><NickName>: 该连接的标识，用于与其它连接区分 <服务器IP地址>:你所要连接的服务器的IP地址 <username>: 你在服务器中的账号用户名</p><p>例如</p><figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs crmsh">Host Alephia<br><br>    HostName  <span class="hljs-number">10.1</span>.<span class="hljs-number">1.1</span><br><br>    <span class="hljs-keyword">User</span> <span class="hljs-title">hhh</span><br></code></pre></td></tr></table></figure><p>这之后点击vscode左侧远程资源管理器选项，可以看到已经出现刚刚写入的NickName了<img src="https://s2.loli.net/2025/01/08/fDGLmj2nSs4JcR1.png"alt="image.png" /></p><p>右键点击连接，会让你输入服务器user的密码，正确输入之后即可连接成功，此时你在vscode界面左下角可以看到绿色的SSH:NiceName字样</p><figure><img src="https://s2.loli.net/2025/01/08/f6TPGLN7KrQcXmq.png"alt="image.png" /><figcaption aria-hidden="true">image.png</figcaption></figure><p>当然这个过程可能会遇到一些问题 #### 学校服务器IP无法ping通</p><p>有些服务器IP想要ping通需要使用学校的VPN，一般每个学校都会给详细的连接教程这里以ecnu为例：</p><p>首先下载vpn工具 打开https://eoffice.ecnu.edu.cn/4e/ba/c6178a85690/page.htm之后，选择对应平台，版本安装即可，安装之后打开效果如下 <imgsrc="https://s2.loli.net/2025/01/08/YckjgCn7ZHV1eKE.png"alt="image.png" /></p><p>输入连接vpn的地址之后填入账号密码即可连接， <imgsrc="https://s2.loli.net/2025/01/08/4VR7td8horuDSgH.png"alt="image.png" /></p><p>有时候可能会出现连接一小会之后VPN自动断开的情况，可以检查本地梯子，wifi稳定性等等。</p><h3 id="ssh免密连接">ssh免密连接</h3><p>如果经常需要登录服务器的话，免密连接可以提供便捷性，否则每次登录都要输入user密码</p><ol type="1"><li>首先使用命令<code>ssh-keygen -t rsa</code>，之后会在<code>C:\Users\username\.ssh</code>下生成<code>id_rsa</code>以及<code>id_rsa.pub</code>，对应的是私钥和公钥。</li><li>在.ssh文件夹下打开gitbash，输入命令<code>ssh-copy-id host别名</code>，这里host别名就是config文件中提及的标识</li><li>此时已经可以ssh登录服务器了。在<code>powershell</code>中使用命令<code>ssh  host别名</code>即可</li><li>在config文件中追加<code>IdentityFile ~/.ssh/id_rsa</code>，类似如下形式<figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs crmsh">Host Alephia<br><br>    HostName  <span class="hljs-number">10.1</span>.<span class="hljs-number">1.1</span><br><br>    <span class="hljs-keyword">User</span> <span class="hljs-title">hhh</span><br><br>    IdentityFile ~/.ssh/id_rsa<br></code></pre></td></tr></table></figure> 此时再去连接服务器就不需要密码了。</li></ol><h2 id="配置">配置</h2><h3 id="深度学习基础配置">深度学习基础配置</h3><p>因为实际使用的是服务器那边的文件和资源，vscode只是提供了一个跟本地操作一样的使用体验，所以一些配置是必须的。基础的炼丹环境，conda安装，conda pip换源，torch安装等等不再赘述</p><h3 id="文件传输">文件传输</h3><p>本地与服务器之间的文件传输是必不可少的，这里推荐FileZilla，安装教程略过。打开之后是这个样子 <imgsrc="https://s2.loli.net/2025/01/08/G4dh5sTWzeXJlNB.png"alt="image.png" /></p><p>点击左上角“打开站点管理”，新建一个站点 <imgsrc="https://s2.loli.net/2025/01/08/tFszfGLDN54bpVW.png"alt="image.png" />协议选择SFTP，之后主机输入服务器IP，之后填入用户密码即可。点击连接之后就可以实现本地与服务器的文件互传了。服务器文件架构位于页面右侧，只需将本地内容拖进对应位置即可。如果有从服务器下载内容的需求的话，在站点管理-高级-默认本地目录处可以设置文件的下载地址</p><h3 id="会话终端分离方案">会话终端分离方案</h3><p>在vscode中打开终端，同时也建立了一个会话，在这个终端中跑的代码，是建立在会话基础上的，当终端关闭的时候，会话也随之取消，训练也会中断。那么服务器/vpn有连接时长限制，或者网络不稳定等情况，就很容易导致训练中断，所以需要一种会话与终端分离的手段，训练开启之后，终端正常关闭，会话可以保持，并且可以在之后与另一个终端建立联系，便于后续操作。</p><p>市面上常见的是Tmux以及screen，这里推荐Tmux</p><p>Tmux最简单的安装就是如下命令，但是需要sudo权限。 <figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros">sudo apt-<span class="hljs-built_in">get</span> install tmux<br></code></pre></td></tr></table></figure>对于非root用户可以按照参考<ahref="https://zhuanlan.zhihu.com/p/155662601">这个教程</a></p><p>常用的Tmux分离会话与终端步骤为 1. 终端使用Tmux新建一个会话<code>tmux new -s my_session</code>，其中my_session是你取的会话名字，之后就会进入一个新的界面，终端命令正常使用，只是这里鼠标滚轮被用于查看历史命令。2. 在该程序中开始炼丹 3. 按下快捷键<code>Ctrl+b</code>，然后按下d，即可实现会话与终端的分离，可以安心关上电脑睡觉去了。需要注意的是，直接按下<code>Ctrl+d</code>会退出该会话并且同时删除它，使用需谨慎5.睡醒之后使用命令<code>tmux attach-session -t my_session</code>来重新连接到该会话</p><p>常用Tmux快捷键 -<code>Ctrl+b [</code>：使用滚轮/上下键查看历史内容，按q退出该模式 -<code>Ctrl+b d</code>：分离当前会话。 -<code>Ctrl+b s</code>：列出所有会话。 -<code>Ctrl+b $</code>：重命名当前会话。</p><p>常用Tmux命令： <figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs pgsql">q：退出Tmux<br>Tmux ls：查看已建立的会话<br>tmux <span class="hljs-keyword">rename</span>-<span class="hljs-keyword">session</span> -t &lt;<span class="hljs-built_in">old</span>-<span class="hljs-keyword">session</span>-<span class="hljs-type">name</span>&gt; &lt;<span class="hljs-built_in">new</span>-<span class="hljs-keyword">session</span>-<span class="hljs-type">name</span>&gt;：重命名会话<br></code></pre></td></tr></table></figure></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>配置笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>配置</tag>
+      
+      <tag>ssh</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>VAE学习笔记</title>
     <link href="/posts/7055bc91/"/>
     <url>/posts/7055bc91/</url>
