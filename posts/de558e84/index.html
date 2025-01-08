@@ -27,7 +27,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://sophilex.github.io/img/j12.jpg">
 <meta property="article:published_time" content="2025-01-08T13:38:47.000Z">
-<meta property="article:modified_time" content="2025-01-08T13:44:26.089Z">
+<meta property="article:modified_time" content="2025-01-08T13:47:26.428Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="配置">
 <meta property="article:tag" content="ssh">
@@ -348,26 +348,19 @@
 <p>例如</p>
 <figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs crmsh">Host Alephia<br><br>    HostName  <span class="hljs-number">10.1</span>.<span class="hljs-number">1.1</span><br><br>    <span class="hljs-keyword">User</span> <span class="hljs-title">hhh</span><br></code></pre></td></tr></table></figure>
 <p>这之后点击vscode左侧远程资源管理器选项，可以看到已经出现刚刚写入的NickName了
-<img src="https://s2.loli.net/2025/01/08/fDGLmj2nSs4JcR1.png" srcset="/img/loadings.gif" lazyload
-alt="image.png" /></p>
+<img src="https://s2.loli.net/2025/01/08/fDGLmj2nSs4JcR1.png" srcset="/img/loadings.gif" lazyload /></p>
 <p>右键点击连接，会让你输入服务器user的密码，正确输入之后即可连接成功，此时你在vscode界面左下角可以看到绿色的SSH:
 NiceName字样</p>
-<figure>
-<img src="https://s2.loli.net/2025/01/08/f6TPGLN7KrQcXmq.png" srcset="/img/loadings.gif" lazyload
-alt="image.png" />
-<figcaption aria-hidden="true">image.png</figcaption>
-</figure>
+<p><img src="https://s2.loli.net/2025/01/08/f6TPGLN7KrQcXmq.png" srcset="/img/loadings.gif" lazyload /></p>
 <p>当然这个过程可能会遇到一些问题 #### 学校服务器IP无法ping通</p>
 <p>有些服务器IP想要ping通需要使用学校的VPN，一般每个学校都会给详细的连接教程
 这里以ecnu为例：</p>
 <p>首先下载vpn工具 打开
 https://eoffice.ecnu.edu.cn/4e/ba/c6178a85690/page.htm
 之后，选择对应平台，版本安装即可，安装之后打开效果如下 <img
-src="https://s2.loli.net/2025/01/08/YckjgCn7ZHV1eKE.png" srcset="/img/loadings.gif" lazyload
-alt="image.png" /></p>
+src="https://s2.loli.net/2025/01/08/YckjgCn7ZHV1eKE.png" srcset="/img/loadings.gif" lazyload /></p>
 <p>输入连接vpn的地址之后填入账号密码即可连接， <img
-src="https://s2.loli.net/2025/01/08/4VR7td8horuDSgH.png" srcset="/img/loadings.gif" lazyload
-alt="image.png" /></p>
+src="https://s2.loli.net/2025/01/08/4VR7td8horuDSgH.png" srcset="/img/loadings.gif" lazyload /></p>
 <p>有时候可能会出现连接一小会之后VPN自动断开的情况，可以检查本地梯子，wifi稳定性等等。</p>
 <h3 id="ssh免密连接">ssh免密连接</h3>
 <p>如果经常需要登录服务器的话，免密连接可以提供便捷性，否则每次登录都要输入user密码</p>
@@ -387,11 +380,9 @@ bash，输入命令<code>ssh-copy-id host别名</code>，这里host别名就是c
 <h3 id="文件传输">文件传输</h3>
 <p>本地与服务器之间的文件传输是必不可少的，这里推荐FileZilla，安装教程略过。
 打开之后是这个样子 <img
-src="https://s2.loli.net/2025/01/08/G4dh5sTWzeXJlNB.png" srcset="/img/loadings.gif" lazyload
-alt="image.png" /></p>
+src="https://s2.loli.net/2025/01/08/G4dh5sTWzeXJlNB.png" srcset="/img/loadings.gif" lazyload /></p>
 <p>点击左上角“打开站点管理”，新建一个站点 <img
-src="https://s2.loli.net/2025/01/08/tFszfGLDN54bpVW.png" srcset="/img/loadings.gif" lazyload
-alt="image.png" />
+src="https://s2.loli.net/2025/01/08/tFszfGLDN54bpVW.png" srcset="/img/loadings.gif" lazyload />
 协议选择SFTP，之后主机输入服务器IP，之后填入用户密码即可。点击连接之后就可以实现本地与服务器的文件互传了。
 服务器文件架构位于页面右侧，只需将本地内容拖进对应位置即可。
 如果有从服务器下载内容的需求的话，在站点管理-高级-默认本地目录处可以设置文件的下载地址</p>
