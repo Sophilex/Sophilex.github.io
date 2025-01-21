@@ -27,7 +27,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://sophilex.github.io/img/j8.jpg">
 <meta property="article:published_time" content="2024-12-31T17:22:48.000Z">
-<meta property="article:modified_time" content="2024-12-31T17:43:07.851Z">
+<meta property="article:modified_time" content="2025-01-21T03:32:42.167Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="学习笔记">
 <meta property="article:tag" content="LLM">
@@ -336,28 +336,30 @@
                 
                 <h1 id="从reinforce到ppo">从REINFORCE到PPO</h1>
 <h2 id="梯度估计">梯度估计</h2>
-<p>考虑最简单的情况，
-直接<strong>取当前状态的期望reward之和作为loss</strong>，那么最终目标就是尝试最大化这个loss。形式化地说，记
-* <span class="math inline">\(\tau: (S_{0}, A_{0}, R_{0}, S_{1}, A_{1},
-R_{1},\dots)\)</span>代表model的行为序列，其中<span
+<p>在RL中，考虑最简单的情况，直接<strong>取当前状态的期望reward之和作为loss</strong>，那么最终目标就是尝试最大化这个loss。形式化地说，记</p>
+<ul>
+<li><span class="math inline">\(\tau: (S_{0}, A_{0}, R_{0}, S_{1},
+A_{1}, R_{1},\dots)\)</span>代表model的行为序列，其中<span
 class="math inline">\(S\)</span>代表当前所处的状态， <span
 class="math inline">\(A\)</span>代表当前状态下采取的动作， <span
 class="math inline">\(R\)</span>表示动作<span
-class="math inline">\(A\)</span>之后得到的奖励 * <span
-class="math inline">\(\pi(a|s:\theta)\)</span>代表在状态<span
+class="math inline">\(A\)</span>之后得到的奖励</li>
+<li><span class="math inline">\(\pi(a|s:\theta)\)</span>代表在状态<span
 class="math inline">\(s\)</span>下模型采用动作<span
 class="math inline">\(a\)</span>的概率。策略<span
 class="math inline">\(\pi\)</span>关于<span
-class="math inline">\(\theta\)</span>是可微的 * <span
-class="math inline">\(Q_{\pi}(s, a)\)</span>代表在当前状态为<span
-class="math inline">\(s\)</span>, 采取动作为<span
-class="math inline">\(a\)</span>时的期望收益 * <span
-class="math inline">\(P((s&#39;, r)|(a,s))\)</span>代表当前状态为<span
+class="math inline">\(\theta\)</span>是可微的</li>
+<li><span class="math inline">\(Q_{\pi}(s,
+a)\)</span>代表在当前状态为<span class="math inline">\(s\)</span>,
+采取动作为<span class="math inline">\(a\)</span>时的期望收益</li>
+<li><span class="math inline">\(P((s&#39;,
+r)|(a,s))\)</span>代表当前状态为<span
 class="math inline">\(s\)</span>,采取动作为<span
 class="math inline">\(a\)</span>时， 转移到状态<span
 class="math inline">\(s&#39;\)</span>,获得reward为<span
 class="math inline">\(r\)</span>的概率。需要注意的是，这是一个与model，或者说策略<span
-class="math inline">\(\pi\)</span>无关的概率分布,它只与交互的环境有关</p>
+class="math inline">\(\pi\)</span>无关的概率分布,它只与交互的环境有关</li>
+</ul>
 <p>那么在当前状态为<span
 class="math inline">\(s\)</span>时loss可以表达为 <span
 class="math display">\[
