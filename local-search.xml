@@ -4,6 +4,35 @@
   
   
   <entry>
+    <title>bug聚集地</title>
+    <link href="/posts/b0268bf8/"/>
+    <url>/posts/b0268bf8/</url>
+    
+    <content type="html"><![CDATA[<h1 id="bug聚集地">bug聚集地</h1><h2 id="tmux-error-connecting">tmux error connecting</h2><p>常见报错格式为</p><figure class="highlight subunit"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs subunit"><span class="hljs-keyword">error </span>connecting to /tmp/tmux-xxxx/default (No such file or directory)<br></code></pre></td></tr></table></figure><p>其中xxxx 是不同的数字，应该是版本号 参考<ahref="https://blog.csdn.net/lianshaohua/article/details/109671105">这篇</a>blog，报错原因是/tmp/tmux-xxxx被误删导致的 在~/.tmux/tmp下创建对应的tmux-xxxx并输入tmuxls或者tmux a等命令尝试重新server，但是一直报错 <figure class="highlight subunit"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs subunit"><span class="hljs-keyword">error </span>creating /home/xxx/.tmux/tmp/tmux-xxxx (Permission denied)<br></code></pre></td></tr></table></figure> 尝试chmod777，但是依然报这个错 在<ahref="https://unix.stackexchange.com/a/724538">这篇</a>回答下面，发现似乎并不用创建tmux-xxxx文件夹，直接pkill-USR1 tmux然后尝试重启server即可 <imgsrc="https://s2.loli.net/2025/02/28/brcCy3LQ59IBim7.png"alt="image-20250228103223543" />总结：一头雾水，不知道为何没解决，也不知道为何解决了</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>bugs</category>
+      
+      <category>linux</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>tmux</tag>
+      
+      <tag>linux</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>服务器炼丹手册</title>
     <link href="/posts/de558e84/"/>
     <url>/posts/de558e84/</url>
