@@ -4,6 +4,27 @@
   
   
   <entry>
+    <title>关于浮点数存储精度</title>
+    <link href="/posts/b32686f3/"/>
+    <url>/posts/b32686f3/</url>
+    
+    <content type="html"><![CDATA[<h1id="关于浮点数存储精度ieee-754浮点标准">关于浮点数存储精度：IEEE-754浮点标准</h1><h2 id="背景">背景</h2><p>炼丹时常用的数据类型有FP32，FP16，其数据存储类型都遵循IEEE-754浮点标准，展示如下&gt;单精度（FP32） &gt;符号位：1位 &gt;指数位：8位 &gt;尾数位：23位&gt;总范围：<span class="math inline">\(\pm 3.4\times10^{38}\)</span></p><blockquote><p>半精度（FP16） 符号位：1位 指数位：5位 尾数位：10位 总范围：<spanclass="math inline">\(\pm 65504\)</span></p></blockquote><p>关于这些不同的位具体是如何组成浮点数的，详细内容可以参考<ahref="https://zhuanlan.zhihu.com/p/343033661">这篇文章</a>，接下来以FP32为例简单解释一下<img src="https://s2.loli.net/2025/04/09/eK546X7qItODUj3.png" /> *符号位 符号位（sign）很好理解，0/1分别用于表示数字的正/负 * 尾数位尾数位记录的是浮点数的二进制表示，并且将小数点移到第一位之后，然后去除第一位，因为其一定是1（这里先不考虑0）比如考虑小数10.75 其二进制表示为 1010.11这是因为10.75=2+8+1/2+1/4，然后将其小数点左移，得到<spanclass="math inline">\(1.01011\times2^3\)</span>,那么尾数就是01011，剩下的位直接用0来补即可FP32下不难得到尾数位的表示范围为<spanclass="math inline">\(2^{23}\)</span> * 指数位指数位顾名思义，组成的是尾数位的指数，FP32下规定其表示范围为<spanclass="math inline">\([-127,128]\)</span>，也就是对半开，这也意味着其需要在没有符号位的情况下同时表示负数和正数。一个非常常见的处理手段就是所有数同时加上一个偏移量，这里这个偏移量就是127，此时所有表示都<spanclass="math inline">\(\geq 0\)</span>还是考虑小数10.75，其尾数的指数为3，加上偏移量之后为130,表示为01111000即可</p><p>最后得到10.75在FP32下表示为0 10000010 01011000...</p><h2 id="误差的来源">误差的来源</h2><p>观察IEEE-754标准，不难发现，尾数用于提供存储的精度，指数用于提供存储的范围。需要指出的是，在存储范围内，整数的表示是没有误差的，但是小数有。这是因为对于整数位，二进制表示本身就是一种准确无误差的表示，但是对于小数位，只能通过<spanclass="math inline">\(\sum\frac{1}{2^{k_{i}}}\)</span>来不断拟合，而尾数所能表示的范围是有限的，也就意味着小数的拟合精度是受限的。不过神奇的是，拟合精度带来的误差，并非是绝对误差，而是相对原数而言的。这一点是通过指数位实现的。还是以FP32为例，其尾数有23位，那么拟合小数的时候，最高精度为<spanclass="math inline">\(\frac{1}{2^{23}}\approx0.0000001192092896\)</span>，这也意味着从小数点后第7位起，已经无法保证准确的拟合了。但是由于指数位的存在，如果原数的有效数字并不是从小数点后开始的话，可以通过指数位抹除中间多余的0，那么中间这几位的拟合精度将由指数位提供，那么最终拟合精度是大于7位的。这一点可以通过0.123456789和0.00000123456789来理解。</p><p>同样的，对于FP16来说，其尾数为10，就始终可以相对提供约3-4位的十进制有效数字。</p><p>从而不难发现，IEEE-754标准保证的是固定位的十进制有效数字，但是这是相对于原数字来说的，与数值量级无关。</p><p>这一点可以通过程序看看 <figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs stylus">pi = math<span class="hljs-selector-class">.pi</span><br>x = torch<span class="hljs-selector-class">.tensor</span>(pi, dtype = torch.float16)<br>y = torch<span class="hljs-selector-class">.tensor</span>(pi, dtype = torch.float32)<br>z = torch<span class="hljs-selector-class">.tensor</span>(pi, dtype = torch.float64)<br><span class="hljs-function"><span class="hljs-title">print</span><span class="hljs-params">(f<span class="hljs-string">&quot;pi: &#123;pi&#125;&quot;</span>)</span></span>  <br><span class="hljs-function"><span class="hljs-title">print</span><span class="hljs-params">(f<span class="hljs-string">&quot;FP16: &#123;x&#125;, &#123;math.fabs(pi-x.item())&#125;&quot;</span>)</span></span><br><span class="hljs-function"><span class="hljs-title">print</span><span class="hljs-params">(f<span class="hljs-string">&quot;FP32: &#123;y&#125;, &#123;math.fabs(pi-y.item())&#125;&quot;</span>)</span></span><br><span class="hljs-function"><span class="hljs-title">print</span><span class="hljs-params">(f<span class="hljs-string">&quot;FP64: &#123;z&#125;, &#123;math.fabs(pi-z.item())&#125;&quot;</span>)</span></span><br></code></pre></td></tr></table></figure> 分别用FP16，FP32，FP64存储<spanclass="math inline">\(\text{pi}=\pi\)</span>并输出，观察其结果与误差<img src="https://s2.loli.net/2025/04/09/HvZhXTgSEpwDacI.png" />不出意料，FP16可以保留2位有效精度，FP32可以保留6位有效精度。而当我们将<span class="math inline">\(\text{pi}\)</span>取做<spanclass="math inline">\(\pi \times 10^-2\)</span>时，得到的结果为 <imgsrc="https://s2.loli.net/2025/04/09/fPQecsCW2Srv4na.png" />此时FP16的有效精度就变成了4位，这是因为它的尾数实际拟合的依然是3.1415926...，多出来的两位精度由指数位提供了。而FP32的有效精度也变成了8位，符合预期。</p><p>可以得到的另外一个有意思的结论就是对于极小的数，其存储的绝对误差可能是更小的，比如存储1e-7和存储1e3的区别</p><h2 id="总结">总结</h2><p>IEEE-754浮点标准下，浮点数存储存在精度误差，精度上限受到尾数位长度限制。但是这里的误差是<strong>相对于有效数字的</strong>，不是绝对的小数点后位数，与数字量级无关。FP16 始终<strong>相对</strong>提供约 <strong>3-4位十进制有效数字</strong>，FP32始终<strong>相对</strong>提供约<strong>6-7位十进制有效数字</strong>，当然这里的“始终”也是建立在数字处于指数位表示范围内的前提下的。当然，如果面对的是大规模随机数的存储，那么也只能将其精度直接估成小数点的有效数字了。</p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>学习笔记</tag>
+      
+      <tag>计算机系统</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>bug聚集地</title>
     <link href="/posts/b0268bf8/"/>
     <url>/posts/b0268bf8/</url>
