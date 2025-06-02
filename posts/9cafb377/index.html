@@ -18,27 +18,27 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="懒人福音">
+    <meta name="description" content="噜啦啦噜啦啦">
 <meta property="og:type" content="article">
-<meta property="og:title" content="服务器转发流量至本地">
-<meta property="og:url" content="https://sophilex.github.io/posts/be9c436c/index.html">
+<meta property="og:title" content="20250602_Weekly_Summary">
+<meta property="og:url" content="https://sophilex.github.io/posts/9cafb377/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="懒人福音">
+<meta property="og:description" content="噜啦啦噜啦啦">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/j9.jpg">
-<meta property="article:published_time" content="2025-05-22T11:18:13.000Z">
-<meta property="article:modified_time" content="2025-05-22T12:32:12.602Z">
+<meta property="og:image" content="https://sophilex.github.io/img/steve1.webp">
+<meta property="article:published_time" content="2025-06-02T12:56:20.000Z">
+<meta property="article:modified_time" content="2025-06-02T13:13:26.318Z">
 <meta property="article:author" content="Sophilex">
-<meta property="article:tag" content="配置">
-<meta property="article:tag" content="ssh">
+<meta property="article:tag" content="杂想">
+<meta property="article:tag" content="周报">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/j9.jpg">
+<meta name="twitter:image" content="https://sophilex.github.io/img/steve1.webp">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>服务器转发流量至本地 - Sophilex‘s Blog</title>
+  <title>20250602_Weekly_Summary - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -238,13 +238,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/j9.jpg') no-repeat center center; background-size: cover;">
+     style="background: url('/img/steve1.webp') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="服务器转发流量至本地"></span>
+            <span id="subtitle" data-typed-text="20250602_Weekly_Summary"></span>
           
         </div>
 
@@ -260,8 +260,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-05-22 19:18" pubdate>
-          2025年5月22日 晚上
+        <time datetime="2025-06-02 20:56" pubdate>
+          2025年6月2日 晚上
         </time>
       </span>
     
@@ -272,7 +272,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          345 字
+          1.1k 字
         
       </span>
     
@@ -283,7 +283,7 @@
         
         
         
-          3 分钟
+          9 分钟
         
       </span>
     
@@ -328,25 +328,36 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">服务器转发流量至本地</h1>
+            <h1 id="seo-header">20250602_Weekly_Summary</h1>
             
             
               <div class="markdown-body">
                 
-                <h1 id="服务器转发流量至本地">服务器转发流量至本地</h1>
-<p>ssh连着服务器时，想要访问github，huggingface之类的，基本是上不去的。所以需要给服务器配一个梯子。但是没有GUI，也没有root权限，本人也懒，所以使用另一种方式。
-利用ssh，在服务器上开一个端口，访问网址时将流量转发回本地，之后只要本地挂着梯子就可以了。</p>
-<h2 id="配置ssh文件">配置ssh文件</h2>
-<p>.ssh/config文件配置如下</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs shell">Host Localc<br>  HostName 你连的服务器的IP<br>  Port 服务器上要转发流量的端口<br>  User 服务器登录用户名<br>  IdentityFile XXXX\.ssh\id_rs<br>  RemoteForward [远程监听地址:远程端口] [本地目标地址:本地端口]<br></code></pre></td></tr></table></figure>
-<p>本地使用clash的话，打开“局域网连接”选项。一般它的端口就是7890，所以上述格式中最后一行一般写为</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">RemoteForward localhost:7890 localhost:7890<br></code></pre></td></tr></table></figure>
-<h2 id="本地ssh连接">本地ssh连接</h2>
-<p>本地连上刚刚配的ssh <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">ssh Localc<br></code></pre></td></tr></table></figure> 此时一般就ok了。尝试 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">curl -x localhost:7890 google.com<br></code></pre></td></tr></table></figure>
-可以收到如下内容 <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs html"><span class="hljs-tag">&lt;<span class="hljs-name">TITLE</span>&gt;</span>301 Moved<span class="hljs-tag">&lt;/<span class="hljs-name">TITLE</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">HEAD</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">BODY</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">H1</span>&gt;</span>301 Moved<span class="hljs-tag">&lt;/<span class="hljs-name">H1</span>&gt;</span><br>The document has moved<br><span class="hljs-tag">&lt;<span class="hljs-name">A</span> <span class="hljs-attr">HREF</span>=<span class="hljs-string">&quot;http://www.google.com/&quot;</span>&gt;</span>here<span class="hljs-tag">&lt;/<span class="hljs-name">A</span>&gt;</span>.<br><span class="hljs-tag">&lt;/<span class="hljs-name">BODY</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">HTML</span>&gt;</span><br></code></pre></td></tr></table></figure> 就代表ok了。</p>
-<p>此时再去用git clone之类的就没问题了。</p>
-<p>需要注意的是，wget这种默认不会走代理端口，需要手动设置一下
-<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs routeros"><span class="hljs-built_in">export</span> <span class="hljs-attribute">http_proxy</span>=http://127.0.0.1:7890<br><span class="hljs-built_in">export</span> <span class="hljs-attribute">https_proxy</span>=http://127.0.0.1:7890<br></code></pre></td></tr></table></figure></p>
+                <h1 id="weekly_summary">20250602_Weekly_Summary</h1>
+<p>​
+从保研之后一直被老师要求每周写一篇周报，再过几个月也快一年了。事实上这种方式可以强迫我总结并记录一周所得，我确实从中受益颇多。并且如果一周纯摆烂的话，周报上没东西，自己也不好意思，所以这也在反逼我每周稍微微自律一些（虽然真想摆还是敢硬摆）
+​
+只是周报的内容往往是科研相关的，而我的生活远不止于此。因此我觉得有必要也来通过周报总结自己一周的生活，偶尔的感悟，情绪，巴拉巴拉的。作为一个文艺青年，我觉得这很有意义，也很适合之后翻看
+同时，作为一个顶级懒癌+拖延症患者，我对自己是否能将这个计划执行下去表示怀疑。但我懒得再给自己加啥限制来保证这个计划，所以先干着看看吧</p>
+<hr />
+<p>​ 科研上，本周前半部分主要在看LLM
+Rec的东西，顺便把现有的KD框架扩展了一个Distiller部件，可以直接选择不同divergence或者list
+wise的相关方法。但是Wasersstein Distance的实现我还没理解，cost
+matrix的实现还没想好怎么实现。后半部分主要在看 LLM
+KD，其中整整两天都在看源码，但是还没看完，太懒了，一读书就想睡觉想摆烂。。。
+收获还是有的，目前对整个LLM
+KD的框架已经有所把握了，但感觉离完全上手还是有些距离。
+另外开始看凸优化的东西，因为感觉如果想做扎实的工作，这块的内容还是很有必要的，事实上目前已经接触过一些与其相关的东西了。不知道入学前能不能看完。</p>
+<p>​
+最近最头疼的一件事，就是频繁的电子设备报废。上周手机进水，但是后面又频繁死机，到目前已经修了三次了，幸好老板不错，只收了我第一次的钱。周三更是离谱，手机又死机拿去修，电脑也突然报废，整个下午直接呆住，啥也干不了。回出租屋练了会琴，没忍住直接倒床上睡了两个多小时（难绷）。哎感觉目前手里的电子设备用了一整个本科，都是半退休的状态，但是目前实在是没财力更新设备啊，愁啊...
+​
+另一件头疼的事就是blog的维护。事实上从去年在字节实习到现在，已经接触过很多领域的东西了，并且由于各种各样的原因，学的都不算浅，都有总结并放到blog上来的必要。但是这种东西一多，我就懒得搞了，导致去年国庆总结的一些内容，那么多且优质（个人感觉），到现在都没放上来...好懒啊，这样不行啊，但实在懒得搞...（瘫）
+​
+还有一件头疼的事，上周末出去骑车打卡沪上985，骑了70km+，很开心，但是太久没骑了过于兴奋，一直挂着大盘，导致骑完右膝盖直接报废，疼了好几天，这两天才感觉恢复差不多了。感觉自己还是过于SB了</p>
+<p>​
+剩下就是我的guitar了。这周正在尝试通过扒歌来帮助自己熟悉相对音程，目前扒了两首爵士的自己喜欢的部分，还跟学长学了快速定调，还是很有意思的。但是何时才能成长到能够随意即兴的地步呢？任重而道远啊</p>
+<p>​
+当然，目前最大的愿景，还是能尽快做出自己的成果，其次是自己满意的成果。感觉毕设的idea要发可能也能发，但是效果实在不算有说服力，加上这种缝合的idea还是过于屎了，想想还是作罢。我非常欣赏学长做的关于频域的一篇工作，从现象，到解决方法，一针见血，理论支撑又扎实，又足够有效，真是太棒了。何时才能成长到这个境界呢？</p>
 
                 
               </div>
@@ -355,34 +366,13 @@
             <div>
               <div class="post-metas my-3">
   
-    <div class="post-meta mr-3 d-flex align-items-center">
-      <i class="iconfont icon-category"></i>
-      
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/%E9%85%8D%E7%BD%AE%E7%AC%94%E8%AE%B0/" class="category-chain-item">配置笔记</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-    </div>
-  
   
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/%E9%85%8D%E7%BD%AE/" class="print-no-link">#配置</a>
+        <a href="/tags/%E6%9D%82%E6%83%B3/" class="print-no-link">#杂想</a>
       
-        <a href="/tags/ssh/" class="print-no-link">#ssh</a>
+        <a href="/tags/%E5%91%A8%E6%8A%A5/" class="print-no-link">#周报</a>
       
     </div>
   
@@ -394,8 +384,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>服务器转发流量至本地</div>
-      <div>https://sophilex.github.io/posts/be9c436c/</div>
+      <div>20250602_Weekly_Summary</div>
+      <div>https://sophilex.github.io/posts/9cafb377/</div>
     </div>
     <div class="license-meta">
       
@@ -407,7 +397,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年5月22日</div>
+          <div>2025年6月2日</div>
         </div>
       
       
@@ -439,18 +429,12 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/9cafb377/" title="20250602_Weekly_Summary">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">20250602_Weekly_Summary</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/4527e01a/" title="练琴有感">
-                        <span class="hidden-mobile">练琴有感</span>
+                      <a href="/posts/be9c436c/" title="服务器转发流量至本地">
+                        <span class="hidden-mobile">服务器转发流量至本地</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
