@@ -110,6 +110,7 @@
             .reveal .slides section:first-child h3 {
                 text-align: center;
                 text-transform: capitalize;
+                font-size: 6em;
             }
 
             /* 其他页面的标题固定在左上角 */
@@ -161,6 +162,11 @@
             }
 
             /* 普通段落左对齐 */
+
+            .reveal .slides section {
+                text-align: left;
+                font-size: 40px;
+            }
             .reveal .slides section p {
                 text-align: left;
             }
@@ -173,7 +179,15 @@
             .reveal .slides section ul ul ul > li {
                 font-size: 0.7em !important; /* 设置三级列表项的字体大小 */
             }
-
+            
+            /* 公式左对齐 */
+            /* .reveal .slides section .MathJax_Display {
+                text-align: left !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            } */
+            
+            
             /* Slide 的设置 */
             .reveal .slides .slide-cols{
                 display: flex;
@@ -192,6 +206,7 @@
                 text-align: center; 
                 padding: 0;
                 display: block;
+                border: none;
             }
             .reveal .slides .slide-ref{
                 position: absolute; 
@@ -288,16 +303,7 @@
 
 
 <small>Alephia</small>
-<small>25/6/10</small>
-
----
-
-## Contents
-
-- <p class="fragment"> KLD</p>
-- <p class="fragment"> Reversed KLD(RKLD)</p>
-- <p class="fragment"> JSD</p>
-- <p class="fragment"> Wasserstein Distance</p>
+<small>25/5/5</small>
 
 ---
 
@@ -371,7 +377,7 @@ $$
 
 ---
 
-## MiniLLM
+## RKLD in LLM KD
 
 KLD下，学生在教师分布的viod region会高估，进而带来麻烦。这一问题在RKLD下有所缓解
 
@@ -380,7 +386,7 @@ KLD下，学生在教师分布的viod region会高估，进而带来麻烦。这
 2 两个分布都是连续的
 
 
-<img src="https://s2.loli.net/2025/06/11/IKkgb3fMR9NxepO.png" style="width: 500px; height: auto; float: center; margin-right: 20px; margin-top: auto; margin-bottom: auto;border: none;">
+<img src="https://s2.loli.net/2025/06/11/IKkgb3fMR9NxepO.png" style="width: 500px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
 
 <div class='slide-ref'>
 Gu, Y., Dong, L., Wei, MiniLLM: Knowledge Distillation of Large Language Models. In ICLR,24
@@ -388,7 +394,33 @@ Gu, Y., Dong, L., Wei, MiniLLM: Knowledge Distillation of Large Language Models.
 
 ---
 
-## Rethinking Kullback-Leibler Divergence in Knowledge Distillation for Large Language Models
+## Does RKLD really helps in LLM KD?
+
+1.  教师，学生输出经过softmax之后不一定满足Gaussion分布
+2.  logits分布是离散的
+
+事实上非Gauission+离散情况下，充分训练后，两种loss训练下都会得到同一个拟合结果
+<div class="slide-img">
+  <img src="https://s2.loli.net/2025/06/11/FHmCdkTPYhuAMZw.png" style="width: 700px; height: auto;border: none">
+</div>
+
+
+<div class='slide-ref'>
+Wu, T., Tao, Rethinking Kullback-Leibler Divergence in Knowledge Distillation for Large Language Models. In COLING,25
+</div>
+
+---
+## Combine RKLD with FKLD
+
+<div class="slide-img">
+  <img src="https://s2.loli.net/2025/06/11/iLIvPSaxHVlET95.png" style="width: 700px; height: auto;border: none">
+</div>
+
+LLM KD中，所谓mean-seeking和mode-seeking可能并不存在，取而代之的是：FKLD倾向于先拟合分布头部，RKLD倾向于先拟合分布尾部
+
+最终solution：$AKL(p,q_{\theta})=\alpha_1  FKL(p,q_{\theta}) + \alpha_2 RKL(p,q_{\theta})$
+
+
 
 </script>
 
