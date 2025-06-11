@@ -8,6 +8,220 @@
         <!-- <title>Different Designs For LLM KD Loss</title> -->
 
         <link rel="stylesheet" href="https://cdn.bootcss.com/reveal.js/3.4.1/css/reveal.min.css">
+
+        <!-- style -->
+
+        <style>
+
+            .reveal.fullscreen {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                z-index: 1000;
+                background-color: white;
+            }
+
+            .reveal:not(.fullscreen) {
+                width: 100%;
+                height: 600px;
+                margin: 2rem 0;
+                position: relative;
+            }
+
+            #fullscreen-btn {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                width: 32px;
+                height: 32px;
+                background-color: rgba(0, 0, 0, 0.6);
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                z-index: 1001;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            #laser-btn {
+                position: fixed;
+                left: 20px;
+                bottom: 20px;
+                width: 32px;
+                height: 32px;
+                background-color: rgba(0, 0, 0, 0.6);
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                z-index: 1001;
+                display: none;
+                align-items: center;
+                justify-content: center;
+            }
+
+            #laser-btn:hover {
+                background-color: rgba(0, 0, 0, 0.8);
+            }
+
+            #laser-btn.active {
+                background-color: rgba(255, 0, 0, 0.6);
+            }
+
+            .laser-pointer {
+                position: fixed;
+                width: 0.6rem;
+                height: 0.6rem;
+                background-color: red;
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 9999;
+                display: none;
+                box-shadow: 0 0 0.25rem 0.15rem rgba(255, 0, 0, 0.5);
+            }
+
+            .cursor-hidden {
+                cursor: none !important;
+            }
+            
+            .cursor-hidden * {
+                cursor: none !important;
+            }
+
+            .reveal .slides section:not(:first-child) {
+                top: 0 !important;
+                transform: none !important;
+            }
+            
+            /* 只取消非首页的垂直居中 */
+            .reveal .slides section:not(:first-child) {
+                top: 0 !important;
+                bottom: 0 !important;
+                transform: none !important;
+            }
+
+            /* 首页保持 Reveal.js 默认的垂直居中 */
+            .reveal .slides section:first-child h1,
+            .reveal .slides section:first-child h2,
+            .reveal .slides section:first-child h3 {
+                text-align: center;
+                text-transform: capitalize;
+            }
+
+            /* 其他页面的标题固定在左上角 */
+            .reveal .slides section:not(:first-child) h1,
+            .reveal .slides section:not(:first-child) h2,
+            .reveal .slides section:not(:first-child) h3 {
+                position: absolute;
+                top: 0;
+                left: -4rem;
+            }
+
+            /* 为不同级别的标题设置不同的字体大小 */
+            .reveal .slides section:not(:first-child) h1 { font-size: 55px; }
+            .reveal .slides section:not(:first-child) h2 { font-size: 55px; }
+            .reveal .slides section:not(:first-child) h3 { font-size: 45px; }
+
+            /* 为整个 section 添加上内边距，防止内容与标题重叠 */
+            .reveal .slides section:not(:first-child) {
+                padding-top: 1.7em; 
+            }
+
+            /* 其他页面的主要内容区域添加上边距 */
+            .reveal .slides section:not(:first-child) > *:not(h1):not(h2):not(h3) {
+                margin-top: 1em;
+                font-size: 0.8em;
+            }
+
+            /* 保持内容左对齐 */
+            .reveal .slides section:not(:first-child) {
+                text-align: left;
+            }
+
+            /* 列表项左对齐 */
+            .reveal .slides section ul,
+            .reveal .slides section ol {
+                display: block;
+                text-align: left;
+            }
+
+            /* 代码块左对齐 */
+            .reveal .slides section pre {
+                width: auto;
+                text-align: left;
+            }
+
+            .reveal .slides section .mjx-chtml {
+                text-align: left !important;
+                margin-left: 0 !important;
+            }
+
+            /* 普通段落左对齐 */
+            .reveal .slides section p {
+                text-align: left;
+            }
+            .reveal .slides section ul > li {
+                font-size: 1em !important; /* 设置一级列表项的字体大小 */
+            }
+            .reveal .slides section ul ul > li {
+                font-size: 0.8em !important; /* 设置二级列表项的字体大小 */
+            }
+            .reveal .slides section ul ul ul > li {
+                font-size: 0.7em !important; /* 设置三级列表项的字体大小 */
+            }
+
+            /* Slide 的设置 */
+            .reveal .slides .slide-cols{
+                display: flex;
+            }
+            .reveal .slides .slide-col-half{
+                flex: 1;
+            }
+            .reveal .slides .slide-col-4{
+                flex: 4;
+            }
+            .reveal .slides .slide-col-6{
+                flex: 6;
+            }
+
+            .reveal .slides .slide-img{
+                text-align: center; 
+                padding: 0;
+                display: block;
+            }
+            .reveal .slides .slide-ref{
+                position: absolute; 
+                bottom: 0; left: 0; 
+                font-size: 0.5em !important;
+                text-align: left; 
+                width: 100%;
+            }
+            .reveal .slide-number {
+                font-size: 1.5rem !important; /* 改变字号 */
+                right: 2.2em !important;
+                bottom: 1.1em !important;
+                background: none !important;
+                color: gray !important;
+            }
+            .reveal .navigate-left {
+                right: 6em !important;
+            }
+            .reveal .navigate-right {
+                right: 1em !important;
+            }
+
+
+            body.is-fullscreen header,
+            body.is-fullscreen footer,
+            body.is-fullscreen main > *:not(.reveal),
+            body.is-fullscreen #fullscreen-btn {
+                display: none;
+            }
+        </style>
         
         <!-- theme -->
         <script>
@@ -59,6 +273,11 @@
     </head>
     <body>
         <div class="reveal">
+            <button id="fullscreen-btn" title="全屏显示 (ESC退出)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                </svg>
+            </button>
             <div class="slides">
                 <section data-markdown
                          data-separator="^\n---\n"
@@ -67,12 +286,13 @@
                     <script type="text/template">Different Designs For LLM KD Loss
 
 
+
 <small>Alephia</small>
 <small>25/6/10</small>
 
 ---
 
-# Contents
+## Contents
 
 - <p class="fragment"> KLD</p>
 - <p class="fragment"> Reversed KLD(RKLD)</p>
@@ -81,84 +301,137 @@
 
 ---
 
-# KLD
+## KLD
 
-$$KL(p(X),q_{\theta}(X)) = E_{x\sim p(X)}\left[ \log \frac{p(x)}{q_{\theta}(x)} \right] = E_{x\sim p(X)}\left[ -\log q_{\theta}(x) \right]-H(p(x))$$
+$$ KL(p(X),q_{\theta}(X)) = E_{x\sim p(X)}\left[ \log \frac{p(x)}{q_{\theta}(x)} \right] = E_{x\sim p(X)}\left[ -\log q_{\theta}(x) \right]-H(p(x)) $$
 
-$$
-\begin{flalign}
+$$ 
+\begin{align}
 argmin_{\theta}\ KL(p(X),q_{\theta}(X)) &= argmin_{\theta}\ E_{x\sim p(X)}\left[ -\log q_{\theta}(x) \right]\\
 &=argmax_{\theta}\ E_{x\sim p(X)}\left[ \log q_{\theta}(x) \right]\\
 & \approx argmax_{\theta} \sum_{x} \log q_{\theta}(x)\\
 &=argmax_{\theta} \prod_{x} q_{\theta}(x)
-\end{flalign}
+\end{align} 
 $$
 
+Note:
 最小化KLD(p,q)等价于最小化CE(p,q)等价于最大化似然函数
+
 
 ---
 
-# RKLD
+## RKLD
 
-$$
-RKL(p(X),q_{\theta}(X))=KL(q_{\theta}(X),p(X)) = E_{x\sim q_{\theta}(X)}\left[ \log \frac{q_{\theta}(x)}{p(x)} \right] = E_{x\sim q_{\theta}(X)}\left[ -\log p(x) \right]-H(q_{\theta}(x))
-$$
+$$ RKL(p(X),q_{\theta}(X))=KL(q_{\theta}(X),p(X)) = E_{x\sim q_{\theta}(X)}\left[ \log \frac{q_{\theta}(x)}{p(x)} \right] = E_{x\sim q_{\theta}(X)}\left[ -\log p(x) \right]-H(q_{\theta}(x)) $$
 
 最小化RKLD(p,q)等价于最小化CE(q,p)-H(q)
 
 ---
 
-# FKLD: Mean-Seeking Behaviour
+## FKLD: Mean-Seeking Behaviour
 
-$$
-KL(p(X),q_{\theta}(X)) = E_{x\sim p(X)}\left[ \log \frac{p(x)}{q_{\theta}(x)} \right] = E_{x\sim p(X)}\left[ -\log q_{\theta}(x) \right]-H(p(x))
-$$
+$$ KL(p(X),q_{\theta}(X)) = E_{x\sim p(X)}\left[ \log \frac{p(x)}{q_{\theta}(x)} \right] = E_{x\sim p(X)}\left[ -\log q_{\theta}(x) \right]-H(p(x)) $$
 - p中高概率的地方，q也必须高，需要涵盖所有高概率区域
 - q中高概率的地方，p不必高
+
 </script>
+
                 </section>
             </div>
         </div>
 
-        <script src="https://cdn.bootcss.com/reveal.js/3.4.1/lib/js/head.min.js"></script>
-        <script src="https://cdn.bootcss.com/reveal.js/3.4.1/js/reveal.min.js"></script>
-        <script src="https://cdn.bootcss.com/reveal.js/3.4.1/plugin/math/math.js"></script>
+
+        <!-- <script src="https://cdn.bootcss.com/reveal.js/3.4.1/lib/js/head.min.js"></script>
+        <script src="https://cdn.bootcss.com/reveal.js/3.4.1/js/reveal.min.js"></script> -->
+        <!-- <script src="/reveal.js/plugin/math/mathjax2.js"></script> -->
+        <!-- <script src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js"></script> -->
+        <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/math/math.js"></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/markdown/markdown.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/highlight/highlight.js"></script>
+
+        <!-- Notes插件 -->
+        <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/notes/notes.js"></script>
+
+
 
         <script>
             // More info https://github.com/hakimel/reveal.js#configuration
             Reveal.initialize({
-                plugins: [ RevealMath ],
+                plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, RevealMath ],
+                math: {
+                    mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js',
+                    // loader: { load: ['[tex]/ams'] },
+                    tex: {
+                        packages: ['base', 'ams'], // 这里必须显式写上 ams
+                        inlineMath: [['$', '$'], ['\\(', '\\)']],
+                        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+                    },
+                    options: {
+                        fontCache: 'global',
+                        scale: 0.8 // 缩放到 80%
+                    }
+                },
+                // 幻灯片距离浏览器边缘的百分比（0 - 1）
+                margin: 0.1,  
+                
+                // 缩小时最小缩放比例
+                minScale: 0.2, 
+
+                // 放大时最大缩放比例
+                maxScale: 2.0, 
+
+                // 地址栏 hash 反映当前页，方便分享链接定位到某页
+                hash: true,
+
                 history: true,
+
                 // 是否在右下角展示控制条
                 controls: true,
+
                 // 是否显示演示的进度条
                 progress: true,
+
                 // 是否显示当前幻灯片的页数编号，也可以使用代码 “slideNumber: 'c/t'” ，表示当前页/总页数。
-                slideNumber: false,
+                slideNumber: true,
+
                 // 是否将每个幻灯片改变加入到浏览器的历史记录中去
                 history: false,
+
                 // 是否启用键盘快捷键来导航
                 keyboard: true,
+
                 // 是否启用幻灯片的概览模式，可使用 "Esc" 或 "o" 键来切换概览模式
                 overview: true,
+
                 // 是否将幻灯片垂直居中
                 center: true,
+
                 // 是否在触屏设备上启用触摸滑动切换
                 touch: true,
+
                 // 是否循环演示
                 loop: false,
+
                 // 是否将演示的方向变成 RTL，即从右往左
                 rtl: false,
+
                 // 是否每次演示的时候，随机幻灯片的顺序
                 shuffle: false,
+
                 // 全局开启和关闭碎片。
                 fragments: true,
+
                 // 标识演示文稿是否在嵌入模式中运行，即包含在屏幕的有限部分中的
                 embedded: false,
+
                 // 标识当问号键被点击的时候是否应该显示一个帮助的覆盖层
                 help: true,
+
                 // 标识演讲者备注标志是否让所有观看者可见
                 showNotes: false,
+
                 // 两个幻灯片之间自动切换的时间间隔（毫秒）
                 // 当设置成 0 的时候则禁止自动切换
                 // 该值可以被幻灯片上的 “data-autoslide” 属性覆盖
@@ -167,8 +440,10 @@ $$
                 autoSlideStoppable: true,
                 // 当自动滑动时，使用此方法进行导航。
                 autoSlideMethod: Reveal.navigateNext,
+
                 // 是否启用通过鼠标滚轮来导航幻灯片
-                mouseWheel: false,
+                mouseWheel: true,
+
                 // 是否在移动设备上隐藏地址栏
                 hideAddressBar: true,
                 // 是否在一个弹出的 iframe 中打开幻灯片中的链接
@@ -179,8 +454,10 @@ $$
                 transitionSpeed: 'default', // default/fast/slow
                 // 全屏幻灯片背景的过渡效果
                 backgroundTransition: 'default', // none/fade/slide/convex/concave/zoom
+
                 // 加载除当前可见的幻灯片之外的幻灯片数量
                 viewDistance: 3,
+
                 // 视差背景图片
                 parallaxBackgroundImage: '',
                 // e.g. 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'
@@ -191,15 +468,98 @@ $$
                 // - 设置为 0 时，禁止沿轴运动
                 parallaxBackgroundHorizontal: null,
                 parallaxBackgroundVertical: null,
-                // More info https://github.com/hakimel/reveal.js#dependencies
-                dependencies: [
-                    
-                    { src: 'https://cdn.bootcss.com/reveal.js/3.4.1/plugin/markdown/marked.js' },
-                    { src: 'https://cdn.bootcss.com/reveal.js/3.4.1/plugin/markdown/markdown.min.js' },
-                    { src: 'https://cdn.bootcss.com/reveal.js/3.4.1/plugin/notes/notes.min.js', async: true },
-                    { src: 'https://cdn.bootcss.com/reveal.js/3.4.1/plugin/highlight/highlight.min.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
-                ]
             });
+
+
+            // 获取所有需要的元素
+            const revealElement = document.querySelector('.reveal');
+            const fullscreenBtn = document.getElementById('fullscreen-btn');
+            const laserBtn = document.getElementById('laser-btn');
+            const laserPointer = document.querySelector('.laser-pointer');
+            const laserPositionInput = document.getElementById('laser-position');
+            
+            let isFullscreen = false;
+            let isLaserActive = false;
+
+            // 检测是否在演示者视图中
+            function isInPresenterView() {
+                // 检查URL中是否有speaker或notes参数
+                return window.location.search.includes('receiver');
+            }
+
+            // 检测是否在展示视图中
+            function isInPresentationView() {
+            return !isInPresenterView() && window.opener;
+            }
+    
+            // 检测是否在主视图
+            function isInMainView() {
+            return !isInPresenterView() && !window.opener;
+            }
+    
+            // 定义一个简单粗暴的本地存储键，用于在演示者视图和展示视图之间通信
+            const LASER_KEY = 'reveal_laser_pointer_position';
+            const LASER_ACTIVE_KEY = 'reveal_laser_active_state';
+
+            // 全屏按钮点击事件
+            fullscreenBtn.addEventListener('click', function() {
+            isFullscreen = !isFullscreen;
+            document.body.classList.toggle('is-fullscreen', isFullscreen);
+            revealElement.classList.toggle('fullscreen', isFullscreen);
+            
+            if (isFullscreen) {
+                document.documentElement.requestFullscreen();
+                laserBtn.style.display = 'flex';
+                Reveal.layout();
+            } else {
+                cleanupLaserPointer();
+            }
+            });
+
+            // 监听全屏状态变化
+            document.addEventListener('fullscreenchange', function() {
+            if (!document.fullscreenElement) {
+                cleanupLaserPointer();
+                Reveal.layout();
+            }
+            });
+
+            // ESC 键处理
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    // 区分演示者视图和其他视图的处理
+                    if (isInPresenterView()) {
+                    // 在演示者视图中，ESC 键只退出全屏，不关闭激光笔
+                    if (isFullscreen || document.fullscreenElement) {
+                        if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                        }
+                        isFullscreen = false;
+                        document.body.classList.remove('is-fullscreen');
+                        revealElement.classList.remove('fullscreen');
+                        // 不关闭激光笔，但在演讲者模式下按钮保持隐藏
+                        laserBtn.style.display = 'none';
+                        Reveal.layout();
+                    }
+                    } else {
+                    // 在其他视图中，ESC 键行为不变
+                    cleanupLaserPointer();
+                    }
+                }
+                    // Alt 键切换激光笔（在所有视图中都有效）
+                if (e.key === 'Alt') {
+                    e.preventDefault(); // 防止触发浏览器默认行为
+                    toggleLaser(!isLaserActive);
+                }
+            });
+                
+            // 添加 Alt 键释放处理
+            document.addEventListener('keyup', function(e) {
+            if (e.key === 'Alt') {
+                e.preventDefault(); // 防止触发浏览器默认行为
+            }
+            });
+
         </script>
     </body>
 </html>
