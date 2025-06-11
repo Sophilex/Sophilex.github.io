@@ -303,19 +303,19 @@
 
 ## KLD
 
-$$ KL(p(X),q_{\theta}(X)) = E_{x\sim p(X)}\left[ \log \frac{p(x)}{q_{\theta}(x)} \right] = E_{x\sim p(X)}\left[ -\log q_{\theta}(x) \right]-H(p(x)) $$
-
 $$ 
-\begin{align}
-argmin_{\theta}\ KL(p(X),q_{\theta}(X)) &= argmin_{\theta}\ E_{x\sim p(X)}\left[ -\log q_{\theta}(x) \right]\\
-&=argmax_{\theta}\ E_{x\sim p(X)}\left[ \log q_{\theta}(x) \right]\\
-& \approx argmax_{\theta} \sum_{x} \log q_{\theta}(x)\\
-&=argmax_{\theta} \prod_{x} q_{\theta}(x)
-\end{align} 
+KL(p(X),q_{\theta}(X)) = E_{x\sim p(X)}\left[ \log \frac{p(x)}{q_{\theta}(x)} \right]  
 $$
 
-Note:
-看到这里的人请我吃顿饭
+$$
+\begin{flalign}
+argmin_{\theta}\ KL(p(X),q_{\theta}(X)) &= argmin_{\theta}\ E_{x\sim p(X)}\left[ -\log q_{\theta}(x) \right]\\\\
+&=argmax_{\theta}\ E_{x\sim p(X)}\left[ \log q_{\theta}(x) \right]\\\\
+& \approx argmax_{\theta} \sum_{x} \log q_{\theta}(x)\\\\
+&=argmax_{\theta} \prod_{x} q_{\theta}(x)
+\end{flalign}
+$$
+
 最小化KLD(p,q)等价于最小化CE(p,q)等价于最大化似然函数
 
 
@@ -323,17 +323,72 @@ Note:
 
 ## RKLD
 
-$$ RKL(p(X),q_{\theta}(X))=KL(q_{\theta}(X),p(X)) = E_{x\sim q_{\theta}(X)}\left[ \log \frac{q_{\theta}(x)}{p(x)} \right] = E_{x\sim q_{\theta}(X)}\left[ -\log p(x) \right]-H(q_{\theta}(x)) $$
-
 最小化RKLD(p,q)等价于最小化CE(q,p)-H(q)
+
+$$
+\begin{flalign}
+RKL(p(X),q_{\theta}(X))&=KL(q_{\theta}(X),p(X)) \\\\
+&= E_{x\sim q_{\theta}(X)}\left[ \log \frac{q_{\theta}(x)}{p(x)} \right] \\\\
+&= E_{x\sim q_{\theta}(X)}\left[ -\log p(x) \right]-H(q_{\theta}(x))
+\end{flalign}
+$$
 
 ---
 
 ## FKLD: Mean-Seeking Behaviour
 
-$$ KL(p(X),q_{\theta}(X)) = E_{x\sim p(X)}\left[ \log \frac{p(x)}{q_{\theta}(x)} \right] = E_{x\sim p(X)}\left[ -\log q_{\theta}(x) \right]-H(p(x)) $$
+$$ KL(p(X),q_{\theta}(X)) =  E_{x\sim p(X)}\left[ -\log q_{\theta}(x) \right]-H(p(x)) $$
+
+Zero Avoiding
+$$
+\exists (x,y)\  s.t.\ p(y|x)\gg 0, q_{\theta}(y|x)\approx 0 \rightarrow KL(p,q_{\theta})=inf
+$$
 - p中高概率的地方，q也必须高，需要涵盖所有高概率区域
 - q中高概率的地方，p不必高
+- FKLD倾向于拟合多个峰
+
+<img src="https://s2.loli.net/2025/06/11/MDh3fYV5F7ClkQp.png" style="width: 500px; height: auto; position: absolute; bottom: 10px; right: 10px;border: none;">
+
+---
+
+## RKLD: Mode-Seeking Behaviour
+
+
+$$
+\begin{flalign}
+RKL(p(X),q_{\theta}(X)) = E_{x\sim q_{\theta}(X)}\left[ -\log p(x) \right]-H(q_{\theta}(x))
+\end{flalign}
+$$
+
+$$
+\exists (x,y)\  s.t.\ q_{\theta}(y|x)\gg 0, p(y|x)\approx 0 \rightarrow KL(q_{\theta},p)=inf
+$$
+- q中高概率的地方，p也必须高， q中低概率的地方，p也应该较小
+- p中高概率的地方，q不必高
+- RKLD倾向于拟合一个峰
+
+<img src="https://s2.loli.net/2025/06/11/QX7HSRayhFOcm3r.png" style="width: 500px; height: auto; position: absolute; bottom: 10px; right: 10px;border: none;">
+
+---
+
+## MiniLLM
+
+KLD下，学生在教师分布的viod region会高估，进而带来麻烦。这一问题在RKLD下有所缓解
+
+条件：
+1 教师服从混合Gaussion分布，学生服从Gaussion分布
+2 两个分布都是连续的
+
+
+<img src="https://s2.loli.net/2025/06/11/IKkgb3fMR9NxepO.png" style="width: 500px; height: auto; float: center; margin-right: 20px; margin-top: auto; margin-bottom: auto;border: none;">
+
+<div class='slide-ref'>
+Gu, Y., Dong, L., Wei, MiniLLM: Knowledge Distillation of Large Language Models. In ICLR,24
+</div>
+
+---
+
+## Rethinking Kullback-Leibler Divergence in Knowledge Distillation for Large Language Models
 
 </script>
 
@@ -341,13 +396,29 @@ $$ KL(p(X),q_{\theta}(X)) = E_{x\sim p(X)}\left[ \log \frac{p(x)}{q_{\theta}(x)}
             </div>
         </div>
 
+        <script>
+            window.MathJax = {
+                tex: {
+                    inlineMath: [['$', '$'], ['\\(', '\\)']],
+                    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                    processEscapes: true,
+                    processEnvironments: true,
+                    packages: {'[+]': ['base', 'ams', 'amsmath', 'amssymb']}
+                },
+                options: {
+                    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+                }
+            };
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
         <!-- <script src="https://cdn.bootcss.com/reveal.js/3.4.1/lib/js/head.min.js"></script>
         <script src="https://cdn.bootcss.com/reveal.js/3.4.1/js/reveal.min.js"></script> -->
         <!-- <script src="/reveal.js/plugin/math/mathjax2.js"></script> -->
         <!-- <script src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js"></script> -->
         <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/math/math.js"></script>
+        <!-- <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/math/math.js"></script> -->
+        <!-- <script src="/reveal.js/plugin/math/math.js"></script> -->
 
         <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/markdown/markdown.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/highlight/highlight.js"></script>
@@ -360,20 +431,19 @@ $$ KL(p(X),q_{\theta}(X)) = E_{x\sim p(X)}\left[ \log \frac{p(x)}{q_{\theta}(x)}
         <script>
             // More info https://github.com/hakimel/reveal.js#configuration
             Reveal.initialize({
-                plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, RevealMath ],
-                math: {
-                    mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js',
-                    // loader: { load: ['[tex]/ams'] },
-                    tex: {
-                        packages: ['base', 'ams'], // 这里必须显式写上 ams
-                        inlineMath: [['$', '$'], ['\\(', '\\)']],
-                        displayMath: [['$$', '$$'], ['\\[', '\\]']]
-                    },
-                    options: {
-                        fontCache: 'global',
-                        scale: 0.8 // 缩放到 80%
-                    }
-                },
+                plugins: [ RevealMarkdown, RevealHighlight, RevealNotes],
+                
+                // math: {
+                //     mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js',
+                //     config: 'TeX-AMS_HTML-full',
+                //     tex: {
+                //         inlineMath: [['$', '$'], ['\\(', '\\)']],
+                //         displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                //         processEscapes: true,
+                //         processEnvironments: true,
+                //         packages: {'[+]': ['ams', 'newcommand', 'configmacros']}
+                //     }
+                // },
                 // 幻灯片距离浏览器边缘的百分比（0 - 1）
                 margin: 0.1,  
                 
@@ -470,7 +540,11 @@ $$ KL(p(X),q_{\theta}(X)) = E_{x\sim p(X)}\left[ \log \frac{p(x)}{q_{\theta}(x)}
                 parallaxBackgroundHorizontal: null,
                 parallaxBackgroundVertical: null,
             });
-
+            Reveal.on('slidechanged', function() {
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    MathJax.typesetPromise();
+                }
+            });
 
             // 获取所有需要的元素
             const revealElement = document.querySelector('.reveal');
@@ -504,17 +578,17 @@ $$ KL(p(X),q_{\theta}(X)) = E_{x\sim p(X)}\left[ \log \frac{p(x)}{q_{\theta}(x)}
 
             // 全屏按钮点击事件
             fullscreenBtn.addEventListener('click', function() {
-            isFullscreen = !isFullscreen;
-            document.body.classList.toggle('is-fullscreen', isFullscreen);
-            revealElement.classList.toggle('fullscreen', isFullscreen);
-            
-            if (isFullscreen) {
-                document.documentElement.requestFullscreen();
-                laserBtn.style.display = 'flex';
-                Reveal.layout();
-            } else {
-                cleanupLaserPointer();
-            }
+                isFullscreen = !isFullscreen;
+                document.body.classList.toggle('is-fullscreen', isFullscreen);
+                revealElement.classList.toggle('fullscreen', isFullscreen);
+                
+                if (isFullscreen) {
+                    document.documentElement.requestFullscreen();
+                    laserBtn.style.display = 'flex';
+                    Reveal.layout();
+                } else {
+                    cleanupLaserPointer();
+                }
             });
 
             // 监听全屏状态变化
@@ -559,6 +633,19 @@ $$ KL(p(X),q_{\theta}(X)) = E_{x\sim p(X)}\left[ \log \frac{p(x)}{q_{\theta}(x)}
             if (e.key === 'Alt') {
                 e.preventDefault(); // 防止触发浏览器默认行为
             }
+            });
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const refs = document.querySelectorAll('.slide-ref');
+
+                refs.forEach(ref => {
+                    const lines = ref.textContent.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+
+                    ref.innerHTML = `
+                    <div style="width: 100px; height: 1px; background: black; margin-bottom: 5px;"></div>
+                    <p style="margin: 2px 0;">${lines.join('<br>')}</p>
+                    `;
+                });
             });
 
         </script>
