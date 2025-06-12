@@ -2,6 +2,24 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://sophilex.github.io/posts/5ba685e4/</loc>
+    
+    <lastmod>2025-06-12</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://sophilex.github.io/posts/9cafb377/</loc>
+    
+    <lastmod>2025-06-12</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://sophilex.github.io/posts/87c52bab/</loc>
     
     <lastmod>2025-06-12</lastmod>
@@ -50,15 +68,6 @@
     <loc>https://sophilex.github.io/slides/slides.html</loc>
     
     <lastmod>2025-06-03</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://sophilex.github.io/posts/9cafb377/</loc>
-    
-    <lastmod>2025-06-02</lastmod>
     
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
