@@ -4,6 +4,87 @@
   
   
   <entry>
+    <title>Dual-Space Knowledge Distillation for Large Language Models</title>
+    <link href="/posts/8d7eb621/"/>
+    <url>/posts/8d7eb621/</url>
+    
+    <content type="html"><![CDATA[<p>目前llm白盒蒸馏往往是对齐教师学生最后输出的概率分布，本文希望在隐藏状态层面进行对齐。同时目前的llmkd局限于同词汇表的架构之间的蒸馏，对上一个点的改进也有助于解决这个问题。</p><p>考虑隐藏状态<spanclass="math inline">\(h_{1:n}^t\)</span>,其过一个linear层<spanclass="math inline">\(P^{t \rightarrows}\)</span>，映射到学生的隐藏状态空间中，表示为 <spanclass="math display">\[h_{1:n}^{t \rightarrow s} = P^{t \rightarrow s}(h_{1:n}^t;\theta_{P}^{t\rightarrow s}) \in \mathbb{R}^{n\times d}\]</span> 其中<span class="math inline">\(d\)</span>是学生emd size从而教师映射之后得到的概率分布可以表示为 <span class="math display">\[p_{1:n}^{t \rightarrow s} = \text{softmax}(h_{1:n}^{t \rightarrow s}W^s)\]</span> 其中<spanclass="math inline">\(W^s\)</span>就是学生的映射头，此时双方可以共享一个映射头。这里唯一的参数是<spanclass="math inline">\(P^{t \rightarrow s}\)</span>,其训练时通过将<spanclass="math inline">\(p_{1:n}^{t \rightarrow s}\)</span>与groundtruth进行ce loss对齐实现的。当然后面做教师学生KLD对齐的时候，这里的<spanclass="math inline">\(W^s\)</span>并不会做反向传播。类似的，学生的隐藏状态也可以映射到教师空间中，然后通过教师映射头得到概率分布，并与教师进行对齐。最终训练的时候，两个对齐的方向都会使用。</p><p>llmkd中另一个问题是，由于模型输出的概率分布是定义在词汇表中的token上的，如果某个token在词汇表上不存在，那么其出现的概率也是没有定义的，从而在使用KLD对齐教师学生概率分布的时候，不同的词汇表就会导致不对应的token对齐错误。因此目前llm白盒蒸馏仅仅局限于同词汇表的模型之间。尝试通过attention来解决这个问题。每次对齐的时候，考虑学生向教师对齐，则将Q设计为学生相关emd，K设计为教师相关emd，然后设计一个V，即可得到学生映射后的emd，即隐藏状态，然后仿照上文进行概率分布对齐即可。教师向学生对齐的部分也是同理。</p><p>具体来说，对于当前句子在学生中的embeding表示，记为<spanclass="math inline">\(e_{1:n}^s\)</span>，其目标tokens的embeding表示记为<spanclass="math inline">\(e_{2:n+1}^s\)</span>，则 <spanclass="math display">\[Q = P^q([e_{1:n}^s\epsilon_{2:n+1}^s];\theta_{P}^q)\in R^{n\times 2D}\]</span> 其中<span class="math inline">\(D\)</span>是教师emd size <spanclass="math inline">\(K\)</span>设计为 <span class="math display">\[K = [e_{1:m}^t;e_{2:m+1}^t]\in R^{m\times 2D}\]</span> <span class="math inline">\(V\)</span>设计为 <spanclass="math display">\[V = P^v(e_{2:m+1}^t+h_{1:m}^t;\theta_{P}^v)\in R^{m\times d}\]</span> 关键主要在于<spanclass="math inline">\(V\)</span>的设计，这里设计为目标tokens在教师中的embedding表示，再加上教师最后一个隐藏层emd，不懂为什么是这样。最终映射结果表示为 <span class="math display">\[softmax(\frac{QK^T}{\sqrt{ 2D }}V)\]</span></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+      <tag>KD</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Why Exposure Bias Matters: An Imitation Learning Perspective of Error Accumulation in Language Generation</title>
+    <link href="/posts/cb5328a8/"/>
+    <url>/posts/cb5328a8/</url>
+    
+    <content type="html"><![CDATA[<p>LM推理生成语句的时候，是逐token生成的。由于LM本身生成的前缀相对训练语料分布可能会有很大的偏差，这会导致后续token的生成也出现偏差。如此不断累积偏差，最终效果就会大打折扣，这一现象称为exposure bias</p><p>模型训练的时候，对于不同的前缀<spanclass="math inline">\(w_{0}^{t-1}\)</span>，loss可以表示为 <spanclass="math display">\[l(p_{\theta},w_{0}^{t-1};o) = \mathop{\mathbb{E}}\limits_{w_{t}\simo(\cdot|w_{0}^{t-1})}\log\frac{o(w_{t}|w_{0}^{t-1})}{p_{\theta}(w_{t}|w_{0}^{t-1})}\]</span> 其中<spanclass="math inline">\(w_{0}^{t-1}\)</span>代表到<spanclass="math inline">\(t-1\)</span>时刻对应的前缀，<spanclass="math inline">\(w_{t}\)</span>代表第<spanclass="math inline">\(t\)</span>个时刻生成的token，<spanclass="math inline">\(o\)</span>代表目标分布（生成策略）这实际上就是一个KLD对齐</p><p>从而在进行teacher forcing的过程中，总loss表示为 <spanclass="math display">\[L^{TF}(p_{\theta}) \approx\sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\simd_{o}^t \\w_{t}\sim o(\cdot|w_{0}^{t-1})}}\log\frac{o(w_{t}|w_{0}^{t-1})}{p_{\theta}(w_{t}|w_{0}^{t-1})}\]</span></p><p>从而在推理的过程中，可以将模型与目标的偏差表示为 <spanclass="math display">\[L^{I}(p_{\theta}) = \sum_{t=1}^{T}\mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\simd_{p_{\theta},F}^t\\ w_{t}\sim o(\cdot| w_{0}^{t-1})}} \log\frac{o(w_{t}|w_{0}^{t-1})}{p_{\theta}(w_{t}|w_{0}^{t-1})}\]</span> 其中<span class="math inline">\(w_{0}^{t-1}\simd_{p_{\theta},F}\)</span>表示前缀由训练的模型得到，<spanclass="math inline">\(F\)</span>代表decoding 其记录了<spanclass="math inline">\(T\)</span>步累积之后的总偏差</p><p>记 <span class="math display">\[\epsilon_{t} = \mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\simd_{o}^t\\ w_{t}\sim o(\cdot| w_{0}^{t-1})}} \log\frac{o(w_{t}|w_{0}^{t-1})}{p_{\theta}(w_{t}|w_{0}^{t-1})}\]</span>代表每一个时间步，模型目标目标分布之后的期望偏差，那么可以得到<spanclass="math inline">\(\epsilon=\frac{1}{T} \sum_{t=1}^{T}\epsilon_{t}\)</span>为总体的期望偏差。由此我们不难得到 <spanclass="math display">\[T\epsilon \leq L^I(p_{\theta}) \leq T^2 \epsilon\]</span>第一个不等号代表累积误差的期望最小值，即每一步的误差都与上一步无关，误差不会累积，这也是最理想的情况。而第二个不等号代表最坏情况，每一步的误差线性累积，最终表现出二次增长的趋势。</p><p>从而可以设计出两个指标： <span class="math display">\[AccErr_{\leq}(l) = \frac{L^I_{\leq l}(p_{\theta})}{\epsilon_{\leq l}}\]</span> 其中<span class="math inline">\(\epsilon_{ \leq l} = 1/l\sum_{t=1}^{l} \epsilon_{t}\)</span>，代表了前<spanclass="math inline">\(l\)</span>步的期望误差 如果exposurebias确实会导致误差累积的话，我们可以观察到<spanclass="math inline">\(\text{AccErr}\)</span>值是随着序列长度增加而超线性增长的。以及 <span class="math display">\[ExAccErr_{\leq}(l) = \frac{L^I_{\leq l}(p_{\theta}) - l \epsilon_{\leql}}{l \epsilon_{\leq l}} \cdot 100\%\]</span> 其中<span class="math inline">\(l\epsilon_{\leql}\)</span>是这<spanclass="math inline">\(l\)</span>步的最小损失，所以<spanclass="math inline">\(ExAccErr\)</span>值代表多出来的损失所占的比重，而这实际上就是由损失累积带来的。如果一个模型能够做到每一个的损失不会累积的话，那么这个值应当一直在0左右，否则，就会呈不断上升的趋势。</p><p>下图<spanclass="math inline">\((a)\)</span>给出了AccErr值的变化曲线，以及l的线性增长曲线，可以看到AccErr确实是超线性增长的，这肯定了损失累积现象。并且可以看到AccErr的增长是接近二次的，而这一点在<spanclass="math inline">\((b)\)</span>中可以观察到，每一步的多余累积误差是线性的，两者可以相互印证。这也证明损失累积的程度是比较大的。<img src="https://s2.loli.net/2025/06/23/CijJE1NtZ6g3Bym.png" /></p><p>另外一个有意思的点是，目前模型推理生成token时，所使用的指标往往是困惑度，而<span class="math display">\[\begin{flalign}\epsilon &amp;= \frac{1}{T} \sum_{t=1}^{T}\mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\sim d_{o}^t\\w_{t}\sim o(\cdot| w_{0}^{t-1})}} \log\frac{o(w_{t}|w_{0}^{t-1})}{p_{\theta}(w_{t}|w_{0}^{t-1})}\\&amp; \approx -\frac{1}{|D|} \sum_{\substack{(w_{0}^{i-1}, w_{i})\in D}}\log p_{\theta}(w_{i}|w_{0}^{i-1}) + c\\&amp;=H(p_{\theta}; D) + c&#39;\end{flalign}\]</span> 这里<span class="math inline">\(H(p_{\theta};D)\)</span>代表log 困惑度</p><p>所以困惑度所关注的内容与<spanclass="math inline">\(\epsilon\)</span>是类似的，只能捕捉单步的损失，但是对多步累积的损失无法监督，这也是可以尝试突破的一个点。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+      <tag>KD</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>NOT ALL LLM-GENERATED DATA ARE EQUAL: RETHINKING DATA WEIGHTING IN TEXT CLASSIFICATION</title>
+    <link href="/posts/a6205548/"/>
+    <url>/posts/a6205548/</url>
+    
+    <content type="html"><![CDATA[<p>现在LLM训练时会使用LLM产出的语料。但是LLM产出的分布与训练语料的分布往往会存在偏差，那么就会对训练带来影响。本文通过在CEloss中添加sample-wise的权重，调整不同样本对训练的贡献，来缓解这种分布的mismatch问题。</p><p>记<span class="math inline">\(P\)</span>为真实世界数据分布，<spanclass="math inline">\(P&#39;\)</span>为从其中采样得到的一个子集（<spanclass="math inline">\(|P&#39;|\approx 200\)</span>），期望<spanclass="math inline">\(P&#39;\)</span>能够反映分布<spanclass="math inline">\(P\)</span>。</p><p><span class="math inline">\(Q\)</span>为LLM产出的数据分布，<spanclass="math inline">\(\hat{P}\)</span>为模型预测的分布，训练时的数据记为<spanclass="math inline">\(x\)</span>,其对应的label记为<spanclass="math inline">\(y\)</span>。用<spanclass="math inline">\(Q\)</span>中采样的数据<spanclass="math inline">\(D_{Q}\)</span>进行训练的话，就有<spanclass="math inline">\(\{x,y\}\in D_{Q}\)</span>，可以将训练目标记为<span class="math display">\[\mathbb{E}_{Q}[-\log \hat{P}(y|x;\theta)]\tag{1}\]</span></p><p>为了缓解上述问题，一个比较直观的想法是，对于那些<spanclass="math inline">\(P(y|x),Q(y|x)\)</span>差距比较大的样本对<spanclass="math inline">\(\{x_{i,y_{i}}\}\)</span>，这意味着该样本偏离分布<spanclass="math inline">\(P\)</span>的程度是比较大的，因此在loss中尝试投入更大的权重来修正，而那些<spanclass="math inline">\(P(y|x),Q(y|x)\)</span>差距不算大的样本，可以投入相对小的权重。重要性采样可以实现类似操作，也就是在<spanclass="math inline">\((1)\)</span>式中插入<spanclass="math inline">\(P(y|x) / Q(y|x)\)</span>，得到训练目标为 <spanclass="math display">\[\mathbb{E}_{Q}\left[ -\frac{P(y|x)}{Q(y|x)} \log \hat{P}(y|x;\theta)\right]\tag{2}\]</span> 这就充当了差距比较以及赋权重的角色。</p><p>想要得到分布<spanclass="math inline">\(P,Q\)</span>的具体分布情况，就需要额外训两个model对其进行拟合。当然，分布<spanclass="math inline">\(P\)</span>实际上也是不能直接拟合的，因此用分布<spanclass="math inline">\(\hat{P}\)</span>进行近似，拟合得到的两个具体分布记为<spanclass="math inline">\(\hat{P}&#39;,\hat{Q}\)</span>，最终得到loss为<span class="math display">\[L(\theta,D_{Q}) = -\frac{1}{N} \sum_{i=1}^{N}\frac{\hat{P}&#39;(y_{i}|x_{i})}{\hat{Q}(y_{i}|x_{i})}\log\hat{P}(y_{i}|x_{i};\theta)\tag{3}\]</span></p><p>仔细观察这一式子，可以注意到在整个训练过程中，每一个样本所对应的权重其实是固定的，因此可以尝试根据训练状况为其赋以动态权重。</p><p>具体来说，由于训练数据来自<spanclass="math inline">\(D_{Q}\)</span>，从而分布<spanclass="math inline">\(\hat{P}\)</span>本来就是在拟合<spanclass="math inline">\(Q\)</span>，其与<spanclass="math inline">\(\hat{Q}\)</span>是类似的功能。因此将后者直接替换为<spanclass="math inline">\(\hat{P}(y_{i}|x_{i};\theta_{t})\)</span>，这里用<spanclass="math inline">\(\theta_{t}\)</span>来强调其是随训练进行而不断变化的。<spanclass="math inline">\(\hat{P}&#39;(y_{i}|x_{i})\)</span>是拟合分布<spanclass="math inline">\(P&#39;\)</span>得到的，也可以选择将<spanclass="math inline">\(\hat{P}(y_{i}|x_{i};\theta_{t})\)</span>过<spanclass="math inline">\(P&#39;\)</span>训一遍进行拟合，然后替换掉<spanclass="math inline">\(\hat{P}&#39;(y_{i}|x_{i})\)</span>，最终得到loss为<span class="math display">\[L_{\theta_{i},D_{Q}} = -\frac{1}{N} \sum_{i=1}^{N}\frac{\hat{P}(y_{i}|x_{i};\theta_{t},D_{P&#39;})}{\hat{P}(y_{i}|x_{i};\theta_{t})}\log\hat{P}(y_{i}|x_{i};\theta_{t})\tag{4}\]</span> 这里用<spanclass="math inline">\(\hat{P}(y_{i}|x_{i};\theta_{t},D_{P&#39;})\)</span>来代表<spanclass="math inline">\(\hat{P}(y_{i}|x_{i};\theta_{t})\)</span>过一遍分布<spanclass="math inline">\(P&#39;\)</span>拟合之后的结果。</p><p>这种动态权重，按照个人理解，其实是在根据训练效果调整样本的权重了。预测结果与实际分布接近的话，权重会较大，反之则较大。也就是说，实际上与式<spanclass="math inline">\((3)\)</span>的出发点已经不太一样了，并不是在根据分布P，Q的差距给权重。</p><p>另外，不管是式<span class="math inline">\((3)\)</span>还是式<spanclass="math inline">\((4)\)</span>，对于那些在P中概率较小的样本，都没有很好的赋权策略。如果在P中某个样本对<spanclass="math inline">\(P(y_{i}|x_{i})\)</span>比较小的话，训练得到的预测<spanclass="math inline">\(\hat{P}(y_{i}|x_{i};\theta)\)</span>更有可能是偏大的，那么最终得到的权重反而是一个较小的值。</p><p>最后，对于式<span class="math inline">\((4)\)</span>中的<spanclass="math inline">\(\hat{P}(y_{i}|x_{i};\theta_{t},D_{P&#39;})\)</span>，用<spanclass="math inline">\(\hat{P}(\cdot;\theta_{t})\)</span>再去拟合一遍<spanclass="math inline">\(P&#39;\)</span>是否有必要，直接用<spanclass="math inline">\((3)\)</span>中的<spanclass="math inline">\(\hat{P}&#39;(y|x)\)</span>是否也是可以的？</p><p><img src="https://s2.loli.net/2025/06/23/WRFG1DqZ7JT8j2s.png" /></p><p>在最终的实验结果中，两种Loss并没有一方是有完全胜过另一方的，这或许也可以印证我的观点：两种loss其实是在从不同的角度进行加权，走的是两条路，<spanclass="math inline">\((4)\)</span>并不能直接看成<spanclass="math inline">\((3)\)</span>的改进。从缓解分布mismatch对训练影响的角度看，或许还是(3)更加合理一些。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+      <tag>KD</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>hexo+reveal指南</title>
     <link href="/posts/87c52bab/"/>
     <url>/posts/87c52bab/</url>
@@ -383,16 +464,18 @@
     
     <categories>
       
-      <category>Machine Learning</category>
+      <category>学习笔记</category>
       
     </categories>
     
     
     <tags>
       
-      <tag>Machine Learning</tag>
-      
       <tag>学习笔记</tag>
+      
+      <tag>Machine</tag>
+      
+      <tag>Learning</tag>
       
     </tags>
     
