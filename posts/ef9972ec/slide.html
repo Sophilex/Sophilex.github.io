@@ -441,16 +441,18 @@ note:
 ---
 
 ## Introduce Sample-Wise Weight
-$$
-\mathbb{E}_{Q}[-\log P_{\theta}(y|x;\theta)]
-$$
+
 $P$为真实分布，$Q$为合成数据分布，$P_{\theta}$为模型预测分布
+
 $$
-\mathbb{E}_{Q}\left[ -\frac{P(y|x)}{Q(y|x)} \log P_{\theta}(y|x;\theta) \right] = \mathbb{E}_{P}[-\log P_{\theta}(y|x;\theta)]
+E_{Q}[-\log P_{\theta}(y|x;\theta)]
 $$
+
+$$
+E_{Q}\left[ -\frac{P(y|x)}{Q(y|x)} \log P_{\theta}(y|x;\theta) \right] = E_{P}[-\log P_{\theta}(y|x;\theta)]
+$$
+
 $P(y|x)$大，数据点与真实分布高度相关且明确，有参考意义。$Q(y|x)$越小，数据点在分布$Q$中所包含的信息越多。
-
-
 
 <div class="slide-ref">
 Kuo, H., Liao, Y., Chao, Y., Ma, W., & Cheng, P. Not All LLM-Generated Data Are Equal: Rethinking Data Weighting in Text Classification. In ICLR, 25
@@ -466,12 +468,14 @@ SGO: 在一些与目标分布相差较大的样本前缀上，也学到向目标
 
 加权策略更新为
 $$
-\mathbb{E}_{Q}\left[ -\frac{P_{\theta}(y|x;\theta,D_{P'})}{P_{\theta}(y|x;\theta)} \log P_{\theta}(y|x;\theta) \right]
+E_{Q}\left[ -\frac{P_{\theta}(y|x;\theta,D_{P'})}{P_{\theta}(y|x;\theta)} \log P_{\theta}(y|x;\theta) \right]
 $$
 
 $P_{\theta}(y|x)$越小，模型在这个数据点上学的越差，越应注重
 
 <img src="https://s2.loli.net/2025/06/23/WRFG1DqZ7JT8j2s.png" style="width: 500px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
+
+---
 
 ## Thinkings
 
