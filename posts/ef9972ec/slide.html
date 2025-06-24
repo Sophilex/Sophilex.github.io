@@ -1,0 +1,739 @@
+
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <!-- <title>Training-Inference Mismatch In LLM KD</title> -->
+
+        <link rel="stylesheet" href="https://cdn.bootcss.com/reveal.js/3.4.1/css/reveal.min.css">
+
+        <!-- style -->
+
+        <style>
+
+            .reveal.fullscreen {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                z-index: 1000;
+                background-color: white;
+            }
+
+            .reveal:not(.fullscreen) {
+                width: 100%;
+                height: 600px;
+                margin: 2rem 0;
+                position: relative;
+            }
+
+            #fullscreen-btn {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                width: 32px;
+                height: 32px;
+                background-color: rgba(0, 0, 0, 0.6);
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                z-index: 1001;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            #laser-btn {
+                position: fixed;
+                left: 20px;
+                bottom: 20px;
+                width: 32px;
+                height: 32px;
+                background-color: rgba(0, 0, 0, 0.6);
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                z-index: 1001;
+                display: none;
+                align-items: center;
+                justify-content: center;
+            }
+
+            #laser-btn:hover {
+                background-color: rgba(0, 0, 0, 0.8);
+            }
+
+            #laser-btn.active {
+                background-color: rgba(255, 0, 0, 0.6);
+            }
+
+            .laser-pointer {
+                position: fixed;
+                width: 0.6rem;
+                height: 0.6rem;
+                background-color: red;
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 9999;
+                display: none;
+                box-shadow: 0 0 0.25rem 0.15rem rgba(255, 0, 0, 0.5);
+            }
+
+            .cursor-hidden {
+                cursor: none !important;
+            }
+            
+            .cursor-hidden * {
+                cursor: none !important;
+            }
+
+            .reveal .slides section:not(:first-child) {
+                top: 0 !important;
+                transform: none !important;
+            }
+            
+            /* 只取消非首页的垂直居中 */
+            .reveal .slides section:not(:first-child) {
+                top: 0 !important;
+                bottom: 0 !important;
+                transform: none !important;
+            }
+
+            /* 首页保持 Reveal.js 默认的垂直居中 */
+            .reveal .slides section:first-child h1,
+            .reveal .slides section:first-child h2,
+            .reveal .slides section:first-child h3 {
+                text-align: center;
+                text-transform: capitalize;
+                font-size: 6em;
+            }
+
+            /* 其他页面的标题固定在左上角 */
+            .reveal .slides section:not(:first-child) h1,
+            .reveal .slides section:not(:first-child) h2,
+            .reveal .slides section:not(:first-child) h3 {
+                position: absolute;
+                top: 0;
+                left: -4rem;
+            }
+
+            /* 为不同级别的标题设置不同的字体大小 */
+            .reveal .slides section:not(:first-child) h1 { font-size: 55px; }
+            .reveal .slides section:not(:first-child) h2 { font-size: 55px; }
+            .reveal .slides section:not(:first-child) h3 { font-size: 45px; }
+
+            /* 为整个 section 添加上内边距，防止内容与标题重叠 */
+            .reveal .slides section:not(:first-child) {
+                padding-top: 1.7em; 
+            }
+
+            /* 其他页面的主要内容区域添加上边距 */
+            .reveal .slides section:not(:first-child) > *:not(h1):not(h2):not(h3) {
+                margin-top: 1em;
+                font-size: 0.8em;
+            }
+
+            /* 保持内容左对齐 */
+            .reveal .slides section:not(:first-child) {
+                text-align: left;
+            }
+
+            /* 列表项左对齐 */
+            .reveal .slides section ul,
+            .reveal .slides section ol {
+                display: block;
+                text-align: left;
+            }
+
+            /* 代码块左对齐 */
+            .reveal .slides section pre {
+                width: auto;
+                text-align: left;
+            }
+
+            .reveal .slides section .mjx-chtml {
+                text-align: left !important;
+                margin-left: 0 !important;
+            }
+
+            /* 普通段落左对齐 */
+
+            .reveal .slides section {
+                text-align: left;
+                font-size: 40px;
+            }
+            .reveal .slides section p {
+                text-align: left;
+            }
+            .reveal .slides section ul > li {
+                font-size: 1em !important; /* 设置一级列表项的字体大小 */
+            }
+            .reveal .slides section ul ul > li {
+                font-size: 0.8em !important; /* 设置二级列表项的字体大小 */
+            }
+            .reveal .slides section ul ul ul > li {
+                font-size: 0.7em !important; /* 设置三级列表项的字体大小 */
+            }
+            
+            /* 公式左对齐 */
+            /* .reveal .slides section .MathJax_Display {
+                text-align: left !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            } */
+            
+            
+            /* Slide 的设置 */
+            .reveal .slides .slide-cols{
+                display: flex;
+            }
+            .reveal .slides .slide-col-half{
+                flex: 1;
+            }
+            .reveal .slides .slide-col-4{
+                flex: 4;
+            }
+            .reveal .slides .slide-col-6{
+                flex: 6;
+            }
+
+            .reveal .slides .slide-img{
+                text-align: center; 
+                padding: 0;
+                display: block;
+                border: none;
+            }
+            .reveal .slides .slide-ref{
+                position: absolute; 
+                bottom: 0; left: 0; 
+                font-size: 0.5em !important;
+                text-align: left; 
+                width: 100%;
+            }
+            .reveal .slide-number {
+                font-size: 1.5rem !important; /* 改变字号 */
+                right: 2.2em !important;
+                bottom: 1.1em !important;
+                background: none !important;
+                color: gray !important;
+            }
+            .reveal .navigate-left {
+                right: 6em !important;
+            }
+            .reveal .navigate-right {
+                right: 1em !important;
+            }
+
+
+            body.is-fullscreen header,
+            body.is-fullscreen footer,
+            body.is-fullscreen main > *:not(.reveal),
+            body.is-fullscreen #fullscreen-btn {
+                display: none;
+            }
+        </style>
+        
+        <!-- theme -->
+        <script>
+            var link = document.createElement( 'link' );
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            var theme ='white';
+            switch (theme){
+                case 'black':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/black.min.css';
+                    break;
+                case 'beige':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/beige.min.css';
+                    break;
+                case 'blood':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/blood.min.css';
+                    break;
+                case 'league':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/league.min.css';
+                    break;
+                case 'moon':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/moon.min.css';
+                    break;
+                case 'night':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/night.min.css';
+                    break;
+                case 'serif':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/serif.min.css';
+                    break;
+                case 'sky':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/sky.min.css';
+                    break;
+                case 'solarized':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/solarized.min.css';
+                    break;
+                case 'white':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/white.min.css';
+                    break;
+                default:
+            }
+            
+            document.getElementsByTagName( 'head' )[0].appendChild( link );
+        </script>
+        <!-- Theme used for syntax highlighting of code -->
+        <link rel="stylesheet" href="https://cdn.bootcss.com/reveal.js/3.4.1/lib/css/zenburn.min.css">
+        <link href="https://cdn.bootcss.com/reveal.js/3.4.1/css/print/paper.min.css" rel="stylesheet">
+        <!-- Printing and PDF exports -->
+        
+    </head>
+    <body>
+        <div class="reveal">
+            <button id="fullscreen-btn" title="全屏显示 (ESC退出)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                </svg>
+            </button>
+            <div class="slides">
+                <section data-markdown
+                         data-separator="^\n---\n"
+                         data-separator-vertical="^\n--\n"
+                         data-separator-notes="^Note:">
+                    <script type="text/template">Training-Inference Mismatch In LLM KD
+
+
+
+<small>Alephia</small>
+<small>25/6/25</small>
+
+---
+
+## Background
+模型$p_{\theta}$依据前缀$w^{t-1}$生成文本的时候，$\text{loss}$可以表示为
+$$
+l(p_{\theta},w^{t-1};o) = \mathop{\mathbb{E}}\limits_{w_{t}\sim o(\cdot|w^{t-1})}\log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
+$$
+由<mark style="background: #FF5582A6;">目标分布o</mark>采样下一个$\text{token}$ $w_{t}$，再进行$\text{KLD}$对齐。
+<p class="fragment">
+可以展开得到
+$$
+L(p_{\theta};o) \approx \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{o}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
+$$
+</p>
+
+
+---
+
+## Train-Inference Mismatch
+由于模型能力不足，生成token的分布与目标分布存在差距，进而模型训练和推理时面对的前缀是不同的
+
+* Distribution Mismatch
+* Error Accumulation
+
+
+
+Distribution Mismatch会导致Error Accumulation，且Accumulation本身无法被已有的loss捕捉
+
+<div class="slide-ref">
+Arora, K., Asri, L.E., Bahuleyan, H., & Cheung, J.C. Why Exposure Bias Matters: An Imitation Learning Perspective of Error Accumulation in Language Generation. In ACL, 22
+</div>
+
+
+Note:
+训练时前缀由目标分布产生，推理时前缀由模型自己产生。这一问题本身包含两部分，分布偏移以及误差累积
+
+---
+
+## Train-Inference Mismatch
+
+模型与目标的偏差表示为
+$$
+L(p_{\theta};o) = \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{o}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
+$$
+记生成第$t$个token的期望误差为
+$$
+\epsilon_{t} = \mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\sim d_{o}^t,\  w_{t}\sim o(\cdot| w^{t-1})}} \log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
+$$
+$$
+T\epsilon_{\leq l} \leq L_{\leq l}(p_{\theta}) \leq T^2 \epsilon_{\leq l}, \ \ \epsilon_{\leq l}=\frac{1}{l} \sum_{t=1}^{l} \epsilon_{t}
+$$
+<div class="slide-ref">
+Arora, K., Asri, L.E., Bahuleyan, H., & Cheung, J.C. Why Exposure Bias Matters: An Imitation Learning Perspective of Error Accumulation in Language Generation. In ACL, 22
+</div>
+
+note:
+loss代表了两个分布在文本建模不同阶段上的总误差，应当包括分布的偏移误差以及误差的累积部分
+第一个不等号代表累积误差的期望最小值，即每一步的误差都与上一步无关，误差不会累积，这也是最理想的情况。而第二个不等号代表最坏情况，每一步的误差线性累积，最终表现出二次增长的趋势。
+
+---
+
+## Train-Inference Mismatch
+$$
+AccErr_{\leq}(l) = \frac{L^I_{\leq l}(p_{\theta})}{\epsilon_{\leq l}}
+$$
+如果Distribution Mismatch确实会导致误差累积的话，应当观察到<mark style="background: #FF5582A6;">AccErr值是随着序列长度增加而超线性增长的。</mark>
+
+<p class="fragment">
+<img src="https://s2.loli.net/2025/06/24/y16SeLZM2Abxpd7.png" style="width: 500px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
+</p>
+
+
+---
+
+## Train-Inference Mismatch
+
+$$
+\begin{flalign}
+\epsilon &= \frac{1}{T} \sum_{t=1}^{T} \mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\sim d_{o}^t\\ w_{t}\sim o(\cdot| w_{0}^{t-1})}} \log \frac{o(w_{t}|w_{0}^{t-1})}{p_{\theta}(w_{t}|w_{0}^{t-1})}\\\\
+& \approx -\frac{1}{|D|} \sum_{\substack{(w_{0}^{i-1}, w_{i})\in D}} \log p_{\theta}(w_{i}|w_{0}^{i-1}) + c\\\\
+&=H(p_{\theta}; D) + c'
+\end{flalign}
+$$
+这里$H(p_{\theta}; D)$代表log Perplexity
+
+不管是CE Loss，还是Perplexity，都无法监督error的累加过程
+
+note:
+目前的问题由两部分组成：
+分布偏移，模型学习不到位引起
+误差累积，语言模型自回归生成内容的形式导致
+大部分解决方法**都是针对第一部分**，分布偏移
+
+---
+
+## The Utilization of SGO
+
+引入模型自己推理生成的内容用于训练(**S**tudent **G**enerated **O**utput)
+
+$$
+L_{SGO}(p_{\theta};o) = \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{p_{\theta}}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
+$$
+
+每次有$\lambda$的概率使用SGO，$1-\lambda$的概率使用训练集样本
+
+<img src="https://s2.loli.net/2025/06/25/6dEeDws4tZNA2Hu.png" style="width: 450px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
+
+<div class="slide-ref">
+Agarwal, R., Vieillard, N., Zhou, Y., Stańczyk, P., Ramos, S., Geist, M., & Bachem, O.  On-Policy Distillation of Language Models: Learning from Self-Generated Mistakes. In ICLR, 24
+</div>
+
+note:
+每次SGO来自当前参数下学生生成的结果，On-Policy
+每次都要学生重新生成SGO，利用率低，计算开销大
+
+---
+
+## The Utilization of SGO
+
+* 使用SGO时，Teacher也面临Train-Inference Mismatch，会带来噪声 <p class="fragment"><mark style="background: #FF5582A6;">更加保守地使用SGO</mark></p>
+* 每次都要学生重新生成SGO，利用率低，计算开销大 <p class="fragment"><mark style="background: #FF5582A6;">on-policy -> off-policy</mark></p>
+
+<img src="https://s2.loli.net/2025/06/25/N2pXnCckbBIfhie.png" style="width: 500px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+<div class="slide-ref">
+Ko, J., Kim, S., Chen, T., & Yun, S. DistiLLM: Towards Streamlined Distillation for Large Language Models. In ICML, 24
+</div>
+
+note:
+直接变成off-policy，对不同训练阶段产出的SGO服从的分布之间的差异没有约束
+
+
+---
+
+## Introduce Sample-Wise Weight
+$$
+\mathbb{E}_{Q}[-\log P_{\theta}(y|x;\theta)]
+$$
+$P$为真实分布，$Q$为合成数据分布，$P_{\theta}$为模型预测分布
+$$
+\mathbb{E}_{Q}\left[ -\frac{P(y|x)}{Q(y|x)} \log P_{\theta}(y|x;\theta) \right] = \mathbb{E}_{P}[-\log P_{\theta}(y|x;\theta)]
+$$
+$P(y|x)$大，数据点与真实分布高度相关且明确，有参考意义。$Q(y|x)$越小，数据点在分布$Q$中所包含的信息越多。
+
+
+
+<div class="slide-ref">
+Kuo, H., Liao, Y., Chao, Y., Ma, W., & Cheng, P. Not All LLM-Generated Data Are Equal: Rethinking Data Weighting in Text Classification. In ICLR, 25
+</div>
+
+Note:
+背景为使用合成数据进行训练
+SGO: 在一些与目标分布相差较大的样本前缀上，也学到向目标分布靠近的倾向
+
+---
+
+## Introduce Sample-Wise Weight
+
+加权策略更新为
+$$
+\mathbb{E}_{Q}\left[ -\frac{P_{\theta}(y|x;\theta,D_{P'})}{P_{\theta}(y|x;\theta)} \log P_{\theta}(y|x;\theta) \right]
+$$
+
+$P_{\theta}(y|x)$越小，模型在这个数据点上学的越差，越应注重
+
+<img src="https://s2.loli.net/2025/06/23/WRFG1DqZ7JT8j2s.png" style="width: 500px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
+
+## Thinkings
+
+* Add weight to SGO
+* </script>
+
+                </section>
+            </div>
+        </div>
+
+        <script>
+            window.MathJax = {
+                tex: {
+                    inlineMath: [['$', '$'], ['\\(', '\\)']],
+                    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                    processEscapes: true,
+                    processEnvironments: true,
+                    packages: {'[+]': ['base', 'ams', 'amsmath', 'amssymb']}
+                },
+                options: {
+                    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+                }
+            };
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+        <!-- <script src="https://cdn.bootcss.com/reveal.js/3.4.1/lib/js/head.min.js"></script>
+        <script src="https://cdn.bootcss.com/reveal.js/3.4.1/js/reveal.min.js"></script> -->
+        <!-- <script src="/reveal.js/plugin/math/mathjax2.js"></script> -->
+        <!-- <script src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js"></script> -->
+        <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.min.js"></script>
+        <!-- <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/math/math.js"></script> -->
+        <!-- <script src="/reveal.js/plugin/math/math.js"></script> -->
+
+        <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/markdown/markdown.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/highlight/highlight.js"></script>
+
+        <!-- Notes插件 -->
+        <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/notes/notes.js"></script>
+
+
+
+        <script>
+            // More info https://github.com/hakimel/reveal.js#configuration
+            Reveal.initialize({
+                plugins: [ RevealMarkdown, RevealHighlight, RevealNotes],
+                
+                // math: {
+                //     mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js',
+                //     config: 'TeX-AMS_HTML-full',
+                //     tex: {
+                //         inlineMath: [['$', '$'], ['\\(', '\\)']],
+                //         displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                //         processEscapes: true,
+                //         processEnvironments: true,
+                //         packages: {'[+]': ['ams', 'newcommand', 'configmacros']}
+                //     }
+                // },
+                // 幻灯片距离浏览器边缘的百分比（0 - 1）
+                margin: 0.1,  
+                
+                // 缩小时最小缩放比例
+                minScale: 0.2, 
+
+                // 放大时最大缩放比例
+                maxScale: 2.0, 
+
+                // 地址栏 hash 反映当前页，方便分享链接定位到某页
+                hash: true,
+
+                history: true,
+
+                // 是否在右下角展示控制条
+                controls: true,
+
+                // 是否显示演示的进度条
+                progress: true,
+
+                // 是否显示当前幻灯片的页数编号，也可以使用代码 “slideNumber: 'c/t'” ，表示当前页/总页数。
+                slideNumber: true,
+
+                // 是否将每个幻灯片改变加入到浏览器的历史记录中去
+                history: false,
+
+                // 是否启用键盘快捷键来导航
+                keyboard: true,
+
+                // 是否启用幻灯片的概览模式，可使用 "Esc" 或 "o" 键来切换概览模式
+                overview: true,
+
+                // 是否将幻灯片垂直居中
+                center: true,
+
+                // 是否在触屏设备上启用触摸滑动切换
+                touch: true,
+
+                // 是否循环演示
+                loop: false,
+
+                // 是否将演示的方向变成 RTL，即从右往左
+                rtl: false,
+
+                // 是否每次演示的时候，随机幻灯片的顺序
+                shuffle: false,
+
+                // 全局开启和关闭碎片。
+                fragments: true,
+
+                // 标识演示文稿是否在嵌入模式中运行，即包含在屏幕的有限部分中的
+                embedded: false,
+
+                // 标识当问号键被点击的时候是否应该显示一个帮助的覆盖层
+                help: true,
+
+                // 标识演讲者备注标志是否让所有观看者可见
+                showNotes: false,
+
+                // 两个幻灯片之间自动切换的时间间隔（毫秒）
+                // 当设置成 0 的时候则禁止自动切换
+                // 该值可以被幻灯片上的 “data-autoslide” 属性覆盖
+                autoSlide: 0,
+                // 当遇到用户输入的时候停止自动切换
+                autoSlideStoppable: true,
+                // 当自动滑动时，使用此方法进行导航。
+                autoSlideMethod: Reveal.navigateNext,
+
+                // 是否启用通过鼠标滚轮来导航幻灯片
+                mouseWheel: true,
+
+                // 是否在移动设备上隐藏地址栏
+                hideAddressBar: true,
+                // 是否在一个弹出的 iframe 中打开幻灯片中的链接
+                previewLinks: false,
+                // 切换过渡效果
+                transition: 'none', // none/fade/slide/convex/concave/zoom
+                // 过渡速度
+                transitionSpeed: 'default', // default/fast/slow
+                // 全屏幻灯片背景的过渡效果
+                backgroundTransition: 'default', // none/fade/slide/convex/concave/zoom
+
+                // 加载除当前可见的幻灯片之外的幻灯片数量
+                viewDistance: 3,
+
+                // 视差背景图片
+                parallaxBackgroundImage: '',
+                // e.g. 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'
+                // 视差背景尺寸
+                parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+                // 移动视差背景（水平和垂直）滑动变化的数量, 例如 100
+                // - 除了指定自动计算
+                // - 设置为 0 时，禁止沿轴运动
+                parallaxBackgroundHorizontal: null,
+                parallaxBackgroundVertical: null,
+            });
+            Reveal.on('slidechanged', function() {
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    MathJax.typesetPromise();
+                }
+            });
+
+            // 获取所有需要的元素
+            const revealElement = document.querySelector('.reveal');
+            const fullscreenBtn = document.getElementById('fullscreen-btn');
+            const laserBtn = document.getElementById('laser-btn');
+            const laserPointer = document.querySelector('.laser-pointer');
+            const laserPositionInput = document.getElementById('laser-position');
+            
+            let isFullscreen = false;
+            let isLaserActive = false;
+
+            // 检测是否在演示者视图中
+            function isInPresenterView() {
+                // 检查URL中是否有speaker或notes参数
+                return window.location.search.includes('receiver');
+            }
+
+            // 检测是否在展示视图中
+            function isInPresentationView() {
+            return !isInPresenterView() && window.opener;
+            }
+    
+            // 检测是否在主视图
+            function isInMainView() {
+            return !isInPresenterView() && !window.opener;
+            }
+    
+            // 定义一个简单粗暴的本地存储键，用于在演示者视图和展示视图之间通信
+            const LASER_KEY = 'reveal_laser_pointer_position';
+            const LASER_ACTIVE_KEY = 'reveal_laser_active_state';
+
+            // 全屏按钮点击事件
+            fullscreenBtn.addEventListener('click', function() {
+                isFullscreen = !isFullscreen;
+                document.body.classList.toggle('is-fullscreen', isFullscreen);
+                revealElement.classList.toggle('fullscreen', isFullscreen);
+                
+                if (isFullscreen) {
+                    document.documentElement.requestFullscreen();
+                    laserBtn.style.display = 'flex';
+                    Reveal.layout();
+                } else {
+                    cleanupLaserPointer();
+                }
+            });
+
+            // 监听全屏状态变化
+            document.addEventListener('fullscreenchange', function() {
+            if (!document.fullscreenElement) {
+                cleanupLaserPointer();
+                Reveal.layout();
+            }
+            });
+
+            // ESC 键处理
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    // 区分演示者视图和其他视图的处理
+                    if (isInPresenterView()) {
+                    // 在演示者视图中，ESC 键只退出全屏，不关闭激光笔
+                    if (isFullscreen || document.fullscreenElement) {
+                        if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                        }
+                        isFullscreen = false;
+                        document.body.classList.remove('is-fullscreen');
+                        revealElement.classList.remove('fullscreen');
+                        // 不关闭激光笔，但在演讲者模式下按钮保持隐藏
+                        laserBtn.style.display = 'none';
+                        Reveal.layout();
+                    }
+                    } else {
+                    // 在其他视图中，ESC 键行为不变
+                    cleanupLaserPointer();
+                    }
+                }
+                    // Alt 键切换激光笔（在所有视图中都有效）
+                if (e.key === 'Alt') {
+                    e.preventDefault(); // 防止触发浏览器默认行为
+                    toggleLaser(!isLaserActive);
+                }
+            });
+                
+            // 添加 Alt 键释放处理
+            document.addEventListener('keyup', function(e) {
+            if (e.key === 'Alt') {
+                e.preventDefault(); // 防止触发浏览器默认行为
+            }
+            });
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const refs = document.querySelectorAll('.slide-ref');
+
+                refs.forEach(ref => {
+                    const lines = ref.textContent.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+
+                    ref.innerHTML = `
+                    <div style="width: 100px; height: 1px; background: black; margin-bottom: 5px;"></div>
+                    <p style="margin: 2px 0;">${lines.join('<br>')}</p>
+                    `;
+                });
+            });
+
+        </script>
+    </body>
+</html>

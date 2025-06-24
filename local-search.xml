@@ -4,6 +4,33 @@
   
   
   <entry>
+    <title>Training-Inference Mismatch In LLM KD</title>
+    <link href="/posts/ef9972ec/"/>
+    <url>/posts/ef9972ec/</url>
+    
+    <content type="html"><![CDATA[]]></content>
+    
+    
+    <categories>
+      
+      <category>slides</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+      <tag>KD</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Dual-Space Knowledge Distillation for Large Language Models</title>
     <link href="/posts/8d7eb621/"/>
     <url>/posts/8d7eb621/</url>
@@ -35,7 +62,7 @@
     <link href="/posts/cb5328a8/"/>
     <url>/posts/cb5328a8/</url>
     
-    <content type="html"><![CDATA[<p>LM推理生成语句的时候，是逐token生成的。由于LM本身生成的前缀相对训练语料分布可能会有很大的偏差，这会导致后续token的生成也出现偏差。如此不断累积偏差，最终效果就会大打折扣，这一现象称为exposure bias</p><p>模型训练的时候，对于不同的前缀<spanclass="math inline">\(w_{0}^{t-1}\)</span>，loss可以表示为 <spanclass="math display">\[l(p_{\theta},w_{0}^{t-1};o) = \mathop{\mathbb{E}}\limits_{w_{t}\simo(\cdot|w_{0}^{t-1})}\log\frac{o(w_{t}|w_{0}^{t-1})}{p_{\theta}(w_{t}|w_{0}^{t-1})}\]</span> 其中<spanclass="math inline">\(w_{0}^{t-1}\)</span>代表到<spanclass="math inline">\(t-1\)</span>时刻对应的前缀，<spanclass="math inline">\(w_{t}\)</span>代表第<spanclass="math inline">\(t\)</span>个时刻生成的token，<spanclass="math inline">\(o\)</span>代表目标分布（生成策略）这实际上就是一个KLD对齐</p><p>从而在进行teacher forcing的过程中，总loss表示为 <spanclass="math display">\[L^{TF}(p_{\theta}) \approx\sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\simd_{o}^t \\w_{t}\sim o(\cdot|w_{0}^{t-1})}}\log\frac{o(w_{t}|w_{0}^{t-1})}{p_{\theta}(w_{t}|w_{0}^{t-1})}\]</span></p><p>从而在推理的过程中，可以将模型与目标的偏差表示为 <spanclass="math display">\[L^{I}(p_{\theta}) = \sum_{t=1}^{T}\mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\simd_{p_{\theta},F}^t\\ w_{t}\sim o(\cdot| w_{0}^{t-1})}} \log\frac{o(w_{t}|w_{0}^{t-1})}{p_{\theta}(w_{t}|w_{0}^{t-1})}\]</span> 其中<span class="math inline">\(w_{0}^{t-1}\simd_{p_{\theta},F}\)</span>表示前缀由训练的模型得到，<spanclass="math inline">\(F\)</span>代表decoding 其记录了<spanclass="math inline">\(T\)</span>步累积之后的总偏差</p><p>记 <span class="math display">\[\epsilon_{t} = \mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\simd_{o}^t\\ w_{t}\sim o(\cdot| w_{0}^{t-1})}} \log\frac{o(w_{t}|w_{0}^{t-1})}{p_{\theta}(w_{t}|w_{0}^{t-1})}\]</span>代表每一个时间步，模型目标目标分布之后的期望偏差，那么可以得到<spanclass="math inline">\(\epsilon=\frac{1}{T} \sum_{t=1}^{T}\epsilon_{t}\)</span>为总体的期望偏差。由此我们不难得到 <spanclass="math display">\[T\epsilon \leq L^I(p_{\theta}) \leq T^2 \epsilon\]</span>第一个不等号代表累积误差的期望最小值，即每一步的误差都与上一步无关，误差不会累积，这也是最理想的情况。而第二个不等号代表最坏情况，每一步的误差线性累积，最终表现出二次增长的趋势。</p><p>从而可以设计出两个指标： <span class="math display">\[AccErr_{\leq}(l) = \frac{L^I_{\leq l}(p_{\theta})}{\epsilon_{\leq l}}\]</span> 其中<span class="math inline">\(\epsilon_{ \leq l} = 1/l\sum_{t=1}^{l} \epsilon_{t}\)</span>，代表了前<spanclass="math inline">\(l\)</span>步的期望误差 如果exposurebias确实会导致误差累积的话，我们可以观察到<spanclass="math inline">\(\text{AccErr}\)</span>值是随着序列长度增加而超线性增长的。以及 <span class="math display">\[ExAccErr_{\leq}(l) = \frac{L^I_{\leq l}(p_{\theta}) - l \epsilon_{\leql}}{l \epsilon_{\leq l}} \cdot 100\%\]</span> 其中<span class="math inline">\(l\epsilon_{\leql}\)</span>是这<spanclass="math inline">\(l\)</span>步的最小损失，所以<spanclass="math inline">\(ExAccErr\)</span>值代表多出来的损失所占的比重，而这实际上就是由损失累积带来的。如果一个模型能够做到每一个的损失不会累积的话，那么这个值应当一直在0左右，否则，就会呈不断上升的趋势。</p><p>下图<spanclass="math inline">\((a)\)</span>给出了AccErr值的变化曲线，以及l的线性增长曲线，可以看到AccErr确实是超线性增长的，这肯定了损失累积现象。并且可以看到AccErr的增长是接近二次的，而这一点在<spanclass="math inline">\((b)\)</span>中可以观察到，每一步的多余累积误差是线性的，两者可以相互印证。这也证明损失累积的程度是比较大的。<img src="https://s2.loli.net/2025/06/23/CijJE1NtZ6g3Bym.png" /></p><p>另外一个有意思的点是，目前模型推理生成token时，所使用的指标往往是困惑度，而<span class="math display">\[\begin{flalign}\epsilon &amp;= \frac{1}{T} \sum_{t=1}^{T}\mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\sim d_{o}^t\\w_{t}\sim o(\cdot| w_{0}^{t-1})}} \log\frac{o(w_{t}|w_{0}^{t-1})}{p_{\theta}(w_{t}|w_{0}^{t-1})}\\&amp; \approx -\frac{1}{|D|} \sum_{\substack{(w_{0}^{i-1}, w_{i})\in D}}\log p_{\theta}(w_{i}|w_{0}^{i-1}) + c\\&amp;=H(p_{\theta}; D) + c&#39;\end{flalign}\]</span> 这里<span class="math inline">\(H(p_{\theta};D)\)</span>代表log 困惑度</p><p>所以困惑度所关注的内容与<spanclass="math inline">\(\epsilon\)</span>是类似的，只能捕捉单步的损失，但是对多步累积的损失无法监督，这也是可以尝试突破的一个点。</p>]]></content>
+    <content type="html"><![CDATA[<p>LM训练的时候，文本前缀用的是groundtruth，而推理生成语句的时候，是逐token生成的，文本前缀是自己生成的。由于LM本身生成的前缀相对训练语料分布可能会有很大的偏差，这会导致后续token的生成也出现偏差。这一现象称为exposure bias。</p><p>模型训练的时候，对于不同的前缀<spanclass="math inline">\(w_{0}^{t-1}\)</span>，loss可以表示为 <spanclass="math display">\[l(p_{\theta},w_{0}^{t-1};o) = \mathop{\mathbb{E}}\limits_{w_{t}\simo(\cdot|w_{0}^{t-1})}\log\frac{o(w_{t}|w_{0}^{t-1})}{p_{\theta}(w_{t}|w_{0}^{t-1})}\]</span> 其中<spanclass="math inline">\(w_{0}^{t-1}\)</span>代表到前面生成的长度为<spanclass="math inline">\(t-1\)</span>的前缀，<spanclass="math inline">\(w_{t}\)</span>代表第<spanclass="math inline">\(t\)</span>个生成的token，<spanclass="math inline">\(o\)</span>代表目标分布（生成策略）这实际上就是一个KLD对齐</p><p>从而在进行teacher forcing的过程中，总loss表示为 <spanclass="math display">\[L^{TF}(p_{\theta}) \approx\sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\simd_{o}^t \\w_{t}\sim o(\cdot|w_{0}^{t-1})}}\log\frac{o(w_{t}|w_{0}^{t-1})}{p_{\theta}(w_{t}|w_{0}^{t-1})}\]</span></p><p>从而在推理的过程中，可以将模型与目标的偏差表示为 <spanclass="math display">\[L^{I}(p_{\theta}) = \sum_{t=1}^{T}\mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\simd_{p_{\theta},F}^t\\ w_{t}\sim o(\cdot| w_{0}^{t-1})}} \log\frac{o(w_{t}|w_{0}^{t-1})}{p_{\theta}(w_{t}|w_{0}^{t-1})}\]</span> 其中<span class="math inline">\(w_{0}^{t-1}\simd_{p_{\theta},F}\)</span>表示前缀由训练的模型得到，<spanclass="math inline">\(F\)</span>代表decoding 其记录了<spanclass="math inline">\(T\)</span>步累积之后的总偏差</p><p>记 <span class="math display">\[\epsilon_{t} = \mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\simd_{o}^t\\ w_{t}\sim o(\cdot| w_{0}^{t-1})}} \log\frac{o(w_{t}|w_{0}^{t-1})}{p_{\theta}(w_{t}|w_{0}^{t-1})}\]</span>代表每一个时间步，模型目标目标分布之后的期望偏差，那么可以得到<spanclass="math inline">\(\epsilon=\frac{1}{T} \sum_{t=1}^{T}\epsilon_{t}\)</span>为总体的期望偏差。由此我们不难得到 <spanclass="math display">\[T\epsilon \leq L^I(p_{\theta}) \leq T^2 \epsilon\]</span>第一个不等号代表累积误差的期望最小值，即每一步的误差都与上一步无关，误差不会累积，这也是最理想的情况。而第二个不等号代表最坏情况，每一步的误差线性累积，最终表现出二次增长的趋势。</p><p>从而可以设计出两个指标： <span class="math display">\[AccErr_{\leq}(l) = \frac{L^I_{\leq l}(p_{\theta})}{\epsilon_{\leq l}}\]</span> 其中<span class="math inline">\(\epsilon_{ \leq l} = 1/l\sum_{t=1}^{l} \epsilon_{t}\)</span>，代表了前<spanclass="math inline">\(l\)</span>步的期望误差 如果exposurebias确实会导致误差累积的话，我们可以观察到<spanclass="math inline">\(\text{AccErr}\)</span>值是随着序列长度增加而超线性增长的。以及 <span class="math display">\[ExAccErr_{\leq}(l) = \frac{L^I_{\leq l}(p_{\theta}) - l \epsilon_{\leql}}{l \epsilon_{\leq l}} \cdot 100\%\]</span> 其中<span class="math inline">\(l\epsilon_{\leql}\)</span>是这<spanclass="math inline">\(l\)</span>步的最小损失，所以<spanclass="math inline">\(ExAccErr\)</span>值代表多出来的损失所占的比重，而这实际上就是由损失累积带来的。如果一个模型能够做到每一个的损失不会累积的话，那么这个值应当一直在0左右，否则，就会呈不断上升的趋势。</p><p>下图<spanclass="math inline">\((a)\)</span>给出了AccErr值的变化曲线，以及l的线性增长曲线，可以看到AccErr确实是超线性增长的，这肯定了损失累积现象。并且可以看到AccErr的增长是接近二次的，而这一点在<spanclass="math inline">\((b)\)</span>中可以观察到，每一步的多余累积误差是线性的，两者可以相互印证。这也证明损失累积的程度是比较大的。<img src="https://s2.loli.net/2025/06/23/CijJE1NtZ6g3Bym.png" /></p><p>另外一个有意思的点是，目前模型推理生成token时，所使用的指标往往是困惑度，而<span class="math display">\[\begin{flalign}\epsilon &amp;= \frac{1}{T} \sum_{t=1}^{T}\mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\sim d_{o}^t\\w_{t}\sim o(\cdot| w_{0}^{t-1})}} \log\frac{o(w_{t}|w_{0}^{t-1})}{p_{\theta}(w_{t}|w_{0}^{t-1})}\\&amp; \approx -\frac{1}{|D|} \sum_{\substack{(w_{0}^{i-1}, w_{i})\in D}}\log p_{\theta}(w_{i}|w_{0}^{i-1}) + c\\&amp;=H(p_{\theta}; D) + c&#39;\end{flalign}\]</span> 这里<span class="math inline">\(H(p_{\theta};D)\)</span>代表log 困惑度</p><p>所以困惑度所关注的内容与<spanclass="math inline">\(\epsilon\)</span>是类似的，只能捕捉单步的损失，但是对多步累积的损失无法监督，这也是可以尝试突破的一个点。</p>]]></content>
     
     
     <categories>

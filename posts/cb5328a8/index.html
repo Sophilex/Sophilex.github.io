@@ -27,7 +27,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://sophilex.github.io/img/wlq1.jpg">
 <meta property="article:published_time" content="2025-06-23T07:11:19.000Z">
-<meta property="article:modified_time" content="2025-06-23T07:25:12.327Z">
+<meta property="article:modified_time" content="2025-06-24T08:17:37.459Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="LLM">
 <meta property="article:tag" content="KD">
@@ -333,8 +333,9 @@
             
               <div class="markdown-body">
                 
-                <p>LM推理生成语句的时候，是逐token生成的。由于LM本身生成的前缀相对训练语料分布可能会有很大的偏差，这会导致后续token的生成也出现偏差。如此不断累积偏差，最终效果就会大打折扣，这一现象称为
-exposure bias</p>
+                <p>LM训练的时候，文本前缀用的是ground
+truth，而推理生成语句的时候，是逐token生成的，文本前缀是自己生成的。由于LM本身生成的前缀相对训练语料分布可能会有很大的偏差，这会导致后续token的生成也出现偏差。这一现象称为
+exposure bias。</p>
 <p>模型训练的时候，对于不同的前缀<span
 class="math inline">\(w_{0}^{t-1}\)</span>，loss可以表示为 <span
 class="math display">\[
@@ -342,10 +343,10 @@ l(p_{\theta},w_{0}^{t-1};o) = \mathop{\mathbb{E}}\limits_{w_{t}\sim
 o(\cdot|w_{0}^{t-1})}\log
 \frac{o(w_{t}|w_{0}^{t-1})}{p_{\theta}(w_{t}|w_{0}^{t-1})}
 \]</span> 其中<span
-class="math inline">\(w_{0}^{t-1}\)</span>代表到<span
-class="math inline">\(t-1\)</span>时刻对应的前缀，<span
+class="math inline">\(w_{0}^{t-1}\)</span>代表到前面生成的长度为<span
+class="math inline">\(t-1\)</span>的前缀，<span
 class="math inline">\(w_{t}\)</span>代表第<span
-class="math inline">\(t\)</span>个时刻生成的token，<span
+class="math inline">\(t\)</span>个生成的token，<span
 class="math inline">\(o\)</span>代表目标分布（生成策略）
 这实际上就是一个KLD对齐</p>
 <p>从而在进行teacher forcing的过程中，总loss表示为 <span
