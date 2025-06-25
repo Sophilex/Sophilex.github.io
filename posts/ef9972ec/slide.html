@@ -308,15 +308,15 @@
 ---
 
 ## Background
-模型$p_{\theta}$依据前缀$w^{t-1}$生成文本的时候，$\text{loss}$可以表示为
+模型$q_{\theta}$依据前缀$w^{t-1}$生成文本的时候，$\text{loss}$可以表示为
 $$
-l(p_{\theta},w^{t-1};o) = \mathop{\mathbb{E}}\limits_{w_{t}\sim \textcolor{red}{o}(\cdot|w^{t-1})}\log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
+l(q_{\theta},w^{t-1};o) = \mathop{\mathbb{E}}\limits_{w_{t}\sim \textcolor{red}{o}(\cdot|w^{t-1})}\log \frac{o(w_{t}|w^{t-1})}{q_{\theta}(w_{t}|w^{t-1})}
 $$
 由<mark style="background: #FF5582A6;">目标分布o</mark>采样下一个$\text{token}$ $w_{t}$，再进行$\text{KLD}$对齐。
 <p class="fragment">
 可以展开得到
 $$
-L(p_{\theta};o) \approx \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{\textcolor{red}{o}}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
+L(q_{\theta};o) \approx \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{\textcolor{red}{o}}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{q_{\theta}(w_{t}|w^{t-1})}
 $$
 </p>
 
@@ -345,50 +345,57 @@ Note:
 
 ## Train-Inference Mismatch
 
-模型与目标的偏差表示为
+模型与目标的总偏差表示为
 $$
-L(p_{\theta};o) = \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{o}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
+\begin{flalign}
+L(q_{\theta};o) &= \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{o}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{q_{\theta}(w_{t}|w^{t-1})}\\\\
+&= \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{w^{t-1}\sim d_{o}^{t-1}} D_{KL}(o(\cdot|w^{t-1})||q_{\theta}(\cdot|w^{t-1}))
+\end{flalign}
 $$
-记生成第$t$个token的期望分布误差为
+记生成第$t$个token的期望误差为
 $$
-\epsilon_{t} = \mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\sim d_{o}^t,\  w_{t}\sim o(\cdot| w^{t-1})}} \log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
+\epsilon_{t} = \mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\sim d_{o}^t,\  w_{t}\sim o(\cdot| w^{t-1})}} \log \frac{o(w_{t}|w^{t-1})}{q_{\theta}(w_{t}|w^{t-1})}
 $$
-$$
-l\epsilon_{\leq l} \leq L_{\leq l}(p_{\theta}) \leq l^2 \epsilon_{\leq l}, \ \ \epsilon_{\leq l}=\frac{1}{l} \sum_{t=1}^{l} \epsilon_{t}
-$$
+
 <div class="slide-ref">
 Arora, K., Asri, L.E., Bahuleyan, H., & Cheung, J.C. Why Exposure Bias Matters: An Imitation Learning Perspective of Error Accumulation in Language Generation. In ACL, 22
 </div>
 
 note:
 loss代表了两个分布在文本建模不同阶段上的总误差，应当包括分布的偏移误差以及误差的累积部分
+
+---
+
+## Train-Inference Mismatch
+
+$$
+l\epsilon_{\leq l} \leq L_{\leq l}(q_{\theta}) \leq l^2 \epsilon_{\leq l}, \ \ \epsilon_{\leq l}=\frac{1}{l} \sum_{t=1}^{l} \epsilon_{t}
+$$
+
+$$
+AccErr_{\leq}(l) = \frac{L_{\leq l}(q_{\theta})}{\epsilon_{\leq l}}
+$$
+如果Distribution Mismatch确实会导致误差累积的话，应当观察到<mark style="background: #FF5582A6;">AccErr值是随着序列长度增加而超线性增长的。</mark>
+
+<p class="fragment">
+<img src="https://s2.loli.net/2025/06/24/y16SeLZM2Abxpd7.png" style="width:300px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
+</p>
+
+Note:
 第一个不等号代表累积误差的期望最小值，即每一步的误差都与上一步无关，误差不会累积，这也是最理想的情况。而第二个不等号代表最坏情况，每一步的误差线性累积，最终表现出二次增长的趋势。
 
 ---
 
 ## Train-Inference Mismatch
 $$
-AccErr_{\leq}(l) = \frac{L_{\leq l}(p_{\theta})}{\epsilon_{\leq l}}
-$$
-如果Distribution Mismatch确实会导致误差累积的话，应当观察到<mark style="background: #FF5582A6;">AccErr值是随着序列长度增加而超线性增长的。</mark>
-
-<p class="fragment">
-<img src="https://s2.loli.net/2025/06/24/y16SeLZM2Abxpd7.png" style="width: 500px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
-</p>
-
-
----
-
-## Train-Inference Mismatch
-$$
-ExAccErr_{\leq}(l) = \frac{L_{\leq l}(p_{\theta}) - l \epsilon_{\leq l}}{l \epsilon_{\leq l}} \cdot 100\%
+ExAccErr_{\leq}(l) = \frac{L_{\leq l}(q_{\theta}) - l \epsilon_{\leq l}}{l \epsilon_{\leq l}} \cdot 100\%
 $$
 
 如果一个模型能够做到每一个的损失不会累积的话，<mark style="background: #FF5582A6;">那么这个值应当一直在0左右，否则，就会呈不断上升的趋势。</mark>
 
 
 <p class="fragment">
-<img src="https://s2.loli.net/2025/06/25/Ipvehbk95Bza4JY.png" style="width: 500px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
+<img src="https://s2.loli.net/2025/06/25/Ipvehbk95Bza4JY.png" style="width: 300px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
 </p>
 
 Note:
@@ -402,12 +409,12 @@ $ExAccErr$值代表多出来的损失所占的比重，而这实际上就是由�
 
 $$
 \begin{flalign}
-\epsilon &= \frac{1}{T} \sum_{t=1}^{T} \mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\sim d_{o}^t\\ w_{t}\sim o(\cdot| w_{0}^{t-1})}} \log \frac{o(w_{t}|w_{0}^{t-1})}{p_{\theta}(w_{t}|w_{0}^{t-1})}\\\\
-& \approx -\frac{1}{|D|} \sum_{\substack{(w_{0}^{i-1}, w_{i})\in D}} \log p_{\theta}(w_{i}|w_{0}^{i-1}) + c\\\\
-&=H(p_{\theta}; D) + c'
+\epsilon &= \frac{1}{T} \sum_{t=1}^{T} \mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\sim d_{o}^t\\ w_{t}\sim o(\cdot| w_{0}^{t-1})}} \log \frac{o(w_{t}|w_{0}^{t-1})}{q_{\theta}(w_{t}|w_{0}^{t-1})}\\\\
+& \approx -\frac{1}{|D|} \sum_{\substack{(w_{0}^{i-1}, w_{i})\in D}} \log q_{\theta}(w_{i}|w_{0}^{i-1}) + c\\\\
+&=H(q_{\theta}; D) + c'
 \end{flalign}
 $$
-这里$H(p_{\theta}; D)$代表log Perplexity
+这里$H(q_{\theta}; D)$代表log Perplexity
 
 不管是CE Loss，还是Perplexity，都无法监督error的累加过程
 
@@ -424,12 +431,13 @@ note:
 引入模型自己推理生成的内容用于训练(**S**tudent **G**enerated **O**utput)
 
 $$
-L_{SGO}(p_{\theta};o) = \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{\textcolor{red}{p_{\theta}}}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
+L_{SGO}(q_{\theta};o) = \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{\textcolor{red}{q_{\theta}}}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{q_{\theta}(w_{t}|w^{t-1})}
 $$
 
 每次有$\lambda$的概率使用SGO，$1-\lambda$的概率使用训练集样本
+<img src="https://s2.loli.net/2025/06/25/Vl6m7Q1ctbUMak9.png" style="width: 450px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
 
-<img src="https://s2.loli.net/2025/06/25/6dEeDws4tZNA2Hu.png" style="width: 450px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
+<img src="https://s2.loli.net/2025/06/25/6dEeDws4tZNA2Hu.png" style="width: 450px; height: auto; float: right; margin-top: auto; margin-bottom: auto;border: none;">
 
 <div class="slide-ref">
 Agarwal, R., Vieillard, N., Zhou, Y., Stańczyk, P., Ramos, S., Geist, M., & Bachem, O.  On-Policy Distillation of Language Models: Learning from Self-Generated Mistakes. In ICLR, 24
@@ -437,7 +445,10 @@ Agarwal, R., Vieillard, N., Zhou, Y., Stańczyk, P., Ramos, S., Geist, M., & Bac
 
 note:
 每次SGO来自当前参数下学生生成的结果，On-Policy
+
 每次都要学生重新生成SGO，利用率低，计算开销大
+
+学生还要跟SGO对齐，当SGO质量较差的时候，这可能会带来影响
 
 ---
 
@@ -447,7 +458,6 @@ note:
 * 每次都要学生重新生成SGO，利用率低，计算开销大 <p class="fragment">💡 <mark style="background: #FF5582A6;">on-policy -> off-policy</mark></p>
 
 <img src="https://s2.loli.net/2025/06/25/N2pXnCckbBIfhie.png" style="width: 500px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
-
 
 <div class="slide-ref">
 Ko, J., Kim, S., Chen, T., & Yun, S. DistiLLM: Towards Streamlined Distillation for Large Language Models. In ICML, 24
@@ -465,7 +475,9 @@ note:
 
 Loss $\uparrow$，ROUGE_L $\uparrow$
 
-过拟合？exposure bias？
+"Our observations indicate that training on a diverse range of SGOs, rather than solely on a fixed dataset, mitigates training-inference mismatch and consequently lowers validation loss"
+
+过拟合？train-inference mismatch？
 指标与loss的不匹配？
 
 Note:
@@ -480,14 +492,14 @@ Distillm将验证集上Loss上涨解释为exposure bias，但是这应该只能�
 
 ## Introduce Sample-Wise Weight
 
-$P$为真实分布，$Q$为合成数据分布，$P_{\theta}$为模型预测分布
+$P$为真实分布，$Q$为合成数据分布，$q_{\theta}$为模型预测分布
 
 $$
-E_{Q}[-\log P_{\theta}(y|x;\theta)]
+E_{Q}[-\log q_{\theta}(y|x;\theta)]
 $$
 
 $$
-E_{Q}\left[ -\frac{P(y|x)}{Q(y|x)} \log P_{\theta}(y|x;\theta) \right] = E_{P}[-\log P_{\theta}(y|x;\theta)]
+E_{Q}\left[ -\frac{P(y|x)}{Q(y|x)} \log q_{\theta}(y|x;\theta) \right] = E_{P}[-\log q_{\theta}(y|x;\theta)]
 $$
 
 $P(y|x)$大，数据点与真实分布高度相关且明确，有参考意义。$Q(y|x)$越小，数据点在分布$Q$中所包含的信息越多。
@@ -506,12 +518,14 @@ SGO: 在一些与目标分布相差较大的样本前缀上，也学到向目标
 
 加权策略更新为
 $$
-E_{Q}\left[ -\frac{P_{\theta}(y|x;\theta,D_{P'})}{P_{\theta}(y|x;\theta)} \log P_{\theta}(y|x;\theta) \right]
+E_{Q}\left[ -\frac{q_{\theta}(y|x;\theta,D_{P'})}{q_{\theta}(y|x;\theta)} \log q_{\theta}(y|x;\theta) \right]
 $$
 
-$P_{\theta}(y|x)$越小，模型在这个数据点上学的越差，越应注重
+$q_{\theta}(y|x)$越小，模型在这个数据点上学的越差，越应注重
 
 <img src="https://s2.loli.net/2025/06/23/WRFG1DqZ7JT8j2s.png" style="width: 500px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
+Note:
+动态赋权
 
 ---
 
@@ -521,9 +535,10 @@ $P_{\theta}(y|x)$越小，模型在这个数据点上学的越差，越应注重
 🤔 Add weight to SGO ？
 </p>
 
+
 <p class="fragment">
 $$
-L_{WSGO}(p_{\theta};o) = \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{p_{\theta}}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}} \textcolor{red}{\lambda(t-1, w^{t-1})} \log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
+L_{WSGO}(q_{\theta};o) =\sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{w^{t-1}\sim d_{o}^{t-1}} \lambda(t-1, w^{t-1}) D_{KL}(o(\cdot|w^{t-1})||q_{\theta}(\cdot|w^{t-1}))
 $$
 </p>
 
@@ -544,6 +559,9 @@ $$
 <p class="fragment">
 🤔 How to solve error accumulation?
 </p>
+
+Note:
+学生需要与SGO对齐是否有必要？
 
 ---
 
@@ -585,8 +603,6 @@ $$
 $$
 p^t = softmax(h^{t \rightarrow s}\_{1:n}\\textcolor{red}{W_{S}})
 $$
-
-
 
 
 ---
