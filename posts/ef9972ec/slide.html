@@ -310,13 +310,13 @@
 ## Background
 模型$p_{\theta}$依据前缀$w^{t-1}$生成文本的时候，$\text{loss}$可以表示为
 $$
-l(p_{\theta},w^{t-1};o) = \mathop{\mathbb{E}}\limits_{w_{t}\sim o(\cdot|w^{t-1})}\log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
+l(p_{\theta},w^{t-1};o) = \mathop{\mathbb{E}}\limits_{w_{t}\sim \textcolor{red}{o}(\cdot|w^{t-1})}\log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
 $$
 由<mark style="background: #FF5582A6;">目标分布o</mark>采样下一个$\text{token}$ $w_{t}$，再进行$\text{KLD}$对齐。
 <p class="fragment">
 可以展开得到
 $$
-L(p_{\theta};o) \approx \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{o}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
+L(p_{\theta};o) \approx \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{\textcolor{red}{o}}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
 $$
 </p>
 
@@ -326,12 +326,12 @@ $$
 ## Train-Inference Mismatch
 由于模型能力不足，生成token的分布与目标分布存在差距，进而模型训练和推理时面对的前缀是不同的
 
-* Distribution Mismatch
+* Distribution Mismatch (Exposure Bias)
 * Error Accumulation
 
 
 
-Distribution Mismatch会导致Error Accumulation，且Accumulation本身无法被已有的loss捕捉
+Distribution Mismatch会导致Error Accumulation，且<mark style="background: #FF5582A6;">Accumulation行为无法被已有的loss捕捉</mark>
 
 <div class="slide-ref">
 Arora, K., Asri, L.E., Bahuleyan, H., & Cheung, J.C. Why Exposure Bias Matters: An Imitation Learning Perspective of Error Accumulation in Language Generation. In ACL, 22
@@ -368,7 +368,7 @@ loss代表了两个分布在文本建模不同阶段上的总误差，应当包�
 
 ## Train-Inference Mismatch
 $$
-AccErr_{\leq}(l) = \frac{L^I_{\leq l}(p_{\theta})}{\epsilon_{\leq l}}
+AccErr_{\leq}(l) = \frac{L_{\leq l}(p_{\theta})}{\epsilon_{\leq l}}
 $$
 如果Distribution Mismatch确实会导致误差累积的话，应当观察到<mark style="background: #FF5582A6;">AccErr值是随着序列长度增加而超线性增长的。</mark>
 
@@ -378,6 +378,25 @@ $$
 
 
 ---
+
+## Train-Inference Mismatch
+$$
+ExAccErr_{\leq}(l) = \frac{L_{\leq l}(p_{\theta}) - l \epsilon_{\leq l}}{l \epsilon_{\leq l}} \cdot 100\%
+$$
+
+如果一个模型能够做到每一个的损失不会累积的话，<mark style="background: #FF5582A6;">那么这个值应当一直在0左右，否则，就会呈不断上升的趋势。</mark>
+
+
+<p class="fragment">
+<img src="https://s2.loli.net/2025/06/25/Ipvehbk95Bza4JY.png" style="width: 500px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
+</p>
+
+Note:
+$ExAccErr$值代表多出来的损失所占的比重，而这实际上就是由损失累积带来的
+
+
+---
+
 
 ## Train-Inference Mismatch
 
@@ -405,7 +424,7 @@ note:
 引入模型自己推理生成的内容用于训练(**S**tudent **G**enerated **O**utput)
 
 $$
-L_{SGO}(p_{\theta};o) = \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{p_{\theta}}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
+L_{SGO}(p_{\theta};o) = \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{\textcolor{red}{p_{\theta}}}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
 $$
 
 每次有$\lambda$的概率使用SGO，$1-\lambda$的概率使用训练集样本
@@ -424,8 +443,8 @@ note:
 
 ## The Utilization of SGO
 
-* 使用SGO时，Teacher也面临Train-Inference Mismatch，会带来噪声 <p class="fragment"><mark style="background: #FF5582A6;">更加保守地使用SGO</mark></p>
-* 每次都要学生重新生成SGO，利用率低，计算开销大 <p class="fragment"><mark style="background: #FF5582A6;">on-policy -> off-policy</mark></p>
+* 使用SGO时，Teacher也面临Train-Inference Mismatch，会带来噪声 <p class="fragment"> 💡 <mark style="background: #FF5582A6;">更加保守地使用SGO</mark></p>
+* 每次都要学生重新生成SGO，利用率低，计算开销大 <p class="fragment">💡 <mark style="background: #FF5582A6;">on-policy -> off-policy</mark></p>
 
 <img src="https://s2.loli.net/2025/06/25/N2pXnCckbBIfhie.png" style="width: 500px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
 
@@ -436,6 +455,23 @@ Ko, J., Kim, S., Chen, T., & Yun, S. DistiLLM: Towards Streamlined Distillation 
 
 note:
 直接变成off-policy，对不同训练阶段产出的SGO服从的分布之间的差异没有约束
+
+
+---
+
+## The Utilization of SGO
+
+<img src="https://s2.loli.net/2025/06/25/SAtfpY2djBkw4WP.png" style="width: 500px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
+
+Loss $\uparrow$，ROUGE_L $\uparrow$
+
+过拟合？exposure bias？
+指标与loss的不匹配？
+
+Note:
+不止是LLM KD场景，只是微调也有这种现象，这应当是一种普遍现象。
+
+Distillm将验证集上Loss上涨解释为exposure bias，但是这应该只能解释验证集loss高，但不能解释为什么loss在不断上涨
 
 
 ---
@@ -479,8 +515,63 @@ $P_{\theta}(y|x)$越小，模型在这个数据点上学的越差，越应注重
 
 ## Thinkings
 
-* Add weight to SGO
-* </script>
+<p class="fragment">
+🤔 Add weight to SGO ？
+</p>
+
+<p class="fragment">
+$$
+L_{WSGO}(p_{\theta};o) = \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{p_{\theta}}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}} \textcolor{red}{\lambda(t-1, w^{t-1})} \log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
+$$
+</p>
+
+<p class="fragment">
+🤔 When using SGO, add adaptive weight for $L_{Base}$ w.r.t $L_{KD}$ ?
+</p>
+
+<p class="fragment">
+$$
+L = L_{KD} + \phi_{epoch} L_{Base}
+$$
+</p>
+
+<p class="fragment">
+🤔 Deeper research in teacher's response to SGO ?
+</p>
+
+<p class="fragment">
+🤔 How to solve error accumulation?
+</p>
+
+---
+
+## LLM KD With Different Vocabularies
+
+教师$(m\times D)$向学生$(n\times d)$对齐：
+$$
+Q = P^q([e_{1:n}^s; e_{2:n+1}^s];\theta_{P}^q)\in R^{n\times 2D}
+$$
+$$
+K = [e_{1:m}^t;e_{2:m+1}^t]\in R^{m\times 2D}
+$$
+$$
+V = P^v(e_{2:m+1}^t+h_{1:m}^t; \theta_{P}^v)\in R^{m\times d}
+$$
+
+<div class="slide-ref">
+Zhang, S., Zhang, X., Sun, Z., Chen, Y., & Xu, J. Dual-Space Knowledge Distillation for Large Language Models. In EMNLP, 24
+</div>
+
+Note:
+V的设计是目标tokens的初始emd+输入tokens的最后一层emb
+
+---
+
+## Thanks
+
+
+
+</script>
 
                 </section>
             </div>
