@@ -473,6 +473,8 @@ Note:
 
 Distillm将验证集上Loss上涨解释为exposure bias，但是这应该只能解释验证集loss高，但不能解释为什么loss在不断上涨
 
+|Train-set|:|Vaild-set|=14:1 
+
 
 ---
 
@@ -558,6 +560,7 @@ $$
 V = P^v(e_{2:m+1}^t+h_{1:m}^t; \theta_{P}^v)\in R^{m\times d}
 $$
 
+
 <div class="slide-ref">
 Zhang, S., Zhang, X., Sun, Z., Chen, Y., & Xu, J. Dual-Space Knowledge Distillation for Large Language Models. In EMNLP, 24
 </div>
@@ -565,9 +568,30 @@ Zhang, S., Zhang, X., Sun, Z., Chen, Y., & Xu, J. Dual-Space Knowledge Distillat
 Note:
 V的设计是目标tokens的初始emd+输入tokens的最后一层emb
 
+过学生的映射头，有助于统一两者的输出空间
+
 ---
 
-## Thanks
+## LLM KD With Different Vocabularies
+
+教师变换后的emd可以表示为
+
+$$
+h^{t \rightarrow s}_{1:n} = softmax(\frac{QK^T}{\sqrt{ 2D }}V)\in R^{n\times d}
+$$
+
+最后过学生的映射头得到概率分布
+
+$$
+p^t = softmax(h^{t \rightarrow s}\_{1:n}\\textcolor{red}{W_{S}})
+$$
+
+
+
+
+---
+
+## Thanks!
 
 
 
