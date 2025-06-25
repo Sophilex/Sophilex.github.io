@@ -349,7 +349,7 @@ Note:
 $$
 L(p_{\theta};o) = \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{o}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
 $$
-记生成第$t$个token的期望误差为
+记生成第$t$个token的期望分布误差为
 $$
 \epsilon_{t} = \mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\sim d_{o}^t,\  w_{t}\sim o(\cdot| w^{t-1})}} \log \frac{o(w_{t}|w^{t-1})}{p_{\theta}(w_{t}|w^{t-1})}
 $$
