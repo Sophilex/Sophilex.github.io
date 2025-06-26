@@ -27,7 +27,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://sophilex.github.io/img/mc4.webp">
 <meta property="article:published_time" content="2025-06-12T05:23:56.000Z">
-<meta property="article:modified_time" content="2025-06-26T06:49:35.290Z">
+<meta property="article:modified_time" content="2025-06-26T06:52:51.705Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="配置">
 <meta name="twitter:card" content="summary_large_image">
@@ -385,12 +385,12 @@ target="_blank" rel="noopener" href="https://github.com/jackey8616/hexo-generato
 <p>其余的reveal相关配置，参考本文第一部分，在<code>post-slide.ejs</code>中进行相关修改即可。这里分享一下我的<a
 target="_blank" rel="noopener" href="https://1drv.ms/f/c/33e22cb13c73a84a/Em95-mYfbkRJtOUZrLPI-7wBwtMqLQIIeWwsbIfxTuz9Eg?e=btxB0z">配置</a>（大部分都抄的学长的hhh）</p>
 <h2 id="导出pdf">导出PDF</h2>
-<p>有时候在线的slides有导出本地PDF文件的需求，但是直接在reveal框架渲染出的网页上按<code>Ctrl+P</code>进行下载的话，格式非常乱，完全不能看。这里提供两种方法
-### reveal官方
-官方给的一个方法是在slides的url后面跟上<code>?print-pdf</code>，然后在对应页面按<code>Ctrl+P</code>进行打印。比如我的一个slide的url是<code>https://sophilex.top/posts/ef9972ec/slide.html</code>，加上对应后缀之后就是<code>https://sophilex.top/posts/ef9972ec/slide.html?print-pdf</code>。
+<p>有时候在线的slides有导出本地PDF文件的需求，但是直接在reveal框架渲染出的网页上按<code>Ctrl+P</code>进行下载的话，格式非常乱，完全不能看。这里提供两种方法</p>
+<h3 id="reveal官方">reveal官方</h3>
+<p>官方给的一个方法是在slides的url后面跟上<code>?print-pdf</code>，然后在对应页面按<code>Ctrl+P</code>进行打印。比如我的一个slide的url是<code>https://sophilex.top/posts/ef9972ec/slide.html</code>，加上对应后缀之后就是<code>https://sophilex.top/posts/ef9972ec/slide.html?print-pdf</code>。
 但是这个功能只能在Chrome和Chromium中使用。
 至于效果，至少在我这边跟原始方法的效果没啥区别，并不具备可用性。</p>
-<h2 id="decktape">decktape</h2>
+<h3 id="decktape">decktape</h3>
 <p>一个专门用来导出网页slides的工具，<a
 target="_blank" rel="noopener" href="https://github.com/astefanutti/decktape">link</a>。除了reveal.js，其也支持各种网页渲染框架的导出，感兴趣可以去详细了解一下。
 使用方法也是非常简单，命令基本格式为 <figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim">decktape [<span class="hljs-keyword">options</span>] [<span class="hljs-keyword">command</span>] <span class="hljs-symbol">&lt;url&gt;</span> <span class="hljs-symbol">&lt;filename&gt;</span><br></code></pre></td></tr></table></figure>
@@ -401,7 +401,7 @@ target="_blank" rel="noopener" href="https://github.com/astefanutti/decktape">li
 <p>举个栗子，如果我想导出<a
 target="_blank" rel="noopener" href="https://sophilex.top/posts/ef9972ec/slide.html">这份slides</a>，我的命令应该写为
 <figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk">decktape reveal https:<span class="hljs-regexp">//</span>sophilex.top<span class="hljs-regexp">/posts/</span>ef9972ec/slide.html hhh.pdf<br></code></pre></td></tr></table></figure></p>
-<p>导出效果实测非常nice！太棒了！感谢伟大的互联网！</p>
+<p>导出效果实测非常nice！</p>
 <h2 id="总结">总结</h2>
 <p>这种写slides的方式跟写日常写笔记差不多，但也意味着其排版比较固定（想要复杂点的，多写点css当然也可以实现，但是我懒），插入图片似乎也比较麻烦，位置大小啥的得慢慢调。不过公式编辑的便捷是一大优势，以及个人觉得很帅。（以及被迫重新学了一点前端hhh</p>
 <p>好玩。</p>
