@@ -18,27 +18,27 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="噜啦啦噜啦啦">
+    <meta name="description" content="DKD在LLM场景下的扩展">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Training-Inference Mismatch In LLM KD">
-<meta property="og:url" content="https://sophilex.github.io/posts/ef9972ec/index.html">
+<meta property="og:title" content="Revisiting Knowledge Distillation for Autoregressive Language Models">
+<meta property="og:url" content="https://sophilex.github.io/posts/c4df3d21/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="噜啦啦噜啦啦">
+<meta property="og:description" content="DKD在LLM场景下的扩展">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/j10.jpg">
-<meta property="article:published_time" content="2025-06-24T12:57:39.000Z">
-<meta property="article:modified_time" content="2025-06-27T08:10:13.551Z">
+<meta property="og:image" content="https://sophilex.github.io/img/mc3.jpg">
+<meta property="article:published_time" content="2025-06-30T09:16:27.000Z">
+<meta property="article:modified_time" content="2025-06-30T09:21:14.854Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="LLM">
 <meta property="article:tag" content="KD">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/j10.jpg">
+<meta name="twitter:image" content="https://sophilex.github.io/img/mc3.jpg">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>Training-Inference Mismatch In LLM KD - Sophilex‘s Blog</title>
+  <title>Revisiting Knowledge Distillation for Autoregressive Language Models - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -238,13 +238,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/j10.jpg') no-repeat center center; background-size: cover;">
+     style="background: url('/img/mc3.jpg') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Training-Inference Mismatch In LLM KD"></span>
+            <span id="subtitle" data-typed-text="Revisiting Knowledge Distillation for Autoregressive Language Models"></span>
           
         </div>
 
@@ -260,8 +260,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-06-24 20:57" pubdate>
-          2025年6月24日 晚上
+        <time datetime="2025-06-30 17:16" pubdate>
+          2025年6月30日 下午
         </time>
       </span>
     
@@ -272,7 +272,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          0 字
+          732 字
         
       </span>
     
@@ -283,7 +283,7 @@
         
         
         
-          1 分钟
+          7 分钟
         
       </span>
     
@@ -328,26 +328,65 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">Training-Inference Mismatch In LLM KD</h1>
+            <h1 id="seo-header">Revisiting Knowledge Distillation for Autoregressive Language Models</h1>
             
             
               <div class="markdown-body">
                 
-                
+                <p>将DKD的思想迁移到了文本生成的场景下，得到了LLM KD的一种方法</p>
+<p>在LLM KD中，目前一般是逐token做教师与学生的KLD对齐，表示为 <span
+class="math display">\[
+Loss = \sum_{t=1}^{T} D_{KL}(p^t||q^t)\tag{1}
+\]</span> 其中<span
+class="math inline">\(p^t,q^t\)</span>分别代表对于第t个token的生成过程，两个模型对应的tokens概率分布，q代表学生，T代表生成文本的总长度。
+记<span class="math inline">\(z^t_{i}\)</span>代表第<span
+class="math inline">\(t\)</span>个token生成时，每一个token的logits，经过softmax之后得到
+<span class="math display">\[
+p_{i} = \frac{\exp(z^t_{i})}{\sum_{j} \exp(z^t_{j})}
+\]</span> 如果记<span
+class="math inline">\(g_{t}\)</span>代表第t轮的目标token的话，同时可以定义
+<span class="math display">\[
+\hat{p}^t_{g_{t}} = \frac{\exp(z^t_{g_{t}})}{\sum_{j } \exp(z^t_{j})}, \
+\hat{p}^t_{n g_{t}} = \frac{\sum_{j \neq g_{t}} \exp(z^t_{j})}{\sum_{j }
+\exp(z^t_{j})}
+\]</span></p>
+<p>那么<span class="math inline">\((1)\)</span>式可以写为 <span
+class="math display">\[
+Loss = \sum_{t=1}^{T}\left( \underbrace{p^t_{g_{t}}\log\left(
+\frac{p^t_{g_{t}}}{q^t_{g_{t}}} \right) + p^t_{n g_{t}}\log\left(
+\frac{p^t_{n g_{t}}}{q^t_{n g_{t}}} \right)}_{TKD} + \underbrace{p^t_{n
+g_{t}}}_{UNC} \underbrace{ \sum_{j \neq g_{t}} \hat{p}^t_{j}\log\left(
+\frac{\hat{p}^t_{j}}{\hat{q}^t_{j}} \right)}_{DKD} \right)\tag{2}
+\]</span>
+其中，TKD代表了KD的target部分，DKD代表非target部分，UNC是两者之间的权重。事实上这一结论是DKD在文本生成场景下的扩展，其与DKD的原结论也只差了一个求和符。</p>
+<p>需要指出的是，UNC实际含义是非target部分的总概率所占比重，其可以代表教师的不确定程度，进而代表了<strong>对应target
+token的学习难度</strong>，接下来涉及的关于token学习难度的表述，都是基于这一指标进行确定的。</p>
+<p>作者指出，<strong>DKD部分在KD过程中起到了主导作用，而对于TKD，其在easy
+target token的学习过程中起到了消极作用，而在hard target
+token的学习中起到了积极作用</strong>，这一点在下面这张表中还是比较直观的。</p>
+<p>这一点的直观解释就是：对于那些简单的token，强调学生与教师对齐可能会导致过拟合，损害学生生成多样性等，而难的部分，加入更多教师的引导可能会更有效。至于DKD占主导，我觉得很合理，毕竟DKD中包含了剩下所有token的信息，而TKD只有一个token的信息。</p>
+<figure>
+<img src="https://s2.loli.net/2025/06/30/LeUhWobwJEVnmZi.png" srcset="/img/loadings.gif" lazyload
+alt="Comparisons of different teaching objectives" />
+<figcaption aria-hidden="true">Comparisons of different teaching
+objectives</figcaption>
+</figure>
+<p>因此作者对不同难度的target token采用不同的loss设计，表述为 <span
+class="math display">\[
+\begin{flalign}
+&amp;L^e = \sum_{t\in D_{e}}KL(\hat{p}^t||\hat{q}^t)\\
+&amp;L^h = \sum_{t\in D_{h}}KL(p^t_{b}||q^t_{b}) +
+KL(\hat{p}^t||\hat{q}^t)
+\end{flalign}\tag{3}
+\]</span> 也就是只在hard target
+token的loss中添加TKD，难度的划分依据UNC，每一个batch选择UNC最大的5个样本作用hard，其它都是easy
+最终loss表述为 <span class="math display">\[
+Loss = \lambda L^e + (1-\lambda) L^h
+\]</span></p>
+<p>总的来说，大部分还是跟DKD一样，只是粒度更细，处理手段到了sample层面。</p>
+
                 
               </div>
-              
-                <hr/>
-                <div class="mt-4 d-flex justify-content-center gap-5">
-                  <a href="/posts/ef9972ec/slide.html" class="btn btn-primary mx-3">
-                    View Slides
-                  </a>
-                  
-                    <a href="/posts/ef9972ec/slide.pdf" class="btn btn-primary mx-3">
-                      View PDF
-                    </a>
-                  
-                </div>
               
 
             
@@ -365,7 +404,7 @@
     
       <span class="category-chain">
         
-  <a href="/categories/slides/" class="category-chain-item">slides</a>
+  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" class="category-chain-item">学习笔记</a>
   
   
 
@@ -394,8 +433,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Training-Inference Mismatch In LLM KD</div>
-      <div>https://sophilex.github.io/posts/ef9972ec/</div>
+      <div>Revisiting Knowledge Distillation for Autoregressive Language Models</div>
+      <div>https://sophilex.github.io/posts/c4df3d21/</div>
     </div>
     <div class="license-meta">
       
@@ -407,7 +446,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年6月24日</div>
+          <div>2025年6月30日</div>
         </div>
       
       
@@ -439,18 +478,12 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/c4df3d21/" title="Revisiting Knowledge Distillation for Autoregressive Language Models">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Revisiting Knowledge Distillation for Autoregressive Language Models</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/8d7eb621/" title="Dual-Space Knowledge Distillation for Large Language Models">
-                        <span class="hidden-mobile">Dual-Space Knowledge Distillation for Large Language Models</span>
+                      <a href="/posts/ef9972ec/" title="Training-Inference Mismatch In LLM KD">
+                        <span class="hidden-mobile">Training-Inference Mismatch In LLM KD</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

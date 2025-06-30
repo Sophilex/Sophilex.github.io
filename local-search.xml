@@ -4,6 +4,33 @@
   
   
   <entry>
+    <title>Revisiting Knowledge Distillation for Autoregressive Language Models</title>
+    <link href="/posts/c4df3d21/"/>
+    <url>/posts/c4df3d21/</url>
+    
+    <content type="html"><![CDATA[<p>将DKD的思想迁移到了文本生成的场景下，得到了LLM KD的一种方法</p><p>在LLM KD中，目前一般是逐token做教师与学生的KLD对齐，表示为 <spanclass="math display">\[Loss = \sum_{t=1}^{T} D_{KL}(p^t||q^t)\tag{1}\]</span> 其中<spanclass="math inline">\(p^t,q^t\)</span>分别代表对于第t个token的生成过程，两个模型对应的tokens概率分布，q代表学生，T代表生成文本的总长度。记<span class="math inline">\(z^t_{i}\)</span>代表第<spanclass="math inline">\(t\)</span>个token生成时，每一个token的logits，经过softmax之后得到<span class="math display">\[p_{i} = \frac{\exp(z^t_{i})}{\sum_{j} \exp(z^t_{j})}\]</span> 如果记<spanclass="math inline">\(g_{t}\)</span>代表第t轮的目标token的话，同时可以定义<span class="math display">\[\hat{p}^t_{g_{t}} = \frac{\exp(z^t_{g_{t}})}{\sum_{j } \exp(z^t_{j})}, \\hat{p}^t_{n g_{t}} = \frac{\sum_{j \neq g_{t}} \exp(z^t_{j})}{\sum_{j }\exp(z^t_{j})}\]</span></p><p>那么<span class="math inline">\((1)\)</span>式可以写为 <spanclass="math display">\[Loss = \sum_{t=1}^{T}\left( \underbrace{p^t_{g_{t}}\log\left(\frac{p^t_{g_{t}}}{q^t_{g_{t}}} \right) + p^t_{n g_{t}}\log\left(\frac{p^t_{n g_{t}}}{q^t_{n g_{t}}} \right)}_{TKD} + \underbrace{p^t_{ng_{t}}}_{UNC} \underbrace{ \sum_{j \neq g_{t}} \hat{p}^t_{j}\log\left(\frac{\hat{p}^t_{j}}{\hat{q}^t_{j}} \right)}_{DKD} \right)\tag{2}\]</span>其中，TKD代表了KD的target部分，DKD代表非target部分，UNC是两者之间的权重。事实上这一结论是DKD在文本生成场景下的扩展，其与DKD的原结论也只差了一个求和符。</p><p>需要指出的是，UNC实际含义是非target部分的总概率所占比重，其可以代表教师的不确定程度，进而代表了<strong>对应targettoken的学习难度</strong>，接下来涉及的关于token学习难度的表述，都是基于这一指标进行确定的。</p><p>作者指出，<strong>DKD部分在KD过程中起到了主导作用，而对于TKD，其在easytarget token的学习过程中起到了消极作用，而在hard targettoken的学习中起到了积极作用</strong>，这一点在下面这张表中还是比较直观的。</p><p>这一点的直观解释就是：对于那些简单的token，强调学生与教师对齐可能会导致过拟合，损害学生生成多样性等，而难的部分，加入更多教师的引导可能会更有效。至于DKD占主导，我觉得很合理，毕竟DKD中包含了剩下所有token的信息，而TKD只有一个token的信息。</p><figure><img src="https://s2.loli.net/2025/06/30/LeUhWobwJEVnmZi.png"alt="Comparisons of different teaching objectives" /><figcaption aria-hidden="true">Comparisons of different teachingobjectives</figcaption></figure><p>因此作者对不同难度的target token采用不同的loss设计，表述为 <spanclass="math display">\[\begin{flalign}&amp;L^e = \sum_{t\in D_{e}}KL(\hat{p}^t||\hat{q}^t)\\&amp;L^h = \sum_{t\in D_{h}}KL(p^t_{b}||q^t_{b}) +KL(\hat{p}^t||\hat{q}^t)\end{flalign}\tag{3}\]</span> 也就是只在hard targettoken的loss中添加TKD，难度的划分依据UNC，每一个batch选择UNC最大的5个样本作用hard，其它都是easy最终loss表述为 <span class="math display">\[Loss = \lambda L^e + (1-\lambda) L^h\]</span></p><p>总的来说，大部分还是跟DKD一样，只是粒度更细，处理手段到了sample层面。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+      <tag>KD</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Training-Inference Mismatch In LLM KD</title>
     <link href="/posts/ef9972ec/"/>
     <url>/posts/ef9972ec/</url>
