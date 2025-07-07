@@ -4,6 +4,114 @@
   
   
   <entry>
+    <title>DipSVD: Dual-importance Protected SVD for Efficient LLM Compression</title>
+    <link href="/posts/dd35f5de/"/>
+    <url>/posts/dd35f5de/</url>
+    
+    <content type="html"><![CDATA[<p>在SVD-LLM的基础上提出改进。LLM matrix decomposition的目标函数，可以写成 <span class="math display">\[W_{k}^* = \mathop{\text{argmin}}\limits_{W_{k}} ||W_{k}X -WX||_{F}^2\tag{1}\]</span> 每一层的线性层参数<spanclass="math inline">\(W\)</span>，以及其输入<spanclass="math inline">\(X\)</span>，参数的最优近似结果为<spanclass="math inline">\(W_{k}^*\)</span> 引入<spanclass="math inline">\(X\)</span>是为了对齐两种参数下的输出结果，但是这对<spanclass="math inline">\(X\)</span>的各个通道都是同一权重。作者提出引入<span class="math display">\[\alpha_{j} = \sqrt{ x_{j}^T(XX^T)x_{j} }\tag{2}\]</span> 这一指标来衡量输入中不同通道的重要性。</p><p>实际上这等价于<spanclass="math inline">\(||x_{j}^TX||\)</span>，它代表了<spanclass="math inline">\(x_{j}\)</span>与各个通道的对齐程度，从而可以反映其重要性。进一步定义重要性矩阵<spanclass="math inline">\(D\)</span>，表示为 <span class="math display">\[D_{jj} = \left\{\begin{matrix}a &amp; \text{if } \alpha_{j} \text{ is among the top p\%values},a&gt;1\\1 &amp; otherwise\end{matrix}\right.\tag{3}\]</span> 那么目标<span class="math inline">\((1)\)</span>可以改写为<span class="math display">\[W_{k}^* = \mathop{\text{argmin}}\limits_{W_{k}} ||W_{k}\tilde{X} -W\tilde{X}||_{F}^2, \ \ \tilde{X} = XD\tag{4}\]</span> 通过系数<span class="math inline">\(a\)</span>对<spanclass="math inline">\(X\)</span>中比较重要的通道进行适当扩大，提高其在之后分解过程中的重要性。</p><p>这是从每一层具体矩阵的分解角度出发，另外还可以考虑每一层的压缩率<spanclass="math inline">\(k_{i}\)</span>。压缩率会影响每一层SVD分解之后保留的奇异值的数量，但是之前的工作往往是对每一层采用同一个压缩率，或者简单使用二分。这篇文章尝试提出一种自适应的策略。</p><p>如果记模型的总层数为<spanclass="math inline">\(L\)</span>的话，期望的总压缩率为<spanclass="math inline">\(k\)</span>的话，目标可以表述如下 <spanclass="math display">\[\begin{flalign}&amp;\mathop{max}\limits_{k_{1},k_{2},\dots k_{L}}D(f_{\text{orig}}(x),f_{\text{comp}}(x))\\&amp;s.t.\ \frac{1}{L}\sum_{i=1}^{L} k_{l} = k\end{flalign}\tag{5}\]</span> 其中<span class="math inline">\(D(\cdot,\cdot)\)</span>代表衡量两个分布相似程度的手段，作者选择了cossimilarity。接下来看看每一层的压缩率<spanclass="math inline">\(k_{i}\)</span>可以怎么设置。</p><p>期望衡量每一层的<strong>重要程度</strong>，以及其<strong>可压缩程度</strong>。对于前者，作者引入Fisher Sensitivity进行描述 <spanclass="math display">\[S_{l} = \sum_{Attention} \frac{||\nabla_{\theta}L||_{F}}{||\theta||_{F}}+ \sum_{MLP} \frac{||\nabla_{\theta}L||_{F}}{||\theta||_{F}}\tag{6}\]</span> <spanclass="math inline">\((6)\)</span>式中，对于每一层的Attention和MLP架构，<spanclass="math inline">\(||\nabla_{\theta}L||_{F}\)</span>衡量了该层参数对Loss的贡献，除以<spanclass="math inline">\(||\theta||_{F}\)</span>则是为了抹去参数规模的影响，从而得到该层的总体重要程度。<spanclass="math inline">\(S_{l}\)</span>越高，该层的重要性越高，从而压缩率应当越高。对于可压缩程度，引入 <span class="math display">\[R_{l} = min\left\{  k| \frac{\sum_{i=1}^{k}\sigma_{i}}{\sum_{i=1}^{r}\sigma_{i}} \geq \text{ threshold}\right\}\tag{7}\]</span></p><p>实际上代表了保留前多少个奇异值得到的信息可以达到预设的阈值threshold，其一般设为<spanclass="math inline">\(0.95\)</span> <spanclass="math inline">\(R_{l}\)</span>越低，代表这一层可压缩程度越高，压缩率应当越低</p><p>那么综合两个指标，可以得到最终指标表示为 <spanclass="math display">\[Q_{l} = S_{l}^{\beta} (1-R_{l})^{1-\beta}\tag{8}\]</span> 其反映了每一层适合的压缩率大小。那么结合目标<spanclass="math inline">\((5)\)</span>，可以得到每一层的具体的参数压缩率为<span class="math display">\[k_{l} = \frac{Q_{l}}{\sum_{i=1}^{L}Q_{i}}Lk\tag{9}\]</span></p><p>简单来说，就是让一些不那么重要，或者空余参数较多的层，来更多地承担压缩任务。下图展示了Vicuna-7B上不同层的对应系数结果，可以看到前几层往往得到较多保留，而之后的层被压缩的较严重。而之前工作往往对每一层采用同一压缩率，显然是不妥的。<img src="https://s2.loli.net/2025/07/06/3owEpIhFUTjP7xa.png" /></p><p>总的来说，在SVD-LLM的基础上，对input <spanclass="math inline">\(X\)</span>进行了增强，同时引入每一层自适应计算压缩率的手段。SVD-LLM的参数微调策略背其省略了，可能也是因为效果有限，毕竟从消融实验也可以看出，主要起作用的还是对<spanclass="math inline">\(XX^T\)</span>进行Cholesky分解带来的奇异值-loss一一对应。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+      <tag>Matrix_Decomposition</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>SVD-LLM: TRUNCATION-AWARE SINGULAR VALUE DECOMPOSITION FOR LARGE LANGUAGE MODEL COMPRESSION</title>
+    <link href="/posts/589e9b78/"/>
+    <url>/posts/589e9b78/</url>
+    
+    <content type="html"><![CDATA[<p>在近似矩阵参数<spanclass="math inline">\(W\)</span>的背景下，即每一层的输入为<spanclass="math inline">\(X\)</span>，那么目标可以表示为 <spanclass="math display">\[W^* = \mathop{\text{argmin}}\limits_{W&#39;} ||W&#39;X -WX||_{F}^2\tag{1}\]</span> ASVD[[#^a3b6a4|[1]]]的做法是引入与输入<spanclass="math inline">\(X\)</span>相关的可逆矩阵<spanclass="math inline">\(S\)</span>，将<spanclass="math inline">\(WX\)</span>改写为<spanclass="math inline">\((WS)(S^{-1}X)\)</span>，并用SVD对<spanclass="math inline">\(WS\)</span>进行近似。其将<spanclass="math inline">\(S\)</span>取为 <span class="math display">\[S_{ii} = \left( \frac{1}{n} \sum_{j=1}^{n}|X_{ij}| \right)^{\alpha}\tag{2}\]</span> 本文指出目前设计的<spanclass="math inline">\(S\)</span>依然存在问题，贪心地对<spanclass="math inline">\(WS\)</span>的最小奇异值方向进行去除并不能保证<spanclass="math inline">\(Loss = ||W&#39;X -WX||_{F}^2\)</span>最小。本文将<spanclass="math inline">\(S\)</span>设计为<spanclass="math inline">\(XX^T\)</span>的Cholesky decomposition，即满足<span class="math display">\[SS^T = XX^T \tag{3}\]</span> 且<spanclass="math inline">\(S\)</span>是一个下三角矩阵，这里记为<spanclass="math inline">\(S_{Cho}\)</span> 在这种设计下，再对<spanclass="math inline">\(WS_{Cho}\)</span>进行SVD分解，可以做到<spanclass="math inline">\(Loss\)</span> 与删除的奇异值<spanclass="math inline">\(\sigma_{i}\)</span>是一一对应的，从而可以从理论上保证贪心策略的有效性。</p><p>具体来说，其证明了，当<span class="math inline">\(S_{Cho}\)</span>是<span class="math inline">\(XX^T\)</span>的Choleskydecomposition，且对<spanclass="math inline">\(WS_{Cho}\)</span>进行SVD分解并去除第<spanclass="math inline">\(i\)</span>个奇异值对应向量时，有 <spanclass="math display">\[Loss = ||W&#39;X - WX||_{F}^2 = \sigma_{i}^2\tag{4}\]</span> 并且，如果同时去除<spanclass="math inline">\(\sigma_{m+1},\sigma_{m+2},\dots ,\sigma_{r}\)</span>的话，可以得到 <span class="math display">\[Loss = ||W&#39;X - WX||_{F}^2 = \sum_{j=m+1}^{r}\sigma_{i}^2\tag{5}\]</span> 具体证明过程略过。这还是非常神奇且强大的。</p><p>另外其还指出在略去一些参数之后，还应该重新对参数进行微调。记近似之后的结果为<span class="math display">\[WS_{Cho} \approx U_{k} \Sigma_{k} V_{k}^T\tag{6}\]</span> 记 <span class="math display">\[W_{u}&#39; = U_{k} \Sigma_{k}^{1/2}, W_{v}&#39; =\Sigma_{k}^{1/2}V_{k}^TS_{Cho}^{-1}\]</span> 这里把多出来的<spanclass="math inline">\(S_{Cho}^{-1}\)</span>放进来，那么此时<spanclass="math inline">\(W_{u}&#39;W_{v}&#39;\)</span>就是最终的近似参数了。我们应当对<spanclass="math inline">\(W_{u}&#39;\)</span>和<spanclass="math inline">\(W_{V}&#39;\)</span>都进行LoRA微调。 <spanclass="math display">\[W_{u}&#39; \leftarrow W_{u}&#39; + B_{u}A_{u}, \ \ W_{v}&#39; \leftarrowW_{v}&#39; + B_{v}A_{v}\]</span> 但是由于它们来自于<spanclass="math inline">\(WS_{Cho}\)</span>的分解，是相互关联的，两者分开单独微调的话，会有一定影响。因此作者提出分别微调 <imgsrc="https://s2.loli.net/2025/07/07/fH4PjBDV29txrg6.png" /> 先冻结<spanclass="math inline">\(W_{v}&#39;\)</span>，微调<spanclass="math inline">\(W_{u}&#39;\)</span>；再冻结<spanclass="math inline">\(W_{u}&#39;\)</span>，更新<spanclass="math inline">\(W_{V}&#39;\)</span></p><p>从结果上来看，效果还是很惊艳的 <imgsrc="https://s2.loli.net/2025/07/07/C1kMDfWFZJBUahx.png" /></p><p>SVD-LLM(W)代表只使用<spanclass="math inline">\(S_{Cho}\)</span>，不进行分解近似后的微调。</p><h2 id="reference">Reference</h2><p>[1] Yuan, Z., Shang, Y., Song, Y., Wu, Q., Yan, Y., &amp; Sun, G.(2023). ASVD: Activation-aware Singular Value Decomposition forCompressing Large Language Models. ^a3b6a4</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+      <tag>KD</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>LANGUAGE MODEL COMPRESSION WITH WEIGHTED  LOW-RANK FACTORIZATION</title>
+    <link href="/posts/b977ce3c/"/>
+    <url>/posts/b977ce3c/</url>
+    
+    <content type="html"><![CDATA[<p>指出模型matrix decomposition的时候，依据singularvalues的大小贪心删去对应方向的向量，与模型性能减少的幅度，可能并不是完全正相关的<img src="https://s2.loli.net/2025/07/03/21nKfNoyZSevJlM.png"alt="The truncation and its crossponding performance" /></p><p>可以看到，这里删去最小的一组singularvalues反而导致了比前几组更多的性能下降。这是因为单纯对参数进行SVD分解，并没有考虑到data，task</p><p>我们记模型的SVD分解结果为 <span class="math display">\[W = U\Sigma V\]</span> 可以简记为<span class="math inline">\(A = U\Sigma,B=V\)</span>那么原本的目标可以表示为 <span class="math display">\[\mathop{min}\limits_{A,B}||W-AB||_{2} =\mathop{min}\limits_{A,B}\sum_{i,j}(W_{i,j}-(AB)_{i,j})^2\tag{1}\]</span>本文考虑对每一个参数进行加权，依据为参数与性能的关联性，从而新的目标可以表示为<span class="math display">\[\mathop{min}\limits_{A,B}\sum_{i,j}\hat{I}_{W_{i,j}}(W_{i,j}-(AB)_{i,j})^2\tag{2}\]</span>接下来的问题就是如何能够得到参数与性能之间的关联？可以使用<strong>Fisherinformation</strong>，其定义如下 <span class="math display">\[I_{w} = E\left[ \left( \frac{\partial}{\partial_{w}}\log p(D|w)\right)^2 \right]\approx \frac{1}{|D|}\sum_{i=1}^{D} \left(\frac{\partial}{\partial_{w}}L(d_{i};w) \right)^2 = \hat{I}_{w}\tag{3}\]</span> 其中<spanclass="math inline">\(d_{i}\)</span>代表具体训练数据，<spanclass="math inline">\(L\)</span>就是任务相关的loss。直观来看，这一指标实际反映的就是在参数<spanclass="math inline">\(w\)</span>下，模型期望loss。那么对于那些改变之后对<spanclass="math inline">\(\hat{I}_{w}\)</span>影响较大的参数，就应当是需要重点拟合的参数，相对应的，在<spanclass="math inline">\((2)\)</span>式中，也应该给到更大的权重。</p><p>当然，<spanclass="math inline">\((2)\)</span>式此时还缺乏一个闭式解，因此需要对齐做一个近似：每一行的参数取同一个权重：<span class="math display">\[\hat{I}_{w_{i}} = \sum_{j} \hat{I}w_{i,j}\tag{4}\]</span> 从而<span class="math inline">\((2)\)</span>式可以整理为 <spanclass="math display">\[\mathop{min}\limits_{A,B}||\hat{I}W-\hat{I}AB||_{2}\tag{5}\]</span> 从而我们只需要对<spanclass="math inline">\(\hat{I}W\)</span>进行SVD分解，分解出来的结果作为<spanclass="math inline">\(\hat{I}AB\)</span>即可。</p><p>最后展示一下目前已有的模型压缩技术路线 <imgsrc="https://s2.loli.net/2025/07/03/bpJMwPvcWFok9Ns.png"alt="three paths to create compressed language models" /></p><p>对于LLM，一般是先做预训练，然后针对特定任务微调，最后post-training进行参数压缩，post-training中已有的技术包括Quantization，参数剪枝，以及本文的Factorization。如果有学生模型的加入的话，在双方都预训练之后，可以做一个KD，然后做类似的微调。早先的操作中，学生在KD，微调之后基本就结束了，但是本文的引入可以做到在后面再加一个Factorization，对学生再进一步压缩参数。作者的实验表明这一操作确实是有效的。</p><p>事实上，对于KD，其实学生模型的架构是提前限定好的，但是model每一层具体可以怎么压缩，压缩到什么程度，直接提前设定好是否还是欠妥，事实上应该也很难提前确定好最优解。而进一步向最优解靠近交给MatrixDecomposition来自适应调整，或许是比较好的。这样一来，KD用于知识迁移，MD用于冗余参数移除，两者的功能其实还是相对正交的。因此路线3的合理性也是可以理解的。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+      <tag>Matrix_Decomposition</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>ASVD: ACTIVATION-AWARE SINGULAR VALUE DECOMPOSITION FOR COMPRESSING LARGE LANGUAGE  MODELS</title>
+    <link href="/posts/38df231f/"/>
+    <url>/posts/38df231f/</url>
+    
+    <content type="html"><![CDATA[<p>ASVD提出使用SVD分解来做到用较少参数近似LLM参数，从而减小模型规模，算一种post-training。这一思想个人感觉与KD算是正交的。前者减小现有模型规模，而后者是在两个模型上转移知识，且学生模型的架构是提前设置好的。首先目标是比较明晰的，我们考虑每一层的线性层参数<spanclass="math inline">\(W\)</span>，以及其输入<spanclass="math inline">\(X\)</span>，参数的最优近似结果<spanclass="math inline">\(W_{k}^*\)</span>应当满足 <spanclass="math display">\[W_{k}^* = \mathop{\text{argmin}}\limits_{W_{k}} ||W_{k}X -WX||_{F}^2\tag{1}\]</span> 其中<span class="math inline">\(k\)</span>代表秩为<spanclass="math inline">\(k\)</span>的近似。 这里我们考虑了每一层的输入<spanclass="math inline">\(X\)</span>，从而<spanclass="math inline">\((1)\)</span>式实际上是在对齐两种参数下的输出空间，而不仅仅是对齐参数。这是因为对模型已有参数进行近似，应当是<code>task-targeted</code>，而这一点在简单对齐参数的情况下可能是难以满足的。事实上[2]对此现象也有所描述,这里不再赘述。</p><p>那么在<spanclass="math inline">\((1)\)</span>式下，我们直接对参数<spanclass="math inline">\(W\)</span>做SVD分解，然后保留前<spanclass="math inline">\(k\)</span>大的奇异值方向，极有可能是不够优的。作者提出引入一个来自参数<spanclass="math inline">\(X\)</span>的<mark style="background: #FF5582A6;">可逆</mark>矩阵<spanclass="math inline">\(S\)</span>，并且将<spanclass="math inline">\(WX\)</span>改写为 <span class="math display">\[W = (WS)(S^{-1}X)\tag{2}\]</span> 那么让<span class="math inline">\(W_{k}\)</span>近似<spanclass="math inline">\(WS\)</span>即可，后半部分只跟输入<spanclass="math inline">\(X\)</span>有关。那么我们按照SVD的套路对WS进行分解，并保留前k大奇异值方向进行近似。具体来说<span class="math display">\[WS=U&#39;\Sigma&#39; V&#39;^T \tag{3}\]</span> 保留前<span class="math inline">\(k\)</span>大奇异值后得到<span class="math display">\[WS \approx U_{k}&#39;\Sigma_{k}&#39; V_{k}&#39;^T = W_{k} \tag{4}\]</span> 事实上也不难看出引入<spanclass="math inline">\(S\)</span>的目的:在分解，近似的过程中加入对当前层输入<spanclass="math inline">\(X\)</span>的考虑，直观上对靠近<spanclass="math inline">\((1)\)</span>式最优解<spanclass="math inline">\(W_{K}^*\)</span>是有帮助的。</p><p>但是如何引入<spanclass="math inline">\(X\)</span>也是有讲究的。ASVD中将<spanclass="math inline">\(S\)</span>设置为一个对角阵 <spanclass="math display">\[S_{ii} = \left( \frac{1}{n} \sum_{j=1}^{n}|X_{ij}| \right)^{\alpha}\tag{5}\]</span> 其没有解释这一设计的具体理由，可能也是试出来的吧</p><p>另外其对模型中不同层对压缩的敏感性也做了探究 <imgsrc="https://s2.loli.net/2025/07/03/FkoDMGUtAdZ4NSb.png"alt="Perplexity across Various Linear Layers and Parameter Ratios" /></p><p>如图，横轴代表不同的压缩比，纵轴代表perplexity用来表示性能。可以看到不同层之间对压缩的敏感性不同，但是都表现出了压缩比越高，性能越差的结果(显然)。</p><p>由此我们应当对不同层采用不同的压缩比，这一点在文中是通过二分实现的，这里不再赘述。</p><h2 id="reference">Reference</h2><p>[1] Yuan, Z., Shang, Y., Song, Y., Wu, Q., Yan, Y., &amp; Sun, G.(2023). ASVD: Activation-aware Singular Value Decomposition forCompressing Large Language Models.  ^132f6c</p><p>[2] Hsu, Y., Hua, T., Chang, S., Lou, Q., Shen, Y., &amp; Jin, H.(2022). Language model compression with weighted low-rankfactorization. In ICLR, 22 ^942a0c</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+      <tag>Matrix_Decomposition</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Revisiting Knowledge Distillation for Autoregressive Language Models</title>
     <link href="/posts/c4df3d21/"/>
     <url>/posts/c4df3d21/</url>

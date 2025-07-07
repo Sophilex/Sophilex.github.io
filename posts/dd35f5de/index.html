@@ -18,27 +18,27 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="DKD在LLM场景下的扩展">
+    <meta name="description" content="根据每一层的重要性和可压缩程度自适应地分配矩阵压缩率">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Revisiting Knowledge Distillation for Autoregressive Language Models">
-<meta property="og:url" content="https://sophilex.github.io/posts/c4df3d21/index.html">
+<meta property="og:title" content="DipSVD: Dual-importance Protected SVD for Efficient LLM Compression">
+<meta property="og:url" content="https://sophilex.github.io/posts/dd35f5de/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="DKD在LLM场景下的扩展">
+<meta property="og:description" content="根据每一层的重要性和可压缩程度自适应地分配矩阵压缩率">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/mc3.jpg">
-<meta property="article:published_time" content="2025-06-30T09:16:27.000Z">
-<meta property="article:modified_time" content="2025-06-30T09:21:14.854Z">
+<meta property="og:image" content="https://sophilex.github.io/img/j11.jpg">
+<meta property="article:published_time" content="2025-07-07T02:34:01.000Z">
+<meta property="article:modified_time" content="2025-07-07T02:45:01.697Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="LLM">
-<meta property="article:tag" content="KD">
+<meta property="article:tag" content="Matrix_Decomposition">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/mc3.jpg">
+<meta name="twitter:image" content="https://sophilex.github.io/img/j11.jpg">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>Revisiting Knowledge Distillation for Autoregressive Language Models - Sophilex‘s Blog</title>
+  <title>DipSVD: Dual-importance Protected SVD for Efficient LLM Compression - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -238,13 +238,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/mc3.jpg') no-repeat center center; background-size: cover;">
+     style="background: url('/img/j11.jpg') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Revisiting Knowledge Distillation for Autoregressive Language Models"></span>
+            <span id="subtitle" data-typed-text="DipSVD: Dual-importance Protected SVD for Efficient LLM Compression"></span>
           
         </div>
 
@@ -260,8 +260,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-06-30 17:16" pubdate>
-          2025年6月30日 下午
+        <time datetime="2025-07-07 10:34" pubdate>
+          2025年7月7日 上午
         </time>
       </span>
     
@@ -272,7 +272,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          732 字
+          1k 字
         
       </span>
     
@@ -283,7 +283,7 @@
         
         
         
-          7 分钟
+          9 分钟
         
       </span>
     
@@ -328,62 +328,86 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">Revisiting Knowledge Distillation for Autoregressive Language Models</h1>
+            <h1 id="seo-header">DipSVD: Dual-importance Protected SVD for Efficient LLM Compression</h1>
             
             
               <div class="markdown-body">
                 
-                <p>将DKD的思想迁移到了文本生成的场景下，得到了LLM KD的一种方法</p>
-<p>在LLM KD中，目前一般是逐token做教师与学生的KLD对齐，表示为 <span
-class="math display">\[
-Loss = \sum_{t=1}^{T} D_{KL}(p^t||q^t)\tag{1}
-\]</span> 其中<span
-class="math inline">\(p^t,q^t\)</span>分别代表对于第t个token的生成过程，两个模型对应的tokens概率分布，q代表学生，T代表生成文本的总长度。
-记<span class="math inline">\(z^t_{i}\)</span>代表第<span
-class="math inline">\(t\)</span>个token生成时，每一个token的logits，经过softmax之后得到
+                <p>在SVD-LLM的基础上提出改进。LLM matrix decomposition
+的目标函数，可以写成 <span class="math display">\[
+W_{k}^* = \mathop{\text{argmin}}\limits_{W_{k}} ||W_{k}X -
+WX||_{F}^2\tag{1}
+\]</span> 每一层的线性层参数<span
+class="math inline">\(W\)</span>，以及其输入<span
+class="math inline">\(X\)</span>，参数的最优近似结果为<span
+class="math inline">\(W_{k}^*\)</span> 引入<span
+class="math inline">\(X\)</span>是为了对齐两种参数下的输出结果，但是这对<span
+class="math inline">\(X\)</span>的各个通道都是同一权重。作者提出引入
 <span class="math display">\[
-p_{i} = \frac{\exp(z^t_{i})}{\sum_{j} \exp(z^t_{j})}
-\]</span> 如果记<span
-class="math inline">\(g_{t}\)</span>代表第t轮的目标token的话，同时可以定义
+\alpha_{j} = \sqrt{ x_{j}^T(XX^T)x_{j} }\tag{2}
+\]</span> 这一指标来衡量输入中不同通道的重要性。</p>
+<p>实际上这等价于<span
+class="math inline">\(||x_{j}^TX||\)</span>，它代表了<span
+class="math inline">\(x_{j}\)</span>与各个通道的对齐程度，从而可以反映其重要性。进一步定义重要性矩阵<span
+class="math inline">\(D\)</span>，表示为 <span class="math display">\[
+D_{jj} = \left\{\begin{matrix}
+a &amp; \text{if } \alpha_{j} \text{ is among the top p\%
+values},a&gt;1\\
+1 &amp; otherwise
+\end{matrix}\right.\tag{3}
+\]</span> 那么目标<span class="math inline">\((1)\)</span>可以改写为
 <span class="math display">\[
-\hat{p}^t_{g_{t}} = \frac{\exp(z^t_{g_{t}})}{\sum_{j } \exp(z^t_{j})}, \
-\hat{p}^t_{n g_{t}} = \frac{\sum_{j \neq g_{t}} \exp(z^t_{j})}{\sum_{j }
-\exp(z^t_{j})}
-\]</span></p>
-<p>那么<span class="math inline">\((1)\)</span>式可以写为 <span
-class="math display">\[
-Loss = \sum_{t=1}^{T}\left( \underbrace{p^t_{g_{t}}\log\left(
-\frac{p^t_{g_{t}}}{q^t_{g_{t}}} \right) + p^t_{n g_{t}}\log\left(
-\frac{p^t_{n g_{t}}}{q^t_{n g_{t}}} \right)}_{TKD} + \underbrace{p^t_{n
-g_{t}}}_{UNC} \underbrace{ \sum_{j \neq g_{t}} \hat{p}^t_{j}\log\left(
-\frac{\hat{p}^t_{j}}{\hat{q}^t_{j}} \right)}_{DKD} \right)\tag{2}
-\]</span>
-其中，TKD代表了KD的target部分，DKD代表非target部分，UNC是两者之间的权重。事实上这一结论是DKD在文本生成场景下的扩展，其与DKD的原结论也只差了一个求和符。</p>
-<p>需要指出的是，UNC实际含义是非target部分的总概率所占比重，其可以代表教师的不确定程度，进而代表了<strong>对应target
-token的学习难度</strong>，接下来涉及的关于token学习难度的表述，都是基于这一指标进行确定的。</p>
-<p>作者指出，<strong>DKD部分在KD过程中起到了主导作用，而对于TKD，其在easy
-target token的学习过程中起到了消极作用，而在hard target
-token的学习中起到了积极作用</strong>，这一点在下面这张表中还是比较直观的。</p>
-<p>这一点的直观解释就是：对于那些简单的token，强调学生与教师对齐可能会导致过拟合，损害学生生成多样性等，而难的部分，加入更多教师的引导可能会更有效。至于DKD占主导，我觉得很合理，毕竟DKD中包含了剩下所有token的信息，而TKD只有一个token的信息。</p>
-<figure>
-<img src="https://s2.loli.net/2025/06/30/LeUhWobwJEVnmZi.png" srcset="/img/loadings.gif" lazyload
-alt="Comparisons of different teaching objectives" />
-<figcaption aria-hidden="true">Comparisons of different teaching
-objectives</figcaption>
-</figure>
-<p>因此作者对不同难度的target token采用不同的loss设计，表述为 <span
+W_{k}^* = \mathop{\text{argmin}}\limits_{W_{k}} ||W_{k}\tilde{X} -
+W\tilde{X}||_{F}^2, \ \ \tilde{X} = XD\tag{4}
+\]</span> 通过系数<span class="math inline">\(a\)</span>对<span
+class="math inline">\(X\)</span>中比较重要的通道进行适当扩大，提高其在之后分解过程中的重要性。</p>
+<p>这是从每一层具体矩阵的分解角度出发，另外还可以考虑每一层的压缩率<span
+class="math inline">\(k_{i}\)</span>。压缩率会影响每一层SVD分解之后保留的奇异值的数量，但是之前的工作往往是对每一层采用同一个压缩率，或者简单使用二分。这篇文章尝试提出一种自适应的策略。</p>
+<p>如果记模型的总层数为<span
+class="math inline">\(L\)</span>的话，期望的总压缩率为<span
+class="math inline">\(k\)</span>的话，目标可以表述如下 <span
 class="math display">\[
 \begin{flalign}
-&amp;L^e = \sum_{t\in D_{e}}KL(\hat{p}^t||\hat{q}^t)\\
-&amp;L^h = \sum_{t\in D_{h}}KL(p^t_{b}||q^t_{b}) +
-KL(\hat{p}^t||\hat{q}^t)
-\end{flalign}\tag{3}
-\]</span> 也就是只在hard target
-token的loss中添加TKD，难度的划分依据UNC，每一个batch选择UNC最大的5个样本作用hard，其它都是easy
-最终loss表述为 <span class="math display">\[
-Loss = \lambda L^e + (1-\lambda) L^h
+&amp;\mathop{max}\limits_{k_{1},k_{2},\dots k_{L}}
+D(f_{\text{orig}}(x),f_{\text{comp}}(x))\\
+&amp;s.t.\ \frac{1}{L}\sum_{i=1}^{L} k_{l} = k
+\end{flalign}\tag{5}
+\]</span> 其中<span class="math inline">\(D(\cdot,
+\cdot)\)</span>代表衡量两个分布相似程度的手段，作者选择了cos
+similarity。接下来看看每一层的压缩率<span
+class="math inline">\(k_{i}\)</span>可以怎么设置。</p>
+<p>期望衡量每一层的<strong>重要程度</strong>，以及其<strong>可压缩程度</strong>。
+对于前者，作者引入Fisher Sensitivity进行描述 <span
+class="math display">\[
+S_{l} = \sum_{Attention} \frac{||\nabla_{\theta}L||_{F}}{||\theta||_{F}}
++ \sum_{MLP} \frac{||\nabla_{\theta}L||_{F}}{||\theta||_{F}}\tag{6}
+\]</span> <span
+class="math inline">\((6)\)</span>式中，对于每一层的Attention和MLP架构，<span
+class="math inline">\(||\nabla_{\theta}L||_{F}\)</span>衡量了该层参数对Loss的贡献，除以<span
+class="math inline">\(||\theta||_{F}\)</span>则是为了抹去参数规模的影响，从而得到该层的总体重要程度。<span
+class="math inline">\(S_{l}\)</span>越高，该层的重要性越高，从而压缩率应当越高。
+对于可压缩程度，引入 <span class="math display">\[
+R_{l} = min\left\{  k| \frac{\sum_{i=1}^{k}
+\sigma_{i}}{\sum_{i=1}^{r}\sigma_{i}} \geq \text{ threshold}
+\right\}\tag{7}
 \]</span></p>
-<p>总的来说，大部分还是跟DKD一样，只是粒度更细，处理手段到了sample层面。</p>
+<p>实际上代表了保留前多少个奇异值得到的信息可以达到预设的阈值threshold，其一般设为<span
+class="math inline">\(0.95\)</span> <span
+class="math inline">\(R_{l}\)</span>越低，代表这一层可压缩程度越高，压缩率应当越低</p>
+<p>那么综合两个指标，可以得到最终指标表示为 <span
+class="math display">\[
+Q_{l} = S_{l}^{\beta} (1-R_{l})^{1-\beta}\tag{8}
+\]</span> 其反映了每一层适合的压缩率大小。那么结合目标<span
+class="math inline">\((5)\)</span>，可以得到每一层的具体的参数压缩率为
+<span class="math display">\[
+k_{l} = \frac{Q_{l}}{\sum_{i=1}^{L}Q_{i}}Lk\tag{9}
+\]</span></p>
+<p>简单来说，就是让一些不那么重要，或者空余参数较多的层，来更多地承担压缩任务。下图展示了Vicuna-7B上不同层的对应系数结果，可以看到前几层往往得到较多保留，而之后的层被压缩的较严重。而之前工作往往对每一层采用同一压缩率，显然是不妥的。
+<img src="https://s2.loli.net/2025/07/06/3owEpIhFUTjP7xa.png" srcset="/img/loadings.gif" lazyload /></p>
+<p>总的来说，在SVD-LLM的基础上，对input <span
+class="math inline">\(X\)</span>进行了增强，同时引入每一层自适应计算压缩率的手段。SVD-LLM的参数微调策略背其省略了，可能也是因为效果有限，毕竟从消融实验也可以看出，主要起作用的还是对<span
+class="math inline">\(XX^T\)</span>进行Cholesky
+分解带来的奇异值-loss一一对应。</p>
 
                 
               </div>
@@ -421,7 +445,7 @@ Loss = \lambda L^e + (1-\lambda) L^h
       
         <a href="/tags/LLM/" class="print-no-link">#LLM</a>
       
-        <a href="/tags/KD/" class="print-no-link">#KD</a>
+        <a href="/tags/Matrix-Decomposition/" class="print-no-link">#Matrix_Decomposition</a>
       
     </div>
   
@@ -433,8 +457,8 @@ Loss = \lambda L^e + (1-\lambda) L^h
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Revisiting Knowledge Distillation for Autoregressive Language Models</div>
-      <div>https://sophilex.github.io/posts/c4df3d21/</div>
+      <div>DipSVD: Dual-importance Protected SVD for Efficient LLM Compression</div>
+      <div>https://sophilex.github.io/posts/dd35f5de/</div>
     </div>
     <div class="license-meta">
       
@@ -446,7 +470,7 @@ Loss = \lambda L^e + (1-\lambda) L^h
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年6月30日</div>
+          <div>2025年7月7日</div>
         </div>
       
       
@@ -478,18 +502,12 @@ Loss = \lambda L^e + (1-\lambda) L^h
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/38df231f/" title="ASVD: ACTIVATION-AWARE SINGULAR VALUE DECOMPOSITION FOR COMPRESSING LARGE LANGUAGE  MODELS">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">ASVD: ACTIVATION-AWARE SINGULAR VALUE DECOMPOSITION FOR COMPRESSING LARGE LANGUAGE  MODELS</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/ef9972ec/" title="Training-Inference Mismatch In LLM KD">
-                        <span class="hidden-mobile">Training-Inference Mismatch In LLM KD</span>
+                      <a href="/posts/589e9b78/" title="SVD-LLM: TRUNCATION-AWARE SINGULAR VALUE DECOMPOSITION FOR LARGE LANGUAGE MODEL COMPRESSION">
+                        <span class="hidden-mobile">SVD-LLM: TRUNCATION-AWARE SINGULAR VALUE DECOMPOSITION FOR LARGE LANGUAGE MODEL COMPRESSION</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

@@ -18,27 +18,27 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="DKD在LLM场景下的扩展">
+    <meta name="description" content="引入关于input的信息辅助SVD分解">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Revisiting Knowledge Distillation for Autoregressive Language Models">
-<meta property="og:url" content="https://sophilex.github.io/posts/c4df3d21/index.html">
+<meta property="og:title" content="ASVD: ACTIVATION-AWARE SINGULAR VALUE DECOMPOSITION FOR COMPRESSING LARGE LANGUAGE  MODELS">
+<meta property="og:url" content="https://sophilex.github.io/posts/38df231f/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="DKD在LLM场景下的扩展">
+<meta property="og:description" content="引入关于input的信息辅助SVD分解">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/mc3.jpg">
-<meta property="article:published_time" content="2025-06-30T09:16:27.000Z">
-<meta property="article:modified_time" content="2025-06-30T09:21:14.854Z">
+<meta property="og:image" content="https://sophilex.github.io/img/j0.jpg">
+<meta property="article:published_time" content="2025-07-07T02:20:23.000Z">
+<meta property="article:modified_time" content="2025-07-07T02:47:41.656Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="LLM">
-<meta property="article:tag" content="KD">
+<meta property="article:tag" content="Matrix_Decomposition">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/mc3.jpg">
+<meta name="twitter:image" content="https://sophilex.github.io/img/j0.jpg">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>Revisiting Knowledge Distillation for Autoregressive Language Models - Sophilex‘s Blog</title>
+  <title>ASVD: ACTIVATION-AWARE SINGULAR VALUE DECOMPOSITION FOR COMPRESSING LARGE LANGUAGE  MODELS - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -238,13 +238,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/mc3.jpg') no-repeat center center; background-size: cover;">
+     style="background: url('/img/j0.jpg') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Revisiting Knowledge Distillation for Autoregressive Language Models"></span>
+            <span id="subtitle" data-typed-text="ASVD: ACTIVATION-AWARE SINGULAR VALUE DECOMPOSITION FOR COMPRESSING LARGE LANGUAGE  MODELS"></span>
           
         </div>
 
@@ -260,8 +260,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-06-30 17:16" pubdate>
-          2025年6月30日 下午
+        <time datetime="2025-07-07 10:20" pubdate>
+          2025年7月7日 上午
         </time>
       </span>
     
@@ -272,7 +272,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          732 字
+          708 字
         
       </span>
     
@@ -283,7 +283,7 @@
         
         
         
-          7 分钟
+          6 分钟
         
       </span>
     
@@ -328,62 +328,64 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">Revisiting Knowledge Distillation for Autoregressive Language Models</h1>
+            <h1 id="seo-header">ASVD: ACTIVATION-AWARE SINGULAR VALUE DECOMPOSITION FOR COMPRESSING LARGE LANGUAGE  MODELS</h1>
             
             
               <div class="markdown-body">
                 
-                <p>将DKD的思想迁移到了文本生成的场景下，得到了LLM KD的一种方法</p>
-<p>在LLM KD中，目前一般是逐token做教师与学生的KLD对齐，表示为 <span
+                <p>ASVD提出使用SVD分解来做到用较少参数近似LLM参数，从而减小模型规模，算一种post-training。这一思想个人感觉与KD算是正交的。前者减小现有模型规模，而后者是在两个模型上转移知识，且学生模型的架构是提前设置好的。
+首先目标是比较明晰的，我们考虑每一层的线性层参数<span
+class="math inline">\(W\)</span>，以及其输入<span
+class="math inline">\(X\)</span>，参数的最优近似结果<span
+class="math inline">\(W_{k}^*\)</span>应当满足 <span
 class="math display">\[
-Loss = \sum_{t=1}^{T} D_{KL}(p^t||q^t)\tag{1}
-\]</span> 其中<span
-class="math inline">\(p^t,q^t\)</span>分别代表对于第t个token的生成过程，两个模型对应的tokens概率分布，q代表学生，T代表生成文本的总长度。
-记<span class="math inline">\(z^t_{i}\)</span>代表第<span
-class="math inline">\(t\)</span>个token生成时，每一个token的logits，经过softmax之后得到
+W_{k}^* = \mathop{\text{argmin}}\limits_{W_{k}} ||W_{k}X -
+WX||_{F}^2\tag{1}
+\]</span> 其中<span class="math inline">\(k\)</span>代表秩为<span
+class="math inline">\(k\)</span>的近似。 这里我们考虑了每一层的输入<span
+class="math inline">\(X\)</span>，从而<span
+class="math inline">\((1)\)</span>式实际上是在对齐两种参数下的输出空间，而不仅仅是对齐参数。这是因为对模型已有参数进行近似，应当是<code>task-targeted</code>，而这一点在简单对齐参数的情况下可能是难以满足的。事实上[2]对此现象也有所描述,这里不再赘述。</p>
+<p>那么在<span
+class="math inline">\((1)\)</span>式下，我们直接对参数<span
+class="math inline">\(W\)</span>做SVD分解，然后保留前<span
+class="math inline">\(k\)</span>大的奇异值方向，极有可能是不够优的。作者提出引入一个来自参数<span
+class="math inline">\(X\)</span>的<mark style="background: #FF5582A6;">可逆</mark>矩阵<span
+class="math inline">\(S\)</span>，并且将<span
+class="math inline">\(WX\)</span>改写为 <span class="math display">\[
+W = (WS)(S^{-1}X)\tag{2}
+\]</span> 那么让<span class="math inline">\(W_{k}\)</span>近似<span
+class="math inline">\(WS\)</span>即可，后半部分只跟输入<span
+class="math inline">\(X\)</span>有关。那么我们按照SVD的套路对WS进行分解，并保留前k大奇异值方向进行近似。具体来说
 <span class="math display">\[
-p_{i} = \frac{\exp(z^t_{i})}{\sum_{j} \exp(z^t_{j})}
-\]</span> 如果记<span
-class="math inline">\(g_{t}\)</span>代表第t轮的目标token的话，同时可以定义
+WS=U&#39;\Sigma&#39; V&#39;^T \tag{3}
+\]</span> 保留前<span class="math inline">\(k\)</span>大奇异值后得到
 <span class="math display">\[
-\hat{p}^t_{g_{t}} = \frac{\exp(z^t_{g_{t}})}{\sum_{j } \exp(z^t_{j})}, \
-\hat{p}^t_{n g_{t}} = \frac{\sum_{j \neq g_{t}} \exp(z^t_{j})}{\sum_{j }
-\exp(z^t_{j})}
-\]</span></p>
-<p>那么<span class="math inline">\((1)\)</span>式可以写为 <span
+WS \approx U_{k}&#39;\Sigma_{k}&#39; V_{k}&#39;^T = W_{k} \tag{4}
+\]</span> 事实上也不难看出引入<span
+class="math inline">\(S\)</span>的目的:
+在分解，近似的过程中加入对当前层输入<span
+class="math inline">\(X\)</span>的考虑，直观上对靠近<span
+class="math inline">\((1)\)</span>式最优解<span
+class="math inline">\(W_{K}^*\)</span>是有帮助的。</p>
+<p>但是如何引入<span
+class="math inline">\(X\)</span>也是有讲究的。ASVD中将<span
+class="math inline">\(S\)</span>设置为一个对角阵 <span
 class="math display">\[
-Loss = \sum_{t=1}^{T}\left( \underbrace{p^t_{g_{t}}\log\left(
-\frac{p^t_{g_{t}}}{q^t_{g_{t}}} \right) + p^t_{n g_{t}}\log\left(
-\frac{p^t_{n g_{t}}}{q^t_{n g_{t}}} \right)}_{TKD} + \underbrace{p^t_{n
-g_{t}}}_{UNC} \underbrace{ \sum_{j \neq g_{t}} \hat{p}^t_{j}\log\left(
-\frac{\hat{p}^t_{j}}{\hat{q}^t_{j}} \right)}_{DKD} \right)\tag{2}
-\]</span>
-其中，TKD代表了KD的target部分，DKD代表非target部分，UNC是两者之间的权重。事实上这一结论是DKD在文本生成场景下的扩展，其与DKD的原结论也只差了一个求和符。</p>
-<p>需要指出的是，UNC实际含义是非target部分的总概率所占比重，其可以代表教师的不确定程度，进而代表了<strong>对应target
-token的学习难度</strong>，接下来涉及的关于token学习难度的表述，都是基于这一指标进行确定的。</p>
-<p>作者指出，<strong>DKD部分在KD过程中起到了主导作用，而对于TKD，其在easy
-target token的学习过程中起到了消极作用，而在hard target
-token的学习中起到了积极作用</strong>，这一点在下面这张表中还是比较直观的。</p>
-<p>这一点的直观解释就是：对于那些简单的token，强调学生与教师对齐可能会导致过拟合，损害学生生成多样性等，而难的部分，加入更多教师的引导可能会更有效。至于DKD占主导，我觉得很合理，毕竟DKD中包含了剩下所有token的信息，而TKD只有一个token的信息。</p>
-<figure>
-<img src="https://s2.loli.net/2025/06/30/LeUhWobwJEVnmZi.png" srcset="/img/loadings.gif" lazyload
-alt="Comparisons of different teaching objectives" />
-<figcaption aria-hidden="true">Comparisons of different teaching
-objectives</figcaption>
-</figure>
-<p>因此作者对不同难度的target token采用不同的loss设计，表述为 <span
-class="math display">\[
-\begin{flalign}
-&amp;L^e = \sum_{t\in D_{e}}KL(\hat{p}^t||\hat{q}^t)\\
-&amp;L^h = \sum_{t\in D_{h}}KL(p^t_{b}||q^t_{b}) +
-KL(\hat{p}^t||\hat{q}^t)
-\end{flalign}\tag{3}
-\]</span> 也就是只在hard target
-token的loss中添加TKD，难度的划分依据UNC，每一个batch选择UNC最大的5个样本作用hard，其它都是easy
-最终loss表述为 <span class="math display">\[
-Loss = \lambda L^e + (1-\lambda) L^h
-\]</span></p>
-<p>总的来说，大部分还是跟DKD一样，只是粒度更细，处理手段到了sample层面。</p>
+S_{ii} = \left( \frac{1}{n} \sum_{j=1}^{n}|X_{ij}| \right)^{\alpha}
+\tag{5}
+\]</span> 其没有解释这一设计的具体理由，可能也是试出来的吧</p>
+<p>另外其对模型中不同层对压缩的敏感性也做了探究 <img
+src="https://s2.loli.net/2025/07/03/FkoDMGUtAdZ4NSb.png" srcset="/img/loadings.gif" lazyload
+alt="Perplexity across Various Linear Layers and Parameter Ratios" /></p>
+<p>如图，横轴代表不同的压缩比，纵轴代表perplexity用来表示性能。可以看到不同层之间对压缩的敏感性不同，但是都表现出了压缩比越高，性能越差的结果(显然)。</p>
+<p>由此我们应当对不同层采用不同的压缩比，这一点在文中是通过二分实现的，这里不再赘述。</p>
+<h2 id="reference">Reference</h2>
+<p>[1] Yuan, Z., Shang, Y., Song, Y., Wu, Q., Yan, Y., &amp; Sun, G.
+(2023). ASVD: Activation-aware Singular Value Decomposition for
+Compressing Large Language Models.  ^132f6c</p>
+<p>[2] Hsu, Y., Hua, T., Chang, S., Lou, Q., Shen, Y., &amp; Jin, H.
+(2022). Language model compression with weighted low-rank
+factorization. In ICLR, 22 ^942a0c</p>
 
                 
               </div>
@@ -421,7 +423,7 @@ Loss = \lambda L^e + (1-\lambda) L^h
       
         <a href="/tags/LLM/" class="print-no-link">#LLM</a>
       
-        <a href="/tags/KD/" class="print-no-link">#KD</a>
+        <a href="/tags/Matrix-Decomposition/" class="print-no-link">#Matrix_Decomposition</a>
       
     </div>
   
@@ -433,8 +435,8 @@ Loss = \lambda L^e + (1-\lambda) L^h
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Revisiting Knowledge Distillation for Autoregressive Language Models</div>
-      <div>https://sophilex.github.io/posts/c4df3d21/</div>
+      <div>ASVD: ACTIVATION-AWARE SINGULAR VALUE DECOMPOSITION FOR COMPRESSING LARGE LANGUAGE  MODELS</div>
+      <div>https://sophilex.github.io/posts/38df231f/</div>
     </div>
     <div class="license-meta">
       
@@ -446,7 +448,7 @@ Loss = \lambda L^e + (1-\lambda) L^h
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年6月30日</div>
+          <div>2025年7月7日</div>
         </div>
       
       
@@ -478,9 +480,9 @@ Loss = \lambda L^e + (1-\lambda) L^h
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/38df231f/" title="ASVD: ACTIVATION-AWARE SINGULAR VALUE DECOMPOSITION FOR COMPRESSING LARGE LANGUAGE  MODELS">
+                      <a href="/posts/b977ce3c/" title="LANGUAGE MODEL COMPRESSION WITH WEIGHTED  LOW-RANK FACTORIZATION">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">ASVD: ACTIVATION-AWARE SINGULAR VALUE DECOMPOSITION FOR COMPRESSING LARGE LANGUAGE  MODELS</span>
+                        <span class="hidden-mobile">LANGUAGE MODEL COMPRESSION WITH WEIGHTED  LOW-RANK FACTORIZATION</span>
                         <span class="visible-mobile">上一篇</span>
                       </a>
                     
@@ -488,8 +490,8 @@ Loss = \lambda L^e + (1-\lambda) L^h
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/ef9972ec/" title="Training-Inference Mismatch In LLM KD">
-                        <span class="hidden-mobile">Training-Inference Mismatch In LLM KD</span>
+                      <a href="/posts/c4df3d21/" title="Revisiting Knowledge Distillation for Autoregressive Language Models">
+                        <span class="hidden-mobile">Revisiting Knowledge Distillation for Autoregressive Language Models</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
