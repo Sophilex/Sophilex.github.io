@@ -426,6 +426,18 @@ LLM KD中，所谓mean-seeking和mode-seeking可能并不存在，取而代之�
             </div>
         </div>
 
+        <!-- 激光笔 -->
+        <button id="laser-btn" title="激光笔">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 5v2m0 10v2M5 12h2m10 0h2"/>
+        </svg>
+        </button>
+        <div class="laser-pointer"></div>
+
+        <!-- 添加存储中，用于存储激光笔位置的输入框 -->
+        <input type="hidden" id="laser-position" value="">
+
         <script>
             window.MathJax = {
                 tex: {
@@ -606,6 +618,70 @@ LLM KD中，所谓mean-seeking和mode-seeking可能并不存在，取而代之�
             const LASER_KEY = 'reveal_laser_pointer_position';
             const LASER_ACTIVE_KEY = 'reveal_laser_active_state';
 
+            // 更新激光笔位置的函数
+            function updateLaserPosition(x, y, isVisible) {
+                const positionData = {
+                    x: x,
+                    y: y,
+                    isVisible: isVisible,
+                    timestamp: Date.now()
+                };
+                
+                // 存储到localStorage
+                localStorage.setItem(LASER_KEY, JSON.stringify(positionData));
+                
+                // 触发一个存储事件（这在同一个窗口中不会自动触发）
+                if (isInPresenterView()) {
+                    const event = new Event('storage');
+                    event.key = LASER_KEY;
+                    event.newValue = JSON.stringify(positionData);
+                    window.dispatchEvent(event);
+                }
+            }
+            
+            // 同步激光笔状态（激活/非激活）
+            function syncLaserActiveState(isActive) {
+                // 存储激光笔激活状态
+                localStorage.setItem(LASER_ACTIVE_KEY, isActive ? 'true' : 'false');
+                
+                // 手动触发一个存储事件，这样同一窗口也能接收
+                if (isInPresenterView()) {
+                    const event = new Event('storage');
+                    event.key = LASER_ACTIVE_KEY;
+                    event.newValue = isActive ? 'true' : 'false';
+                    window.dispatchEvent(event);
+                }
+            }
+            
+            // 激活或禁用激光笔的函数
+            function toggleLaser(activate) {
+                isLaserActive = activate;
+                
+                if (isLaserActive) {
+                    document.body.classList.add('cursor-hidden');
+                    laserBtn.classList.add('active');
+                } else {
+                    document.body.classList.remove('cursor-hidden');
+                    // 使用hideLaser辅助函数确保激光笔完全隐藏
+                    hideLaser();
+                    laserBtn.classList.remove('active');
+                }
+                
+                // 同步激光笔激活状态到其他视图
+                syncLaserActiveState(isLaserActive);
+                }
+                
+                // 清理激光笔状态的函数
+                function cleanupLaserPointer() {
+                toggleLaser(false);
+                isFullscreen = false;
+                document.body.classList.remove('is-fullscreen');
+                revealElement.classList.remove('fullscreen');
+                laserBtn.style.display = 'none';
+                // 使用hideLaser辅助函数确保激光笔完全隐藏
+                hideLaser();
+            }
+
             // 全屏按钮点击事件
             fullscreenBtn.addEventListener('click', function() {
                 isFullscreen = !isFullscreen;
@@ -627,6 +703,153 @@ LLM KD中，所谓mean-seeking和mode-seeking可能并不存在，取而代之�
                 cleanupLaserPointer();
                 Reveal.layout();
             }
+            });
+
+            // 激光笔按钮点击事件
+            laserBtn.addEventListener('click', function() {
+                toggleLaser(!isLaserActive);
+            });
+
+            // 检测演示者视图的激光笔位置并同步
+            window.addEventListener('storage', function(e) {
+                // 处理激光笔位置同步
+                if (e.key === LASER_KEY && (isInMainView() || isInPresentationView())) {
+                    try {
+                        const data = JSON.parse(e.newValue);
+                        
+                        // 计算当前窗口中的激光笔位置
+                        const revealRect = revealElement.getBoundingClientRect();
+                        
+                        if (data.isVisible && isLaserActive) {
+                            // 使用相对位置计算激光笔位置
+                            const absX = data.x * revealRect.width + revealRect.left;
+                            const absY = data.y * revealRect.height + revealRect.top;
+                            
+                            // 更新激光笔位置
+                            requestAnimationFrame(() => {
+                            laserPointer.style.display = 'block';
+                            laserPointer.style.left = (absX - 4) + 'px';
+                            laserPointer.style.top = (absY - 4) + 'px';
+                            });
+                        } else {
+                            // 隐藏激光笔
+                            requestAnimationFrame(() => {
+                            laserPointer.style.display = 'none';
+                            laserPointer.style.left = '-9999px';
+                            laserPointer.style.top = '-9999px';
+                            });
+                        }
+                    } 
+                    catch (err) {
+                        console.error('解析激光笔数据失败', err);
+                        // 出错时也确保激光笔隐藏
+                        requestAnimationFrame(() => {
+                            laserPointer.style.display = 'none';
+                            laserPointer.style.left = '-9999px';
+                            laserPointer.style.top = '-9999px';
+                        });
+                    }
+                }
+            
+                // 处理激光笔激活状态同步
+                if (e.key === LASER_ACTIVE_KEY && (isInMainView() || isInPresentationView())) {
+                    const isActive = e.newValue === 'true';
+                    console.log('接收到激光笔状态同步:', isActive);
+                    
+                    // 只更新UI状态，不再触发事件，避免循环
+                    isLaserActive = isActive;
+                    
+                    if (isActive) {
+                        laserBtn.classList.add('active');
+                        document.body.classList.add('cursor-hidden');
+                    } else {
+                        laserBtn.classList.remove('active');
+                        document.body.classList.remove('cursor-hidden');
+                        // 使用hideLaser辅助函数确保激光笔完全隐藏
+                        hideLaser();
+                    }
+                }
+            });
+        
+            // 鼠标移动事件
+            document.addEventListener('mousemove', function(e) {
+                // 只有当激光笔激活时才处理
+                if (isLaserActive) {
+                    const revealRect = revealElement.getBoundingClientRect();
+                    const isInsideReveal = (
+                    e.clientX >= revealRect.left &&
+                    e.clientX <= revealRect.right &&
+                    e.clientY >= revealRect.top &&
+                    e.clientY <= revealRect.bottom
+                    );
+            
+                    if (isInsideReveal) {
+                    // 计算相对位置
+                    const relX = (e.clientX - revealRect.left) / revealRect.width;
+                    const relY = (e.clientY - revealRect.top) / revealRect.height;
+                    
+                    // 在本窗口中显示激光笔
+                    requestAnimationFrame(() => {
+                        laserPointer.style.display = 'block';
+                        laserPointer.style.left = (e.clientX - 4) + 'px';
+                        laserPointer.style.top = (e.clientY - 4) + 'px';
+                    });
+                    
+                    // 将位置信息同步到其他窗口
+                    if (isInPresenterView()) {
+                        updateLaserPosition(relX, relY, true);
+                    }
+                    } else {
+                    // 确保激光笔完全隐藏
+                    requestAnimationFrame(() => {
+                        laserPointer.style.display = 'none';
+                        laserPointer.style.left = '-9999px';
+                        laserPointer.style.top = '-9999px';
+                    });
+                    
+                    // 通知其他窗口隐藏激光笔
+                    if (isInPresenterView()) {
+                        updateLaserPosition(0, 0, false);
+                    }
+                    }
+                } else {
+                    // 如果激光笔未激活，确保它被隐藏
+                    requestAnimationFrame(() => {
+                    laserPointer.style.display = 'none';
+                    laserPointer.style.left = '-9999px';
+                    laserPointer.style.top = '-9999px';
+                    });
+                }
+            });
+        
+            // 鼠标离开窗口事件
+            document.addEventListener('mouseleave', function() {
+                if (isLaserActive) {
+                    // 使用hideLaser辅助函数确保激光笔完全隐藏
+                    hideLaser();
+                }
+            });
+        
+            // 鼠标进入窗口事件
+            document.addEventListener('mouseenter', function(e) {
+                if (isLaserActive) {
+                    const revealRect = revealElement.getBoundingClientRect();
+                    const isInsideReveal = (
+                    e.clientX >= revealRect.left &&
+                    e.clientX <= revealRect.right &&
+                    e.clientY >= revealRect.top &&
+                    e.clientY <= revealRect.bottom
+                    );
+            
+                    if (isInsideReveal && isInPresenterView()) {
+                    // 计算相对位置
+                    const relX = (e.clientX - revealRect.left) / revealRect.width;
+                    const relY = (e.clientY - revealRect.top) / revealRect.height;
+                    
+                    // 更新激光笔位置
+                    updateLaserPosition(relX, relY, true);
+                    }
+                }
             });
 
             // ESC 键处理
@@ -665,6 +888,118 @@ LLM KD中，所谓mean-seeking和mode-seeking可能并不存在，取而代之�
             }
             });
 
+            // 在页面加载时检查激光笔按钮显示状态
+            window.addEventListener('load', function() {
+                // 如果是演示者视图，不显示激光笔按钮和全屏按钮
+                if (isInPresenterView()) {
+                    console.log('当前是演示者视图，隐藏激光笔按钮和全屏按钮');
+                    laserBtn.style.display = 'none';
+                    fullscreenBtn.style.display = 'none';
+                }
+                
+                // 如果是展示视图或主视图，检查是否有激光笔位置信息
+                if (isInPresentationView() || isInMainView()) {
+                    console.log('当前是展示视图或主视图，准备接收激光笔位置');
+                    
+                    // 检查激光笔激活状态
+                    const laserActiveState = localStorage.getItem(LASER_ACTIVE_KEY);
+                    if (laserActiveState === 'true') {
+                    console.log('检测到激光笔处于激活状态');
+                    isLaserActive = true;
+                    laserBtn.classList.add('active');
+                    document.body.classList.add('cursor-hidden');
+                    } else {
+                    // 如果激光笔未激活，确保它被隐藏
+                    requestAnimationFrame(() => {
+                        laserPointer.style.display = 'none';
+                        laserPointer.style.left = '-9999px';
+                        laserPointer.style.top = '-9999px';
+                    });
+                    }
+                    
+                    // 立即检查是否有存储的激光笔位置
+                    const storedPosition = localStorage.getItem(LASER_KEY);
+                    if (storedPosition) {
+                    try {
+                        const data = JSON.parse(storedPosition);
+                        // 如果数据不是太旧（10秒内），并且激光笔当前处于激活状态，则应用它
+                        if (Date.now() - data.timestamp < 10000 && data.isVisible && isLaserActive) {
+                        const revealRect = revealElement.getBoundingClientRect();
+                        const absX = data.x * revealRect.width + revealRect.left;
+                        const absY = data.y * revealRect.height + revealRect.top;
+                        
+                        requestAnimationFrame(() => {
+                            laserPointer.style.display = 'block';
+                            laserPointer.style.left = (absX - 4) + 'px';
+                            laserPointer.style.top = (absY - 4) + 'px';
+                        });
+                        } else {
+                        // 数据过期或激光笔未激活，确保激光笔隐藏
+                        requestAnimationFrame(() => {
+                            laserPointer.style.display = 'none';
+                            laserPointer.style.left = '-9999px';
+                            laserPointer.style.top = '-9999px';
+                        });
+                        }
+                    } catch (err) {
+                        console.error('解析存储的激光笔位置失败', err);
+                        // 解析失败时隐藏激光笔
+                        requestAnimationFrame(() => {
+                        laserPointer.style.display = 'none';
+                        laserPointer.style.left = '-9999px';
+                        laserPointer.style.top = '-9999px';
+                        });
+                    }
+                    }
+                }
+            });
+
+            // 检测演示窗口的关闭，以便更新状态
+            window.addEventListener('beforeunload', function() {
+                // 如果是演示者视图，通知其他视图不再自动全屏
+                if (isInPresenterView()) {
+                    localStorage.removeItem('reveal_auto_fullscreen');
+                    localStorage.removeItem('reveal_auto_fullscreen_timestamp');
+                }
+            });
+
+            // 更新激光笔按钮的提示文字
+            document.querySelector('#laser-btn').title = '激光笔 (Alt + O 切换)';
+
+            // 窗口大小改变事件 - 恢复此事件处理以便在调整大小时正确处理激光笔
+            window.addEventListener('resize', function() {
+            if (!isFullscreen) {
+                cleanupLaserPointer();
+            }
+            });
+
+            // 为主动隐藏激光笔添加一个帮助函数
+            function hideLaser() {
+                requestAnimationFrame(() => {
+                    laserPointer.style.display = 'none';
+                    laserPointer.style.left = '-9999px';
+                    laserPointer.style.top = '-9999px';
+                });
+                
+                if (isInPresenterView()) {
+                    updateLaserPosition(0, 0, false);
+                }
+            }
+
+            // 确保在窗口失去焦点时隐藏激光笔
+            window.addEventListener('blur', function() {
+                if (isLaserActive) {
+                    hideLaser();
+                }
+                });
+                
+                // 确保在页面可见性改变时处理激光笔
+                document.addEventListener('visibilitychange', function() {
+                if (document.hidden && isLaserActive) {
+                    hideLaser();
+                }
+            });
+
             document.addEventListener('DOMContentLoaded', () => {
                 const refs = document.querySelectorAll('.slide-ref');
 
@@ -677,6 +1012,8 @@ LLM KD中，所谓mean-seeking和mode-seeking可能并不存在，取而代之�
                     `;
                 });
             });
+
+
 
         </script>
     </body>
