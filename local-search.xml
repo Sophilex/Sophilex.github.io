@@ -4,6 +4,35 @@
   
   
   <entry>
+    <title>SVD Decompositon in LLM Compression</title>
+    <link href="/posts/af06fe9c/"/>
+    <url>/posts/af06fe9c/</url>
+    
+    <content type="html"><![CDATA[]]></content>
+    
+    
+    <categories>
+      
+      <category>slides</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+      <tag>Compression</tag>
+      
+      <tag>SVD</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>DipSVD: Dual-importance Protected SVD for Efficient LLM Compression</title>
     <link href="/posts/dd35f5de/"/>
     <url>/posts/dd35f5de/</url>

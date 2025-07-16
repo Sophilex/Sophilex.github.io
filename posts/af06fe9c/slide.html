@@ -1,0 +1,1214 @@
+
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <!-- <title>SVD Decompositon in LLM Compression</title> -->
+
+        <link rel="stylesheet" href="https://cdn.bootcss.com/reveal.js/3.4.1/css/reveal.min.css">
+
+        <!-- style -->
+
+        <style>
+
+            .reveal.fullscreen {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                z-index: 1000;
+                background-color: white;
+            }
+
+            .reveal:not(.fullscreen) {
+                width: 100%;
+                height: 600px;
+                margin: 2rem 0;
+                position: relative;
+            }
+
+            #fullscreen-btn {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                width: 32px;
+                height: 32px;
+                background-color: rgba(0, 0, 0, 0.6);
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                z-index: 1001;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            #laser-btn {
+                position: fixed;
+                left: 20px;
+                bottom: 20px;
+                width: 32px;
+                height: 32px;
+                background-color: rgba(0, 0, 0, 0.6);
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                z-index: 1001;
+                display: none;
+                align-items: center;
+                justify-content: center;
+            }
+
+            #laser-btn:hover {
+                background-color: rgba(0, 0, 0, 0.8);
+            }
+
+            #laser-btn.active {
+                background-color: rgba(255, 0, 0, 0.6);
+            }
+
+            .laser-pointer {
+                position: fixed;
+                width: 0.6rem;
+                height: 0.6rem;
+                background-color: red;
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 9999;
+                display: none;
+                box-shadow: 0 0 0.25rem 0.15rem rgba(255, 0, 0, 0.5);
+            }
+
+            .cursor-hidden {
+                cursor: none !important;
+            }
+            
+            .cursor-hidden * {
+                cursor: none !important;
+            }
+
+            .reveal .slides section:not(:first-child) {
+                top: 0 !important;
+                transform: none !important;
+            }
+            
+            /* 只取消非首页的垂直居中 */
+            .reveal .slides section:not(:first-child) {
+                top: 0 !important;
+                bottom: 0 !important;
+                transform: none !important;
+            }
+
+            /* 首页保持 Reveal.js 默认的垂直居中 */
+            .reveal .slides section:first-child h1,
+            .reveal .slides section:first-child h2,
+            .reveal .slides section:first-child h3 {
+                text-align: center;
+                text-transform: capitalize;
+                font-size: 6em;
+            }
+
+            /* 其他页面的标题固定在左上角 */
+            .reveal .slides section:not(:first-child) h1,
+            .reveal .slides section:not(:first-child) h2,
+            .reveal .slides section:not(:first-child) h3 {
+                position: absolute;
+                top: 0;
+                left: -4rem;
+            }
+
+            /* 为不同级别的标题设置不同的字体大小 */
+            .reveal .slides section:not(:first-child) h1 { font-size: 55px; }
+            .reveal .slides section:not(:first-child) h2 { font-size: 55px; }
+            .reveal .slides section:not(:first-child) h3 { font-size: 45px; }
+
+            /* 为整个 section 添加上内边距，防止内容与标题重叠 */
+            .reveal .slides section:not(:first-child) {
+                padding-top: 1.7em; 
+            }
+
+            /* 其他页面的主要内容区域添加上边距 */
+            .reveal .slides section:not(:first-child) > *:not(h1):not(h2):not(h3) {
+                margin-top: 1em;
+                font-size: 0.8em;
+            }
+
+            /* 保持内容左对齐 */
+            .reveal .slides section:not(:first-child) {
+                text-align: left;
+            }
+
+            /* 列表项左对齐 */
+            .reveal .slides section ul,
+            .reveal .slides section ol {
+                display: block;
+                text-align: left;
+            }
+
+            /* 代码块左对齐 */
+            .reveal .slides section pre {
+                width: auto;
+                text-align: left;
+            }
+
+            .reveal .slides section .mjx-chtml {
+                text-align: left !important;
+                margin-left: 0 !important;
+            }
+
+            /* 普通段落左对齐 */
+
+            .reveal .slides section {
+                text-align: left;
+                font-size: 40px;
+            }
+            .reveal .slides section p {
+                text-align: left;
+            }
+            .reveal .slides section ul > li {
+                font-size: 1em !important; /* 设置一级列表项的字体大小 */
+            }
+            .reveal .slides section ul ul > li {
+                font-size: 0.8em !important; /* 设置二级列表项的字体大小 */
+            }
+            .reveal .slides section ul ul ul > li {
+                font-size: 0.7em !important; /* 设置三级列表项的字体大小 */
+            }
+            
+            /* 公式左对齐 */
+            /* .reveal .slides section .MathJax_Display {
+                text-align: left !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            } */
+            
+            
+            /* Slide 的设置 */
+            .reveal .slides .slide-cols{
+                display: flex;
+            }
+            .reveal .slides .slide-col-half{
+                flex: 1;
+            }
+            .reveal .slides .slide-col-4{
+                flex: 4;
+            }
+            .reveal .slides .slide-col-6{
+                flex: 6;
+            }
+
+            .reveal .slides .slide-img{
+                text-align: center; 
+                padding: 0;
+                display: block;
+                border: none;
+            }
+            .reveal .slides .slide-ref{
+                position: absolute; 
+                bottom: 0; left: 0; 
+                font-size: 0.5em !important;
+                text-align: left; 
+                width: 100%;
+            }
+            .reveal .slide-number {
+                font-size: 1.5rem !important; /* 改变字号 */
+                right: 2.2em !important;
+                bottom: 1.1em !important;
+                background: none !important;
+                color: gray !important;
+            }
+            .reveal .navigate-left {
+                right: 6em !important;
+            }
+            .reveal .navigate-right {
+                right: 1em !important;
+            }
+
+
+            body.is-fullscreen header,
+            body.is-fullscreen footer,
+            body.is-fullscreen main > *:not(.reveal),
+            body.is-fullscreen #fullscreen-btn {
+                display: none;
+            }
+        </style>
+        
+        <!-- theme -->
+        <script>
+            var link = document.createElement( 'link' );
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            var theme ='white';
+            switch (theme){
+                case 'black':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/black.min.css';
+                    break;
+                case 'beige':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/beige.min.css';
+                    break;
+                case 'blood':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/blood.min.css';
+                    break;
+                case 'league':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/league.min.css';
+                    break;
+                case 'moon':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/moon.min.css';
+                    break;
+                case 'night':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/night.min.css';
+                    break;
+                case 'serif':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/serif.min.css';
+                    break;
+                case 'sky':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/sky.min.css';
+                    break;
+                case 'solarized':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/solarized.min.css';
+                    break;
+                case 'white':
+                    link.href = 'https://cdn.bootcss.com/reveal.js/3.4.1/css/theme/white.min.css';
+                    break;
+                default:
+            }
+            
+            document.getElementsByTagName( 'head' )[0].appendChild( link );
+        </script>
+        <!-- Theme used for syntax highlighting of code -->
+        <link rel="stylesheet" href="https://cdn.bootcss.com/reveal.js/3.4.1/lib/css/zenburn.min.css">
+        <link href="https://cdn.bootcss.com/reveal.js/3.4.1/css/print/paper.min.css" rel="stylesheet">
+        <!-- Printing and PDF exports -->
+        
+    </head>
+    <body>
+        <div class="reveal">
+            <button id="fullscreen-btn" title="全屏显示 (ESC退出)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                </svg>
+            </button>
+            <div class="slides">
+                <section data-markdown
+                         data-separator="^\n---\n"
+                         data-separator-vertical="^\n--\n"
+                         data-separator-notes="^Note:">
+                    <script type="text/template">SVD Decompositon in LLM Compression
+
+
+
+<small>Alephia</small>
+<small>25/7/15</small>
+
+---
+
+## SVD Decomposition
+对于任意实矩阵$W\in \mathbb{R}^{n\times m}$，其存在如下分解
+$$
+W = U\Sigma V^T
+$$
+
+其中
+$$
+U\in \mathbb{R}^{m \times m}, V\in \mathbb{R}^{n\times n}, \Sigma \in \mathbb{R}^{m\times n}
+$$
+$\Sigma$包含所有singular value，$U,V$由对应方向上的正交向量组成
+
+截取$r$个最大singular value之后得到$W$的最优$r$秩近似
+$$
+W \approx U_{r}\Sigma_{r}V_{r}^T
+$$
+
+
+---
+
+## Apply SVD in model Compression
+对于模型参数矩阵$W$，尝试对其进行参数压缩得到$W_{k}$，$k$代表压缩后的矩阵秩。直观目标函数可以定义为
+$$
+W_{k}^* = \mathop{\text{argmin}}\limits_{W_{k}} ||W_{k} - W||_{F}^2
+$$
+
+<p class="fragment">
+🤔 Does this really enough?
+</p>
+<p class="fragment">
+ <img src="https://s2.loli.net/2025/07/16/8QfV6R2zIuUkWdl.png " 
+         style="width: 510px; height: auto; position: absolute; bottom: 90px; right: 0; border: none;">
+</p>
+
+<div class="slide-ref">
+Hsu, Y., Hua, T., Chang, S., Lou, Q., Shen, Y., & Jin, H. (2022). Language model compression with weighted low-rank factorization. In ICLR, 22
+</div>
+
+---
+
+## junk DNA hypothesis
+
+<p class="fragment">
+💡 Small-magnitude weights might seem nearly superfluous for <mark style="background: #FF5582A6;">simple downstream tasks</mark>
+</p>
+<p class="fragment">
+💡 They actually <mark style="background: #FF5582A6;">encode vital knowledge</mark> essential for tackling more challenging downstream tasks
+</p>
+<p class="fragment">
+💡 It's <mark style="background: #FF5582A6;">challenging to re-gain through fine-tuning</mark>, if these initial pre-trained weights are eliminated
+</p>
+
+<div class="slide-ref">
+Lu, Y.,Shi, L. (2024)JUNK DNA HYPOTHESIS: A TASK-CENTRIC ANGLE OF LLM PRE-TRAINED WEIGHTS THROUGH SPARSITY
+</div>
+
+---
+
+## Task-centric SVD for compression
+
+$$
+W^* = \mathop{argmin}\limits_{W'}\sum_{i,j}I_{W_{i,j}}(W_{i,j}-W_{i,j}')^2
+$$
+**Fisher Information**
+$$
+I_{w} = E\left[ \left( \frac{\partial}{\partial_{w}}\log p(D|w) \right)^2 \right]\approx \frac{1}{|D|}\sum_{i=1}^{D} \left( \frac{\partial}{\partial_{w}}L(d_{i};w) \right)^2 
+$$
+<p class="fragment">
+最终整理为
+$$
+W^* = \mathop{argmin}\limits_{W'}||IW-IW'||_{2}
+$$
+</p>
+
+<div class="slide-ref">
+Hsu, Y., Hua, T., Chang, S., Lou, Q., Shen, Y., & Jin, H. (2022). Language model compression with weighted low-rank factorization. In ICLR, 22
+</div>
+
+Note:
+当loss是任务相关的时候，期望做SVD分解时，重要的参数应当获得较大的重要性
+
+---
+
+## Task-centric SVD for compression
+
+目标函数可以更新为
+$$
+W^* = \mathop{\text{argmin}}\limits_{W'} ||W'X - WX||_{F}^2
+$$
+引入与input activation$X$ 相关的矩阵$S$，得到
+$$
+WX = (WS)(S^{-1}X)
+$$
+
+$$
+S_{ii} = \left( \frac{1}{n} \sum_{j=1}^{n}|X_{ij}| \right)^{\alpha}
+$$
+
+<div class="slide-ref">
+Yuan, Z., Shang, Y., Song, Y., Wu, Q., Yan, Y., & Sun, G. (2023). ASVD: Activation-aware Singular Value Decomposition for Compressing Large Language Models. 
+</div>
+
+
+Note:
+两种方式其实都是添加了一个tast specific的矩阵，一个是参数关于任务相关loss的信息量，一个是input activation，但是前者需要计算梯度，算力消耗大
+
+这里是对关于X的矩阵S，WS进行SVD，而不是对WX进行SVD，个人认为是对X进行了一次增强？
+
+以及既然是task-centric，那么仅仅用一小批，一个数据集得到的activation引导分解，是不是也是不妥？
+
+---
+
+## Task-centric SVD for compression
+
+#### develop of S
+对$XX^T$做**Cholesky decomposition**，得到下三角矩阵$S$满足
+$$
+SS^S = XX^T
+$$
+从而$S^{-1}X$是正交的
+
+$$
+\begin{flalign}
+L_{i} &= ||(W'S-WS)S^{-1}X ||\_{F}^2  \\\\
+&= ||\text{SVD}(WS)-WS||\_{F}^2  \\\\
+&= ||\sigma_{i}u_{i}v_{i}^T||\_{F}^2= \sigma_{i}^2
+\end{flalign}
+$$
+
+
+<div class="slide-ref">
+Wang, X., Zheng, Y., Wan, Z., & Zhang, M. (2024). SVD-LLM: Truncation-aware Singular Value Decomposition for Large Language Model Compression. In ICLR, 25
+</div>
+
+Note:
+丢弃多个singular value也能得到类似的结论，证明略过
+实现损失与singular value的值一一对应，从而可以摆脱JUNK DNA HYPOTHESIS
+
+
+---
+
+## Task-centric SVD for compression
+#### develop of S
+
+<img src="https://s2.loli.net/2025/07/16/5VOBiadJfgTx3A7.png" style="width: 1000px; height: auto;  margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+---
+
+
+
+## Task-centric SVD for compression
+#### Augmentation of input activation
+引入
+$$
+\alpha_{j} = \sqrt{ x_{j}^T(XX^T)x_{j} } = ||x_{j}^TX||
+$$
+代表$x_{j}$与$X$各个通道的对齐程度，进而反映其重要性
+
+$$
+D_{jj} = 
+\begin{cases}
+a & \text{if } \alpha_{j} \text{ is among the top } p\\% \text{ values},\ a > 1 \\\\
+1 & \text{otherwise}
+\end{cases}
+$$
+
+$$
+\tilde{X} = XD
+$$
+
+<div class="slide-ref">
+Ding, X., Sun, R. (2025). DipSVD: Dual-importance Protected SVD for Efficient LLM Compression.
+</div>
+
+---
+
+## Layer-wise compression ratio
+
+<p class="fragment">
+🤔 How to automatically assign layer-wise compression ratio
+</p>
+<br>
+
+<p class="fragment">
+💡量化每一层参数相对于task的重要性  ->  Fisher Information
+</p>
+<p class="fragment">
+$$
+S_{l} = \sum_{Attention} \frac{||\nabla_{\theta}L||_{F}}{||\theta||_{F}} + \sum_{MLP} \frac{||\nabla_{\theta}L||_{F}}{||\theta||_{F}}
+$$
+</p>
+<p class="fragment">
+💡量化每一层的可压缩程度
+</p>
+<p class="fragment">
+$$
+R_{l} = min\left\{  k| \frac{\sum_{i=1}^{k} \sigma_{i}}{\sum_{i=1}^{r}\sigma_{i}} \geq \text{ threshold} \right\}
+$$
+</p>
+
+<div class="slide-ref">
+Ding, X., Sun, R. (2025). DipSVD: Dual-importance Protected SVD for Efficient LLM Compression.
+</div>
+
+---
+
+## Layer-wise compression ratio
+
+#### observations on Llama-7B
+
+$$
+\begin{flalign}
+&head_{i} = \text{Softmax}\left( \frac{X\textcolor{red}{W_{q_{i}}}(X\textcolor{red}{W_{k_{i}}})^T}{\sqrt{ d_{h} }}\right)X\textcolor{red}{W_{v_{i}}}\\\\
+&MHA(X) = \text{Concat}(head_{1},\dots head_{h})\textcolor{red}{W_{o}}
+\end{flalign}
+$$
+
+$$
+FFN(X) = (X\textcolor{red}{W_{up}} \odot \sigma(X\textcolor{red}{W_{gate}}))\textcolor{red}{W_{down}}
+$$
+
+<p class="fragment">
+
+<img src="https://s2.loli.net/2025/07/16/jyIoAZTSPDYUrda.png" style="width:380px; height: auto; float: right; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+
+
+
+
+
+
+
+
+
+<img src="https://s2.loli.net/2025/07/16/td74hf6Parv8ouz.png" style="width:380px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+</p>
+
+---
+
+## Layer-wise compression ratio
+
+attention与mlp相比有效秩更低，可压缩程度更高
+
+<p class="fragment">
+对每一层分配统一的compression ratio是不够合理的，attention与mlp应当分开处理
+</p>
+
+<div class="slide-ref">
+Li, G., Tang, Y., & Zhang, W. (2024). LoRAP: Transformer Sub-Layers Deserve Differentiated Structured Compression for Large Language Models. In ICML, 24
+</div>
+
+---
+
+## The PATH Of LLM Compression
+
+
+
+<img src="https://s2.loli.net/2025/07/03/bpJMwPvcWFok9Ns.png" style="width:700px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
+<p class="fragment">
+🤔 Factorization VS KD?
+</p>
+<p class="fragment">
+对于KD，学生模型的架构是提前设计好的，事实上应该也很难提前确定好最优解。而进一步向最优解靠近交给Matrix Decomposition来自适应调整。
+</p>
+
+<p class="fragment">
+KD用于知识迁移，MD用于冗余参数移除，两者的功能其实还是相对正交的。
+</p>
+
+<p class="fragment">
+锦上添花
+</p>
+
+Note:
+SVD分解中，后者一般压缩参数的幅度不会很大，20%-30%左右，并且一般是有损的，而KD有概率学生超过学生。以及后者的损失部分，通过微调可能很难保证能还原。
+
+---
+
+## Conclusion
+<p class="fragment">
+The difinitation of objective function: <mark style="background: #FF5582A6;">junk-DNA-hypothesis</mark>, <mark style="background: #FF5582A6;">task-centric </mark>
+</p>
+<p class="fragment">
+$$
+W^* = \mathop{\text{argmin}}\limits_{W'} ||W'X - WX||_{F}^2
+$$
+</p>
+<p class="fragment">
+Designs of X and S
+</p>
+<p class="fragment">
+Layer-wise compression ratio: <mark style="background: #FF5582A6;">importance</mark>, <mark style="background: #FF5582A6;">effective rank ratio</mark>
+</p>
+<p class="fragment">
+treat Attention and MLP differently
+</p>
+
+---
+
+## Thanks!
+
+</script>
+
+                </section>
+            </div>
+        </div>
+
+        <!-- 激光笔 -->
+        <button id="laser-btn" title="激光笔">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 5v2m0 10v2M5 12h2m10 0h2"/>
+        </svg>
+        </button>
+        <div class="laser-pointer"></div>
+
+        <!-- 添加存储中，用于存储激光笔位置的输入框 -->
+        <input type="hidden" id="laser-position" value="">
+
+        <script>
+            window.MathJax = {
+                tex: {
+                    inlineMath: [['$', '$'], ['\\(', '\\)']],
+                    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                    processEscapes: true,
+                    processEnvironments: true,
+                    packages: {'[+]': ['base', 'ams', 'amsmath', 'amssymb']}
+                },
+                options: {
+                    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+                }
+            };
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+        <!-- <script src="https://cdn.bootcss.com/reveal.js/3.4.1/lib/js/head.min.js"></script>
+        <script src="https://cdn.bootcss.com/reveal.js/3.4.1/js/reveal.min.js"></script> -->
+        <!-- <script src="/reveal.js/plugin/math/mathjax2.js"></script> -->
+        <!-- <script src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js"></script> -->
+        <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.min.js"></script>
+        <!-- <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/math/math.js"></script> -->
+        <!-- <script src="/reveal.js/plugin/math/math.js"></script> -->
+
+        <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/markdown/markdown.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/highlight/highlight.js"></script>
+
+        <!-- Notes插件 -->
+        <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/notes/notes.js"></script>
+
+
+
+        <script>
+            // More info https://github.com/hakimel/reveal.js#configuration
+            Reveal.initialize({
+                plugins: [ RevealMarkdown, RevealHighlight, RevealNotes],
+                
+                // math: {
+                //     mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js',
+                //     config: 'TeX-AMS_HTML-full',
+                //     tex: {
+                //         inlineMath: [['$', '$'], ['\\(', '\\)']],
+                //         displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                //         processEscapes: true,
+                //         processEnvironments: true,
+                //         packages: {'[+]': ['ams', 'newcommand', 'configmacros']}
+                //     }
+                // },
+                // 幻灯片距离浏览器边缘的百分比（0 - 1）
+                margin: 0.1,  
+                
+                // 缩小时最小缩放比例
+                minScale: 0.2, 
+
+                // 放大时最大缩放比例
+                maxScale: 2.0, 
+
+                // 地址栏 hash 反映当前页，方便分享链接定位到某页
+                hash: true,
+
+                history: true,
+
+                // 是否在右下角展示控制条
+                controls: true,
+
+                // 是否显示演示的进度条
+                progress: true,
+
+                // 是否显示当前幻灯片的页数编号，也可以使用代码 “slideNumber: 'c/t'” ，表示当前页/总页数。
+                slideNumber: true,
+
+                // 是否将每个幻灯片改变加入到浏览器的历史记录中去
+                history: false,
+
+                // 是否启用键盘快捷键来导航
+                keyboard: true,
+
+                // 是否启用幻灯片的概览模式，可使用 "Esc" 或 "o" 键来切换概览模式
+                overview: true,
+
+                // 是否将幻灯片垂直居中
+                center: true,
+
+                // 是否在触屏设备上启用触摸滑动切换
+                touch: true,
+
+                // 是否循环演示
+                loop: false,
+
+                // 是否将演示的方向变成 RTL，即从右往左
+                rtl: false,
+
+                // 是否每次演示的时候，随机幻灯片的顺序
+                shuffle: false,
+
+                // 全局开启和关闭碎片。
+                fragments: true,
+
+                // 标识演示文稿是否在嵌入模式中运行，即包含在屏幕的有限部分中的
+                embedded: false,
+
+                // 标识当问号键被点击的时候是否应该显示一个帮助的覆盖层
+                help: true,
+
+                // 标识演讲者备注标志是否让所有观看者可见
+                showNotes: false,
+
+                // 两个幻灯片之间自动切换的时间间隔（毫秒）
+                // 当设置成 0 的时候则禁止自动切换
+                // 该值可以被幻灯片上的 “data-autoslide” 属性覆盖
+                autoSlide: 0,
+                // 当遇到用户输入的时候停止自动切换
+                autoSlideStoppable: true,
+                // 当自动滑动时，使用此方法进行导航。
+                autoSlideMethod: Reveal.navigateNext,
+
+                // 是否启用通过鼠标滚轮来导航幻灯片
+                mouseWheel: true,
+
+                // 是否在移动设备上隐藏地址栏
+                hideAddressBar: true,
+                // 是否在一个弹出的 iframe 中打开幻灯片中的链接
+                previewLinks: false,
+                // 切换过渡效果
+                transition: 'none', // none/fade/slide/convex/concave/zoom
+                // 过渡速度
+                transitionSpeed: 'default', // default/fast/slow
+                // 全屏幻灯片背景的过渡效果
+                backgroundTransition: 'default', // none/fade/slide/convex/concave/zoom
+
+                // 加载除当前可见的幻灯片之外的幻灯片数量
+                viewDistance: 3,
+
+                // 视差背景图片
+                parallaxBackgroundImage: '',
+                // e.g. 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'
+                // 视差背景尺寸
+                parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+                // 移动视差背景（水平和垂直）滑动变化的数量, 例如 100
+                // - 除了指定自动计算
+                // - 设置为 0 时，禁止沿轴运动
+                parallaxBackgroundHorizontal: null,
+                parallaxBackgroundVertical: null,
+            });
+            Reveal.on('slidechanged', function() {
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    MathJax.typesetPromise();
+                }
+            });
+
+            // 获取所有需要的元素
+            const revealElement = document.querySelector('.reveal');
+            const fullscreenBtn = document.getElementById('fullscreen-btn');
+            const laserBtn = document.getElementById('laser-btn');
+            const laserPointer = document.querySelector('.laser-pointer');
+            const laserPositionInput = document.getElementById('laser-position');
+            
+            let isFullscreen = false;
+            let isLaserActive = false;
+
+            // 检测是否在演示者视图中
+            function isInPresenterView() {
+                // 检查URL中是否有speaker或notes参数
+                return window.location.search.includes('receiver');
+            }
+
+            // 检测是否在展示视图中
+            function isInPresentationView() {
+            return !isInPresenterView() && window.opener;
+            }
+    
+            // 检测是否在主视图
+            function isInMainView() {
+            return !isInPresenterView() && !window.opener;
+            }
+    
+            // 定义一个简单粗暴的本地存储键，用于在演示者视图和展示视图之间通信
+            const LASER_KEY = 'reveal_laser_pointer_position';
+            const LASER_ACTIVE_KEY = 'reveal_laser_active_state';
+
+            // 更新激光笔位置的函数
+            function updateLaserPosition(x, y, isVisible) {
+                const positionData = {
+                    x: x,
+                    y: y,
+                    isVisible: isVisible,
+                    timestamp: Date.now()
+                };
+                
+                // 存储到localStorage
+                localStorage.setItem(LASER_KEY, JSON.stringify(positionData));
+                
+                // 触发一个存储事件（这在同一个窗口中不会自动触发）
+                if (isInPresenterView()) {
+                    const event = new Event('storage');
+                    event.key = LASER_KEY;
+                    event.newValue = JSON.stringify(positionData);
+                    window.dispatchEvent(event);
+                }
+            }
+            
+            // 同步激光笔状态（激活/非激活）
+            function syncLaserActiveState(isActive) {
+                // 存储激光笔激活状态
+                localStorage.setItem(LASER_ACTIVE_KEY, isActive ? 'true' : 'false');
+                
+                // 手动触发一个存储事件，这样同一窗口也能接收
+                if (isInPresenterView()) {
+                    const event = new Event('storage');
+                    event.key = LASER_ACTIVE_KEY;
+                    event.newValue = isActive ? 'true' : 'false';
+                    window.dispatchEvent(event);
+                }
+            }
+            
+            // 激活或禁用激光笔的函数
+            function toggleLaser(activate) {
+                isLaserActive = activate;
+                
+                if (isLaserActive) {
+                    document.body.classList.add('cursor-hidden');
+                    laserBtn.classList.add('active');
+                } else {
+                    document.body.classList.remove('cursor-hidden');
+                    // 使用hideLaser辅助函数确保激光笔完全隐藏
+                    hideLaser();
+                    laserBtn.classList.remove('active');
+                }
+                
+                // 同步激光笔激活状态到其他视图
+                syncLaserActiveState(isLaserActive);
+                }
+                
+                // 清理激光笔状态的函数
+                function cleanupLaserPointer() {
+                toggleLaser(false);
+                isFullscreen = false;
+                document.body.classList.remove('is-fullscreen');
+                revealElement.classList.remove('fullscreen');
+                laserBtn.style.display = 'none';
+                // 使用hideLaser辅助函数确保激光笔完全隐藏
+                hideLaser();
+            }
+
+            // 全屏按钮点击事件
+            fullscreenBtn.addEventListener('click', function() {
+                isFullscreen = !isFullscreen;
+                document.body.classList.toggle('is-fullscreen', isFullscreen);
+                revealElement.classList.toggle('fullscreen', isFullscreen);
+                
+                if (isFullscreen) {
+                    document.documentElement.requestFullscreen();
+                    laserBtn.style.display = 'flex';
+                    Reveal.layout();
+                } else {
+                    cleanupLaserPointer();
+                }
+            });
+
+            // 监听全屏状态变化
+            document.addEventListener('fullscreenchange', function() {
+            if (!document.fullscreenElement) {
+                cleanupLaserPointer();
+                Reveal.layout();
+            }
+            });
+
+            // 激光笔按钮点击事件
+            laserBtn.addEventListener('click', function() {
+                toggleLaser(!isLaserActive);
+            });
+
+            // 检测演示者视图的激光笔位置并同步
+            window.addEventListener('storage', function(e) {
+                // 处理激光笔位置同步
+                if (e.key === LASER_KEY && (isInMainView() || isInPresentationView())) {
+                    try {
+                        const data = JSON.parse(e.newValue);
+                        
+                        // 计算当前窗口中的激光笔位置
+                        const revealRect = revealElement.getBoundingClientRect();
+                        
+                        if (data.isVisible && isLaserActive) {
+                            // 使用相对位置计算激光笔位置
+                            const absX = data.x * revealRect.width + revealRect.left;
+                            const absY = data.y * revealRect.height + revealRect.top;
+                            
+                            // 更新激光笔位置
+                            requestAnimationFrame(() => {
+                            laserPointer.style.display = 'block';
+                            laserPointer.style.left = (absX - 4) + 'px';
+                            laserPointer.style.top = (absY - 4) + 'px';
+                            });
+                        } else {
+                            // 隐藏激光笔
+                            requestAnimationFrame(() => {
+                            laserPointer.style.display = 'none';
+                            laserPointer.style.left = '-9999px';
+                            laserPointer.style.top = '-9999px';
+                            });
+                        }
+                    } 
+                    catch (err) {
+                        console.error('解析激光笔数据失败', err);
+                        // 出错时也确保激光笔隐藏
+                        requestAnimationFrame(() => {
+                            laserPointer.style.display = 'none';
+                            laserPointer.style.left = '-9999px';
+                            laserPointer.style.top = '-9999px';
+                        });
+                    }
+                }
+            
+                // 处理激光笔激活状态同步
+                if (e.key === LASER_ACTIVE_KEY && (isInMainView() || isInPresentationView())) {
+                    const isActive = e.newValue === 'true';
+                    console.log('接收到激光笔状态同步:', isActive);
+                    
+                    // 只更新UI状态，不再触发事件，避免循环
+                    isLaserActive = isActive;
+                    
+                    if (isActive) {
+                        laserBtn.classList.add('active');
+                        document.body.classList.add('cursor-hidden');
+                    } else {
+                        laserBtn.classList.remove('active');
+                        document.body.classList.remove('cursor-hidden');
+                        // 使用hideLaser辅助函数确保激光笔完全隐藏
+                        hideLaser();
+                    }
+                }
+            });
+        
+            // 鼠标移动事件
+            document.addEventListener('mousemove', function(e) {
+                // 只有当激光笔激活时才处理
+                if (isLaserActive) {
+                    const revealRect = revealElement.getBoundingClientRect();
+                    const isInsideReveal = (
+                    e.clientX >= revealRect.left &&
+                    e.clientX <= revealRect.right &&
+                    e.clientY >= revealRect.top &&
+                    e.clientY <= revealRect.bottom
+                    );
+            
+                    if (isInsideReveal) {
+                    // 计算相对位置
+                    const relX = (e.clientX - revealRect.left) / revealRect.width;
+                    const relY = (e.clientY - revealRect.top) / revealRect.height;
+                    
+                    // 在本窗口中显示激光笔
+                    requestAnimationFrame(() => {
+                        laserPointer.style.display = 'block';
+                        laserPointer.style.left = (e.clientX - 4) + 'px';
+                        laserPointer.style.top = (e.clientY - 4) + 'px';
+                    });
+                    
+                    // 将位置信息同步到其他窗口
+                    if (isInPresenterView()) {
+                        updateLaserPosition(relX, relY, true);
+                    }
+                    } else {
+                    // 确保激光笔完全隐藏
+                    requestAnimationFrame(() => {
+                        laserPointer.style.display = 'none';
+                        laserPointer.style.left = '-9999px';
+                        laserPointer.style.top = '-9999px';
+                    });
+                    
+                    // 通知其他窗口隐藏激光笔
+                    if (isInPresenterView()) {
+                        updateLaserPosition(0, 0, false);
+                    }
+                    }
+                } else {
+                    // 如果激光笔未激活，确保它被隐藏
+                    requestAnimationFrame(() => {
+                    laserPointer.style.display = 'none';
+                    laserPointer.style.left = '-9999px';
+                    laserPointer.style.top = '-9999px';
+                    });
+                }
+            });
+        
+            // 鼠标离开窗口事件
+            document.addEventListener('mouseleave', function() {
+                if (isLaserActive) {
+                    // 使用hideLaser辅助函数确保激光笔完全隐藏
+                    hideLaser();
+                }
+            });
+        
+            // 鼠标进入窗口事件
+            document.addEventListener('mouseenter', function(e) {
+                if (isLaserActive) {
+                    const revealRect = revealElement.getBoundingClientRect();
+                    const isInsideReveal = (
+                    e.clientX >= revealRect.left &&
+                    e.clientX <= revealRect.right &&
+                    e.clientY >= revealRect.top &&
+                    e.clientY <= revealRect.bottom
+                    );
+            
+                    if (isInsideReveal && isInPresenterView()) {
+                    // 计算相对位置
+                    const relX = (e.clientX - revealRect.left) / revealRect.width;
+                    const relY = (e.clientY - revealRect.top) / revealRect.height;
+                    
+                    // 更新激光笔位置
+                    updateLaserPosition(relX, relY, true);
+                    }
+                }
+            });
+
+            // ESC 键处理
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    // 区分演示者视图和其他视图的处理
+                    if (isInPresenterView()) {
+                    // 在演示者视图中，ESC 键只退出全屏，不关闭激光笔
+                    if (isFullscreen || document.fullscreenElement) {
+                        if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                        }
+                        isFullscreen = false;
+                        document.body.classList.remove('is-fullscreen');
+                        revealElement.classList.remove('fullscreen');
+                        // 不关闭激光笔，但在演讲者模式下按钮保持隐藏
+                        laserBtn.style.display = 'none';
+                        Reveal.layout();
+                    }
+                    } else {
+                    // 在其他视图中，ESC 键行为不变
+                    cleanupLaserPointer();
+                    }
+                }
+                    // Alt 键切换激光笔（在所有视图中都有效）
+                if (e.key === 'Alt') {
+                    e.preventDefault(); // 防止触发浏览器默认行为
+                    toggleLaser(!isLaserActive);
+                }
+            });
+                
+            // 添加 Alt 键释放处理
+            document.addEventListener('keyup', function(e) {
+            if (e.key === 'Alt') {
+                e.preventDefault(); // 防止触发浏览器默认行为
+            }
+            });
+
+            // 在页面加载时检查激光笔按钮显示状态
+            window.addEventListener('load', function() {
+                // 如果是演示者视图，不显示激光笔按钮和全屏按钮
+                if (isInPresenterView()) {
+                    console.log('当前是演示者视图，隐藏激光笔按钮和全屏按钮');
+                    laserBtn.style.display = 'none';
+                    fullscreenBtn.style.display = 'none';
+                }
+                
+                // 如果是展示视图或主视图，检查是否有激光笔位置信息
+                if (isInPresentationView() || isInMainView()) {
+                    console.log('当前是展示视图或主视图，准备接收激光笔位置');
+                    
+                    // 检查激光笔激活状态
+                    const laserActiveState = localStorage.getItem(LASER_ACTIVE_KEY);
+                    if (laserActiveState === 'true') {
+                    console.log('检测到激光笔处于激活状态');
+                    isLaserActive = true;
+                    laserBtn.classList.add('active');
+                    document.body.classList.add('cursor-hidden');
+                    } else {
+                    // 如果激光笔未激活，确保它被隐藏
+                    requestAnimationFrame(() => {
+                        laserPointer.style.display = 'none';
+                        laserPointer.style.left = '-9999px';
+                        laserPointer.style.top = '-9999px';
+                    });
+                    }
+                    
+                    // 立即检查是否有存储的激光笔位置
+                    const storedPosition = localStorage.getItem(LASER_KEY);
+                    if (storedPosition) {
+                    try {
+                        const data = JSON.parse(storedPosition);
+                        // 如果数据不是太旧（10秒内），并且激光笔当前处于激活状态，则应用它
+                        if (Date.now() - data.timestamp < 10000 && data.isVisible && isLaserActive) {
+                        const revealRect = revealElement.getBoundingClientRect();
+                        const absX = data.x * revealRect.width + revealRect.left;
+                        const absY = data.y * revealRect.height + revealRect.top;
+                        
+                        requestAnimationFrame(() => {
+                            laserPointer.style.display = 'block';
+                            laserPointer.style.left = (absX - 4) + 'px';
+                            laserPointer.style.top = (absY - 4) + 'px';
+                        });
+                        } else {
+                        // 数据过期或激光笔未激活，确保激光笔隐藏
+                        requestAnimationFrame(() => {
+                            laserPointer.style.display = 'none';
+                            laserPointer.style.left = '-9999px';
+                            laserPointer.style.top = '-9999px';
+                        });
+                        }
+                    } catch (err) {
+                        console.error('解析存储的激光笔位置失败', err);
+                        // 解析失败时隐藏激光笔
+                        requestAnimationFrame(() => {
+                        laserPointer.style.display = 'none';
+                        laserPointer.style.left = '-9999px';
+                        laserPointer.style.top = '-9999px';
+                        });
+                    }
+                    }
+                }
+            });
+
+            // 检测演示窗口的关闭，以便更新状态
+            window.addEventListener('beforeunload', function() {
+                // 如果是演示者视图，通知其他视图不再自动全屏
+                if (isInPresenterView()) {
+                    localStorage.removeItem('reveal_auto_fullscreen');
+                    localStorage.removeItem('reveal_auto_fullscreen_timestamp');
+                }
+            });
+
+            // 更新激光笔按钮的提示文字
+            document.querySelector('#laser-btn').title = '激光笔 (Alt + O 切换)';
+
+            // 窗口大小改变事件 - 恢复此事件处理以便在调整大小时正确处理激光笔
+            window.addEventListener('resize', function() {
+            if (!isFullscreen) {
+                cleanupLaserPointer();
+            }
+            });
+
+            // 为主动隐藏激光笔添加一个帮助函数
+            function hideLaser() {
+                requestAnimationFrame(() => {
+                    laserPointer.style.display = 'none';
+                    laserPointer.style.left = '-9999px';
+                    laserPointer.style.top = '-9999px';
+                });
+                
+                if (isInPresenterView()) {
+                    updateLaserPosition(0, 0, false);
+                }
+            }
+
+            // 确保在窗口失去焦点时隐藏激光笔
+            window.addEventListener('blur', function() {
+                if (isLaserActive) {
+                    hideLaser();
+                }
+                });
+                
+                // 确保在页面可见性改变时处理激光笔
+                document.addEventListener('visibilitychange', function() {
+                if (document.hidden && isLaserActive) {
+                    hideLaser();
+                }
+            });
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const refs = document.querySelectorAll('.slide-ref');
+
+                refs.forEach(ref => {
+                    const lines = ref.textContent.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+
+                    ref.innerHTML = `
+                    <div style="width: 100px; height: 1px; background: black; margin-bottom: 5px;"></div>
+                    <p style="margin: 2px 0;">${lines.join('<br>')}</p>
+                    `;
+                });
+            });
+
+
+
+        </script>
+    </body>
+</html>
