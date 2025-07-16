@@ -363,6 +363,11 @@ Hsu, Y., Hua, T., Chang, S., Lou, Q., Shen, Y., & Jin, H. (2022). Language model
 Lu, Y.,Shi, L. (2024)JUNK DNA HYPOTHESIS: A TASK-CENTRIC ANGLE OF LLM PRE-TRAINED WEIGHTS THROUGH SPARSITY
 </div>
 
+Note:
+应当在目标函数中引入一下任务相关的内容
+为什么这些重要的知识要放在最后一组最没用的参数上，而不是往前面放？
+事实上有看到一些文章从该结论出发，直接对最后一组singular value这种corner case进行特判
+
 ---
 
 ## Task-centric SVD for compression
@@ -387,6 +392,7 @@ Hsu, Y., Hua, T., Chang, S., Lou, Q., Shen, Y., & Jin, H. (2022). Language model
 
 Note:
 当loss是任务相关的时候，期望做SVD分解时，重要的参数应当获得较大的重要性
+但是需要算梯度，算力消耗大
 
 ---
 
@@ -424,7 +430,7 @@ Note:
 #### develop of S
 对$XX^T$做**Cholesky decomposition**，得到下三角矩阵$S$满足
 $$
-SS^S = XX^T
+SS^T = XX^T
 $$
 从而$S^{-1}X$是正交的
 
@@ -450,9 +456,27 @@ Note:
 
 ## Task-centric SVD for compression
 #### develop of S
+只需要构造$S$满足$S^{-1}X$是正交的即可
+构造
+$$
+X = U\Sigma V^T, \ S = U\Sigma
+$$
+有
+$$
+S^{-1}X = \Sigma^{-1}U^{-1}U\Sigma V^T = V^T
+$$
+也满足前述条件
 
+<div class="slide-ref">
+Wang, X., Alam, S., Wan, Z., Shen, H., & Zhang, M. (2025). SVD-LLM V2: Optimizing Singular Value Truncation for Large Language Model Compression. In NAACL, 25
+</div>
+
+---
+
+## Task-centric SVD for compression
+#### develop of S
+Results
 <img src="https://s2.loli.net/2025/07/16/5VOBiadJfgTx3A7.png" style="width: 1000px; height: auto;  margin-top: auto; margin-bottom: auto;border: none;">
-
 
 
 ---
@@ -476,7 +500,7 @@ a & \text{if } \alpha_{j} \text{ is among the top } p\\% \text{ values},\ a > 1 
 $$
 
 $$
-\tilde{X} = XD
+\tilde{X} = XD, \ W^* = \mathop{\text{argmin}}\limits_{W'} ||W'\tilde{X} - W\tilde{X}||_{F}^2
 $$
 
 <div class="slide-ref">
@@ -488,7 +512,7 @@ Ding, X., Sun, R. (2025). DipSVD: Dual-importance Protected SVD for Efficient LL
 ## Layer-wise compression ratio
 
 <p class="fragment">
-🤔 How to automatically assign layer-wise compression ratio
+🤔 How to adaptively assign layer-wise compression ratio
 </p>
 <br>
 
