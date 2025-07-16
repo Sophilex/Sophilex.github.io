@@ -330,7 +330,7 @@ $$
 ## Apply SVD in model Compression
 对于模型参数矩阵$W$，尝试对其进行参数压缩得到$W_{k}$，$k$代表压缩后的矩阵秩。直观目标函数可以定义为
 $$
-W_{k}^* = \mathop{\text{argmin}}\limits_{W_{k}} ||W_{k} - W||_{F}^2
+W^* = \mathop{\text{argmin}}\limits_{W'} ||W' - W||_{F}^2
 $$
 
 <p class="fragment">
