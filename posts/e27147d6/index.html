@@ -18,28 +18,27 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="事情似乎并没有那么简单...">
+    <meta name="description" content="训练时，根据模型学习效果动态筛选数据集，dataset efficient">
 <meta property="og:type" content="article">
-<meta property="og:title" content="SVD Decompositon in LLM Compression">
-<meta property="og:url" content="https://sophilex.github.io/posts/af06fe9c/index.html">
+<meta property="og:title" content="DA-KD: Difficulty-Aware Knowledge Distillation for  Efficient Large Language Models">
+<meta property="og:url" content="https://sophilex.github.io/posts/e27147d6/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="事情似乎并没有那么简单...">
+<meta property="og:description" content="训练时，根据模型学习效果动态筛选数据集，dataset efficient">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/mc7.jpg">
-<meta property="article:published_time" content="2025-07-15T15:45:28.000Z">
-<meta property="article:modified_time" content="2025-07-16T11:24:15.670Z">
+<meta property="og:image" content="https://sophilex.github.io/img/j7.jpg">
+<meta property="article:published_time" content="2025-08-04T05:19:31.000Z">
+<meta property="article:modified_time" content="2025-08-04T05:23:03.679Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="LLM">
-<meta property="article:tag" content="Compression">
-<meta property="article:tag" content="SVD">
+<meta property="article:tag" content="KD">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/mc7.jpg">
+<meta name="twitter:image" content="https://sophilex.github.io/img/j7.jpg">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>SVD Decompositon in LLM Compression - Sophilex‘s Blog</title>
+  <title>DA-KD: Difficulty-Aware Knowledge Distillation for  Efficient Large Language Models - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -239,13 +238,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/mc7.jpg') no-repeat center center; background-size: cover;">
+     style="background: url('/img/j7.jpg') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="SVD Decompositon in LLM Compression"></span>
+            <span id="subtitle" data-typed-text="DA-KD: Difficulty-Aware Knowledge Distillation for  Efficient Large Language Models"></span>
           
         </div>
 
@@ -261,8 +260,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-07-15 23:45" pubdate>
-          2025年7月15日 晚上
+        <time datetime="2025-08-04 13:19" pubdate>
+          2025年8月4日 下午
         </time>
       </span>
     
@@ -273,7 +272,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          0 字
+          314 字
         
       </span>
     
@@ -284,7 +283,7 @@
         
         
         
-          1 分钟
+          3 分钟
         
       </span>
     
@@ -329,26 +328,48 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">SVD Decompositon in LLM Compression</h1>
+            <h1 id="seo-header">DA-KD: Difficulty-Aware Knowledge Distillation for  Efficient Large Language Models</h1>
             
             
               <div class="markdown-body">
                 
-                
+                <p>提出在训练的时候，根据模型学习效果动态筛选数据集，倾向于选出学习效果较差的样本拿来训练。学习效果的依据为
+<span class="math display">\[
+DDS(x) = \frac{L_{q_{\theta}}(x)}{L_{p}(x)}
+\]</span> 其中<span class="math inline">\(L_{f}(x)\)</span>代表样本<span
+class="math inline">\(x\)</span>在模型<span
+class="math inline">\(f\)</span>预测结果与ground truth下的ce loss</p>
+<p><img src="https://s2.loli.net/2025/08/04/zGiofbaP3dRp2MA.png" srcset="/img/loadings.gif" lazyload /></p>
+<p>至于实际筛选策略，每次会根据样本的<span
+class="math inline">\(DDS\)</span>值降序排序，然后按比重分成高<span
+class="math inline">\(DDS\)</span>部分和低<span
+class="math inline">\(DDS\)</span>部分，再分别从中随机采样一定数量样本，组合成新的训练数据集。</p>
+<p>另外对loss也做了修改，参考SKL[1]，得到 <span class="math display">\[
+D_{BDL}(p,q_{\theta}) = D_{KL}(((1-\lambda)p+\lambda q_{\theta})||
+(\lambda p+(1-\lambda)q_{\theta}))
+\]</span> 实际上也就是把SKL和SRKL糅在了一起，此时相对参数<span
+class="math inline">\(\lambda\)</span>会有一个比较稳定的上下界，梯度相对比较稳定。记<span
+class="math inline">\(P_{m},Q_{m}\)</span>分别代表<span
+class="math inline">\((1-\lambda)p+\lambda q_{\theta}, \lambda
+p+(1-\lambda)q_{\theta}\)</span>，有 <img
+src="https://s2.loli.net/2025/08/04/ZcaN6Fo3zkvDmjG.png" srcset="/img/loadings.gif" lazyload /></p>
+<p>而 <span class="math display">\[
+\frac{P_{m}}{Q_{m}} = \frac{(1-\lambda)p+\lambda q_{\theta}}{\lambda
+p+(1-\lambda)q_{\theta}}
+\]</span> 当<span class="math inline">\(p \gg
+q_{\theta}\)</span>时，<span class="math inline">\(\frac{P_{m}}{Q_{m}}
+\rightarrow \frac{1-\lambda}{\lambda}\)</span>，当<span
+class="math inline">\(p \ll q_{\theta}\)</span>时，<span
+class="math inline">\(\frac{P_{m}}{Q_{m}} \rightarrow
+\frac{\lambda}{\lambda}\)</span> 从而<span
+class="math inline">\(\nabla_{\theta}
+D_{BDL}(p,q_{\theta})\)</span>上下界相对稳定</p>
+<h2 id="reference">Reference</h2>
+<p>[1] Ko, J., Kim, S., Chen, T., &amp; Yun, S. DistiLLM: Towards
+Streamlined Distillation for Large Language Models. In ICML, 24</p>
+
                 
               </div>
-              
-                <hr/>
-                <div class="mt-4 d-flex justify-content-center gap-5">
-                  <a href="/posts/af06fe9c/slide.html" class="btn btn-primary mx-3">
-                    View Slides
-                  </a>
-                  
-                    <a href="/posts/af06fe9c/slide.pdf" class="btn btn-primary mx-3">
-                      View PDF
-                    </a>
-                  
-                </div>
               
 
             
@@ -366,7 +387,7 @@
     
       <span class="category-chain">
         
-  <a href="/categories/slides/" class="category-chain-item">slides</a>
+  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" class="category-chain-item">学习笔记</a>
   
   
 
@@ -383,9 +404,7 @@
       
         <a href="/tags/LLM/" class="print-no-link">#LLM</a>
       
-        <a href="/tags/Compression/" class="print-no-link">#Compression</a>
-      
-        <a href="/tags/SVD/" class="print-no-link">#SVD</a>
+        <a href="/tags/KD/" class="print-no-link">#KD</a>
       
     </div>
   
@@ -397,8 +416,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>SVD Decompositon in LLM Compression</div>
-      <div>https://sophilex.github.io/posts/af06fe9c/</div>
+      <div>DA-KD: Difficulty-Aware Knowledge Distillation for  Efficient Large Language Models</div>
+      <div>https://sophilex.github.io/posts/e27147d6/</div>
     </div>
     <div class="license-meta">
       
@@ -410,7 +429,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年7月15日</div>
+          <div>2025年8月4日</div>
         </div>
       
       
@@ -442,18 +461,12 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/898fd981/" title="C2KD: Cross-layer and Cross-head Knowledge Distillation for  Small Language Model-based Recommendations">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">C2KD: Cross-layer and Cross-head Knowledge Distillation for  Small Language Model-based Recommendations</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/dd35f5de/" title="DipSVD: Dual-importance Protected SVD for Efficient LLM Compression">
-                        <span class="hidden-mobile">DipSVD: Dual-importance Protected SVD for Efficient LLM Compression</span>
+                      <a href="/posts/bdceb487/" title="Boosting Parameter Efficiency in LLM-Based Recommendation through Sophisticated Pruning">
+                        <span class="hidden-mobile">Boosting Parameter Efficiency in LLM-Based Recommendation through Sophisticated Pruning</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
