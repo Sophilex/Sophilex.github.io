@@ -18,27 +18,26 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="训练时，根据模型学习效果动态筛选数据集，dataset efficient">
+    <meta name="description" content="推荐任务中，item的输入顺序可能会影响模型推荐结果">
 <meta property="og:type" content="article">
-<meta property="og:title" content="DA-KD: Difficulty-Aware Knowledge Distillation for  Efficient Large Language Models">
-<meta property="og:url" content="https://sophilex.github.io/posts/e27147d6/index.html">
+<meta property="og:title" content="Evaluating Position Bias in Large Language Model Recommendations">
+<meta property="og:url" content="https://sophilex.github.io/posts/871e7e59/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="训练时，根据模型学习效果动态筛选数据集，dataset efficient">
+<meta property="og:description" content="推荐任务中，item的输入顺序可能会影响模型推荐结果">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/j7.jpg">
-<meta property="article:published_time" content="2025-08-04T05:19:31.000Z">
-<meta property="article:modified_time" content="2025-08-04T05:23:03.679Z">
+<meta property="og:image" content="https://sophilex.github.io/img/mc1.jpg">
+<meta property="article:published_time" content="2025-08-10T16:06:18.000Z">
+<meta property="article:modified_time" content="2025-08-10T16:10:30.028Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="LLM">
-<meta property="article:tag" content="KD">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/j7.jpg">
+<meta name="twitter:image" content="https://sophilex.github.io/img/mc1.jpg">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>DA-KD: Difficulty-Aware Knowledge Distillation for  Efficient Large Language Models - Sophilex‘s Blog</title>
+  <title>Evaluating Position Bias in Large Language Model Recommendations - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -238,13 +237,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/j7.jpg') no-repeat center center; background-size: cover;">
+     style="background: url('/img/mc1.jpg') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="DA-KD: Difficulty-Aware Knowledge Distillation for  Efficient Large Language Models"></span>
+            <span id="subtitle" data-typed-text="Evaluating Position Bias in Large Language Model Recommendations"></span>
           
         </div>
 
@@ -260,8 +259,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-08-04 13:19" pubdate>
-          2025年8月4日 下午
+        <time datetime="2025-08-11 00:06" pubdate>
+          2025年8月11日 凌晨
         </time>
       </span>
     
@@ -272,7 +271,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          314 字
+          572 字
         
       </span>
     
@@ -283,7 +282,7 @@
         
         
         
-          3 分钟
+          5 分钟
         
       </span>
     
@@ -328,45 +327,51 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">DA-KD: Difficulty-Aware Knowledge Distillation for  Efficient Large Language Models</h1>
+            <h1 id="seo-header">Evaluating Position Bias in Large Language Model Recommendations</h1>
             
             
               <div class="markdown-body">
                 
-                <p>提出在训练的时候，根据模型学习效果动态筛选数据集，倾向于选出学习效果较差的样本拿来训练。学习效果的依据为
-<span class="math display">\[
-DDS(x) = \frac{L_{q_{\theta}}(x)}{L_{p}(x)}
-\]</span> 其中<span class="math inline">\(L_{f}(x)\)</span>代表样本<span
-class="math inline">\(x\)</span>在模型<span
-class="math inline">\(f\)</span>预测结果与ground truth下的ce loss</p>
-<p><img src="https://s2.loli.net/2025/08/04/zGiofbaP3dRp2MA.png" srcset="/img/loadings.gif" lazyload /></p>
-<p>至于实际筛选策略，每次会根据样本的<span
-class="math inline">\(DDS\)</span>值降序排序，然后按比重分成高<span
-class="math inline">\(DDS\)</span>部分和低<span
-class="math inline">\(DDS\)</span>部分，再分别从中随机采样一定数量样本，组合成新的训练数据集。</p>
-<p>另外对loss也做了修改，参考SKL[1]，得到 <span class="math display">\[
-D_{BDL}(p,q_{\theta}) = D_{KL}(((1-\lambda)p+\lambda q_{\theta})||
-(\lambda p+(1-\lambda)q_{\theta}))
-\]</span> 实际上也就是把SKL和SRKL糅在了一起，此时相对参数<span
-class="math inline">\(\lambda\)</span>会有一个比较稳定的上下界，梯度相对比较稳定。记<span
-class="math inline">\(P_{m},Q_{m}\)</span>分别代表<span
-class="math inline">\((1-\lambda)p+\lambda q_{\theta}, \lambda
-p+(1-\lambda)q_{\theta}\)</span>，有 <img
-src="https://s2.loli.net/2025/08/04/ZcaN6Fo3zkvDmjG.png" srcset="/img/loadings.gif" lazyload /></p>
-<p>而 <span class="math display">\[
-\frac{P_{m}}{Q_{m}} = \frac{(1-\lambda)p+\lambda q_{\theta}}{\lambda
-p+(1-\lambda)q_{\theta}}
-\]</span> 当<span class="math inline">\(p \gg
-q_{\theta}\)</span>时，<span class="math inline">\(\frac{P_{m}}{Q_{m}}
-\rightarrow \frac{1-\lambda}{\lambda}\)</span>，当<span
-class="math inline">\(p \ll q_{\theta}\)</span>时，<span
-class="math inline">\(\frac{P_{m}}{Q_{m}} \rightarrow
-\frac{\lambda}{\lambda}\)</span> 从而<span
-class="math inline">\(\nabla_{\theta}
-D_{BDL}(p,q_{\theta})\)</span>上下界相对稳定</p>
-<h2 id="reference">Reference</h2>
-<p>[1] Ko, J., Kim, S., Chen, T., &amp; Yun, S. DistiLLM: Towards
-Streamlined Distillation for Large Language Models. In ICML, 24</p>
+                <p>指出LLM
+Rec的时候，模型给出的推荐结果可能会受到item输入顺序的影响。输入的prompt格式如下
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lasso">Based <span class="hljs-keyword">on</span> the user’s preferences, can you rank the following items, item1, item2,<span class="hljs-params">...</span>?<br></code></pre></td></tr></table></figure>
+那么item列表打乱之后，得到的推荐序列结果也可能会与原本有很大的差异。
+为了衡量这种现象的程度，作者设计了一个指标用于计算两个序列的相似性 <span
+class="math display">\[
+\tau = \frac{ n_{c} -n_{d} }{\frac{1}{2}n(n-1)}
+\]</span> 其中<span
+class="math inline">\(n\)</span>是item序列长度，也是最终推荐列表的长度。<span
+class="math inline">\(n_{c}\)</span> 代表pairs ordered the same way in
+both rankings，那么<span class="math inline">\(n_{d}\)</span>就代表pairs
+ordered differently in two rankings。那么这个<span
+class="math inline">\(\tau\)</span>越大，就代表两个序列越相似，这么设计的合理性还是很直观的。
+为了衡量模型受input position
+bias的影响程度，可以计算其在原始item序列<span
+class="math inline">\(K\)</span>以及reversed <span
+class="math inline">\(K\)</span>下推荐序列之间的<span
+class="math inline">\(\tau\)</span>(Positional Consistency
+(<strong>PC</strong>))，也可以计算其在<span
+class="math inline">\(K\)</span>的不同shuffle下推荐结果的两两平均<span
+class="math inline">\(\tau\)</span>(Output Similarity
+(<strong>Sim</strong>))</p>
+<p>接下来先看看作者是如何尝试降低input position bias对模型的影响的 <img
+src="https://s2.loli.net/2025/08/11/aDJGYEwPjh9uFxA.png" srcset="/img/loadings.gif" lazyload
+alt="600" /></p>
+<p>设计非常直观，每次推荐时只取出推荐序列的top1，然后将剩下的item重新给llm进行推荐任务，最后将n-1次推荐结果合在一起得到最终推荐结果。如果一次性给n个item排序太难的话，就把任务进行拆解。这里每次只取出top1，记为RISE@1</p>
+<figure>
+<img src="https://s2.loli.net/2025/08/11/1v9euDLQ6WYsZoP.png" srcset="/img/loadings.gif" lazyload
+alt="600" />
+<figcaption aria-hidden="true">600</figcaption>
+</figure>
+<p>这里<span class="math inline">\(K\)</span>代表序列长度，Positional
+Consistency (<strong>PC</strong>)，Output Similarity
+(<strong>Sim</strong>)的含义如前所述。首先可以看到RISE@1在缓解input
+position bias上确实是有帮助的，只是其在Amazon Books上的推荐效果(Recall,
+NDCG)反而落后挺多，说服力不是很足。</p>
+<p>总之，本文提出模型在推荐任务中得到的结果会受到input position
+bias的影响，并指出对推荐任务进行拆解有助于缓解该现象。
+但是没有尝试解释这一现象的内在原因，以及其具体是如何影响推荐性能的。这个bias本身的描述也不甚清晰，推荐结果中两个item之间的相对顺序的改变，是只受到它们在input中相对顺序的影响吗，还是与其它item也有关？
+不过现象本身还是挺有意思的。</p>
 
                 
               </div>
@@ -404,8 +409,6 @@ Streamlined Distillation for Large Language Models. In ICML, 24</p>
       
         <a href="/tags/LLM/" class="print-no-link">#LLM</a>
       
-        <a href="/tags/KD/" class="print-no-link">#KD</a>
-      
     </div>
   
 </div>
@@ -416,8 +419,8 @@ Streamlined Distillation for Large Language Models. In ICML, 24</p>
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>DA-KD: Difficulty-Aware Knowledge Distillation for  Efficient Large Language Models</div>
-      <div>https://sophilex.github.io/posts/e27147d6/</div>
+      <div>Evaluating Position Bias in Large Language Model Recommendations</div>
+      <div>https://sophilex.github.io/posts/871e7e59/</div>
     </div>
     <div class="license-meta">
       
@@ -429,7 +432,7 @@ Streamlined Distillation for Large Language Models. In ICML, 24</p>
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年8月4日</div>
+          <div>2025年8月11日</div>
         </div>
       
       
@@ -461,18 +464,12 @@ Streamlined Distillation for Large Language Models. In ICML, 24</p>
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/9e785f75/" title="Distilling the Knowledge in Data Pruning">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Distilling the Knowledge in Data Pruning</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/bdceb487/" title="Boosting Parameter Efficiency in LLM-Based Recommendation through Sophisticated Pruning">
-                        <span class="hidden-mobile">Boosting Parameter Efficiency in LLM-Based Recommendation through Sophisticated Pruning</span>
+                      <a href="/posts/16b1e492/" title="DATASET DISTILLATION VIA KNOWLEDGE DISTILLATION: TOWARDS EFFICIENT SELF-SUPERVISED PRETRAINING OF DEEP NETWORKS">
+                        <span class="hidden-mobile">DATASET DISTILLATION VIA KNOWLEDGE DISTILLATION: TOWARDS EFFICIENT SELF-SUPERVISED PRETRAINING OF DEEP NETWORKS</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

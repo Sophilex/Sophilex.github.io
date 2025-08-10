@@ -18,27 +18,28 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="训练时，根据模型学习效果动态筛选数据集，dataset efficient">
+    <meta name="description" content="Dataset Pruning与KD的结合">
 <meta property="og:type" content="article">
-<meta property="og:title" content="DA-KD: Difficulty-Aware Knowledge Distillation for  Efficient Large Language Models">
-<meta property="og:url" content="https://sophilex.github.io/posts/e27147d6/index.html">
+<meta property="og:title" content="Distilling the Knowledge in Data Pruning">
+<meta property="og:url" content="https://sophilex.github.io/posts/9e785f75/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="训练时，根据模型学习效果动态筛选数据集，dataset efficient">
+<meta property="og:description" content="Dataset Pruning与KD的结合">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/j7.jpg">
-<meta property="article:published_time" content="2025-08-04T05:19:31.000Z">
-<meta property="article:modified_time" content="2025-08-04T05:23:03.679Z">
+<meta property="og:image" content="https://sophilex.github.io/img/j3.png">
+<meta property="article:published_time" content="2025-08-10T15:30:32.000Z">
+<meta property="article:modified_time" content="2025-08-10T16:08:55.460Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="LLM">
 <meta property="article:tag" content="KD">
+<meta property="article:tag" content="Compression">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/j7.jpg">
+<meta name="twitter:image" content="https://sophilex.github.io/img/j3.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>DA-KD: Difficulty-Aware Knowledge Distillation for  Efficient Large Language Models - Sophilex‘s Blog</title>
+  <title>Distilling the Knowledge in Data Pruning - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -238,13 +239,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/j7.jpg') no-repeat center center; background-size: cover;">
+     style="background: url('/img/j3.png') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="DA-KD: Difficulty-Aware Knowledge Distillation for  Efficient Large Language Models"></span>
+            <span id="subtitle" data-typed-text="Distilling the Knowledge in Data Pruning"></span>
           
         </div>
 
@@ -260,8 +261,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-08-04 13:19" pubdate>
-          2025年8月4日 下午
+        <time datetime="2025-08-10 23:30" pubdate>
+          2025年8月10日 晚上
         </time>
       </span>
     
@@ -272,7 +273,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          314 字
+          620 字
         
       </span>
     
@@ -283,7 +284,7 @@
         
         
         
-          3 分钟
+          6 分钟
         
       </span>
     
@@ -328,45 +329,46 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">DA-KD: Difficulty-Aware Knowledge Distillation for  Efficient Large Language Models</h1>
+            <h1 id="seo-header">Distilling the Knowledge in Data Pruning</h1>
             
             
               <div class="markdown-body">
                 
-                <p>提出在训练的时候，根据模型学习效果动态筛选数据集，倾向于选出学习效果较差的样本拿来训练。学习效果的依据为
-<span class="math display">\[
-DDS(x) = \frac{L_{q_{\theta}}(x)}{L_{p}(x)}
-\]</span> 其中<span class="math inline">\(L_{f}(x)\)</span>代表样本<span
-class="math inline">\(x\)</span>在模型<span
-class="math inline">\(f\)</span>预测结果与ground truth下的ce loss</p>
-<p><img src="https://s2.loli.net/2025/08/04/zGiofbaP3dRp2MA.png" srcset="/img/loadings.gif" lazyload /></p>
-<p>至于实际筛选策略，每次会根据样本的<span
-class="math inline">\(DDS\)</span>值降序排序，然后按比重分成高<span
-class="math inline">\(DDS\)</span>部分和低<span
-class="math inline">\(DDS\)</span>部分，再分别从中随机采样一定数量样本，组合成新的训练数据集。</p>
-<p>另外对loss也做了修改，参考SKL[1]，得到 <span class="math display">\[
-D_{BDL}(p,q_{\theta}) = D_{KL}(((1-\lambda)p+\lambda q_{\theta})||
-(\lambda p+(1-\lambda)q_{\theta}))
-\]</span> 实际上也就是把SKL和SRKL糅在了一起，此时相对参数<span
-class="math inline">\(\lambda\)</span>会有一个比较稳定的上下界，梯度相对比较稳定。记<span
-class="math inline">\(P_{m},Q_{m}\)</span>分别代表<span
-class="math inline">\((1-\lambda)p+\lambda q_{\theta}, \lambda
-p+(1-\lambda)q_{\theta}\)</span>，有 <img
-src="https://s2.loli.net/2025/08/04/ZcaN6Fo3zkvDmjG.png" srcset="/img/loadings.gif" lazyload /></p>
-<p>而 <span class="math display">\[
-\frac{P_{m}}{Q_{m}} = \frac{(1-\lambda)p+\lambda q_{\theta}}{\lambda
-p+(1-\lambda)q_{\theta}}
-\]</span> 当<span class="math inline">\(p \gg
-q_{\theta}\)</span>时，<span class="math inline">\(\frac{P_{m}}{Q_{m}}
-\rightarrow \frac{1-\lambda}{\lambda}\)</span>，当<span
-class="math inline">\(p \ll q_{\theta}\)</span>时，<span
-class="math inline">\(\frac{P_{m}}{Q_{m}} \rightarrow
-\frac{\lambda}{\lambda}\)</span> 从而<span
-class="math inline">\(\nabla_{\theta}
-D_{BDL}(p,q_{\theta})\)</span>上下界相对稳定</p>
+                <p>原本对训练dataset进行pruning之后直接进行模型训练就结束了，本文提出，原本的基于全dataset训练的模型可以作为Teacher，对在pruned
+dataset上训练的Student进行蒸馏，这会取得更好的效果。 首先介绍一下Dataset
+Pruning，这其实与Weight
+Pruning是类似的，都是对基本组成元素定义一个重要性，然后依据重要性进行pruning。同时定义剪枝比例<span
+class="math inline">\(f =
+\frac{N_{f}}{N}\)</span>代表保留的数据比例，其中<span
+class="math inline">\(N,N_{f}\)</span>分别代表原始数据集大小，剪枝后的数据集大小
+整体Loss表示为 <span class="math display">\[
+L_{\theta} = (1-\alpha) L_{cls}(\theta) + \alpha L_{KD}(\theta)
+\]</span> 其中前者代表学生在pruned dataset上训练的CE
+Loss，后者代表教师与学生的KD Loss。这里<span
+class="math inline">\(\alpha\)</span>的设计也有点意思。事实上随着剪枝比例<span
+class="math inline">\(f\)</span>的降低，留下的都是一些学习难度较大的样本，其中的噪声较多，此时在全dataset上训练过的教师就能提供很好的指导作用[1]。因此<span
+class="math inline">\(f\)</span>降低时，KD所占的权重应当扩大，即<span
+class="math inline">\(\alpha\)</span>与<span
+class="math inline">\(f\)</span>应当是成反比的。 至于在构造pruned
+data的时候，具体的pruning策略，作者直接选择了随机pruning。这是因为作者发现，在加入KD之后，与复杂的修剪方法相比，在使用简单随机修剪的同时结合
+KD 可以达到相当或更高的准确性。</p>
+<figure>
+<img src="https://s2.loli.net/2025/08/11/ZbOSxzMqK9HksfY.png" srcset="/img/loadings.gif" lazyload
+alt="600" />
+<figcaption aria-hidden="true">600</figcaption>
+</figure>
+<p>这一点还是很有意思的。</p>
+<p>训练时还有一个有意思的现象 <img
+src="https://s2.loli.net/2025/08/11/tVDBiw6XhOGjmQK.png" srcset="/img/loadings.gif" lazyload alt="400" />
+当剪枝比例<span
+class="math inline">\(f\)</span>比较低的时候，面对同一个学生，用规模较低的教师对其进行蒸馏反而有更好的效果，并且这一现象关于蒸馏温度是鲁棒的。这其实有点反直觉，作者也没有给出很好的解释。不过这一现象在<span
+class="math inline">\(f\)</span>较高的时候就不存在了。</p>
+<p>总体来说，引入KD之后，对dataset的pruning策略可以变得异常简单（完全随机pruning）而不会带来显著的模型性能下降（甚至还有上升）。不过其实也可以直接从KD的视角来观察这一训练范式：<strong>它其实就是在教师训练好之后，对教师训练用的dataset进行pruning，然后直接做KD。</strong>
+从这一视角来看，做dataset
+pruning可能就显得有些多余了，不如直接做KD？</p>
 <h2 id="reference">Reference</h2>
-<p>[1] Ko, J., Kim, S., Chen, T., &amp; Yun, S. DistiLLM: Towards
-Streamlined Distillation for Large Language Models. In ICML, 24</p>
+<p>[1] Das, R., &amp; Sanghavi, S. (2023). Understanding
+Self-Distillation in the Presence of Label Noise.</p>
 
                 
               </div>
@@ -406,6 +408,8 @@ Streamlined Distillation for Large Language Models. In ICML, 24</p>
       
         <a href="/tags/KD/" class="print-no-link">#KD</a>
       
+        <a href="/tags/Compression/" class="print-no-link">#Compression</a>
+      
     </div>
   
 </div>
@@ -416,8 +420,8 @@ Streamlined Distillation for Large Language Models. In ICML, 24</p>
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>DA-KD: Difficulty-Aware Knowledge Distillation for  Efficient Large Language Models</div>
-      <div>https://sophilex.github.io/posts/e27147d6/</div>
+      <div>Distilling the Knowledge in Data Pruning</div>
+      <div>https://sophilex.github.io/posts/9e785f75/</div>
     </div>
     <div class="license-meta">
       
@@ -429,7 +433,7 @@ Streamlined Distillation for Large Language Models. In ICML, 24</p>
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年8月4日</div>
+          <div>2025年8月10日</div>
         </div>
       
       
@@ -461,9 +465,9 @@ Streamlined Distillation for Large Language Models. In ICML, 24</p>
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/9e785f75/" title="Distilling the Knowledge in Data Pruning">
+                      <a href="/posts/16b1e492/" title="DATASET DISTILLATION VIA KNOWLEDGE DISTILLATION: TOWARDS EFFICIENT SELF-SUPERVISED PRETRAINING OF DEEP NETWORKS">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Distilling the Knowledge in Data Pruning</span>
+                        <span class="hidden-mobile">DATASET DISTILLATION VIA KNOWLEDGE DISTILLATION: TOWARDS EFFICIENT SELF-SUPERVISED PRETRAINING OF DEEP NETWORKS</span>
                         <span class="visible-mobile">上一篇</span>
                       </a>
                     
@@ -471,8 +475,8 @@ Streamlined Distillation for Large Language Models. In ICML, 24</p>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/bdceb487/" title="Boosting Parameter Efficiency in LLM-Based Recommendation through Sophisticated Pruning">
-                        <span class="hidden-mobile">Boosting Parameter Efficiency in LLM-Based Recommendation through Sophisticated Pruning</span>
+                      <a href="/posts/e27147d6/" title="DA-KD: Difficulty-Aware Knowledge Distillation for  Efficient Large Language Models">
+                        <span class="hidden-mobile">DA-KD: Difficulty-Aware Knowledge Distillation for  Efficient Large Language Models</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

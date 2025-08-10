@@ -4,6 +4,89 @@
   
   
   <entry>
+    <title>Evaluating Position Bias in Large Language Model Recommendations</title>
+    <link href="/posts/871e7e59/"/>
+    <url>/posts/871e7e59/</url>
+    
+    <content type="html"><![CDATA[<p>指出LLMRec的时候，模型给出的推荐结果可能会受到item输入顺序的影响。输入的prompt格式如下<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lasso">Based <span class="hljs-keyword">on</span> the user’s preferences, can you rank the following items, item1, item2,<span class="hljs-params">...</span>?<br></code></pre></td></tr></table></figure>那么item列表打乱之后，得到的推荐序列结果也可能会与原本有很大的差异。为了衡量这种现象的程度，作者设计了一个指标用于计算两个序列的相似性 <spanclass="math display">\[\tau = \frac{ n_{c} -n_{d} }{\frac{1}{2}n(n-1)}\]</span> 其中<spanclass="math inline">\(n\)</span>是item序列长度，也是最终推荐列表的长度。<spanclass="math inline">\(n_{c}\)</span> 代表pairs ordered the same way inboth rankings，那么<span class="math inline">\(n_{d}\)</span>就代表pairsordered differently in two rankings。那么这个<spanclass="math inline">\(\tau\)</span>越大，就代表两个序列越相似，这么设计的合理性还是很直观的。为了衡量模型受input positionbias的影响程度，可以计算其在原始item序列<spanclass="math inline">\(K\)</span>以及reversed <spanclass="math inline">\(K\)</span>下推荐序列之间的<spanclass="math inline">\(\tau\)</span>(Positional Consistency(<strong>PC</strong>))，也可以计算其在<spanclass="math inline">\(K\)</span>的不同shuffle下推荐结果的两两平均<spanclass="math inline">\(\tau\)</span>(Output Similarity(<strong>Sim</strong>))</p><p>接下来先看看作者是如何尝试降低input position bias对模型的影响的 <imgsrc="https://s2.loli.net/2025/08/11/aDJGYEwPjh9uFxA.png"alt="600" /></p><p>设计非常直观，每次推荐时只取出推荐序列的top1，然后将剩下的item重新给llm进行推荐任务，最后将n-1次推荐结果合在一起得到最终推荐结果。如果一次性给n个item排序太难的话，就把任务进行拆解。这里每次只取出top1，记为RISE@1</p><figure><img src="https://s2.loli.net/2025/08/11/1v9euDLQ6WYsZoP.png"alt="600" /><figcaption aria-hidden="true">600</figcaption></figure><p>这里<span class="math inline">\(K\)</span>代表序列长度，PositionalConsistency (<strong>PC</strong>)，Output Similarity(<strong>Sim</strong>)的含义如前所述。首先可以看到RISE@1在缓解inputposition bias上确实是有帮助的，只是其在Amazon Books上的推荐效果(Recall,NDCG)反而落后挺多，说服力不是很足。</p><p>总之，本文提出模型在推荐任务中得到的结果会受到input positionbias的影响，并指出对推荐任务进行拆解有助于缓解该现象。但是没有尝试解释这一现象的内在原因，以及其具体是如何影响推荐性能的。这个bias本身的描述也不甚清晰，推荐结果中两个item之间的相对顺序的改变，是只受到它们在input中相对顺序的影响吗，还是与其它item也有关？不过现象本身还是挺有意思的。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>DATASET DISTILLATION VIA KNOWLEDGE DISTILLATION: TOWARDS EFFICIENT SELF-SUPERVISED PRETRAINING OF DEEP NETWORKS</title>
+    <link href="/posts/16b1e492/"/>
+    <url>/posts/16b1e492/</url>
+    
+    <content type="html"><![CDATA[<p>尝试在SSL问题中使用datadistillation，以往的方法主要针对SL，并不能直接迁移到SSL问题中。</p><p>SSL问题一般需要对data训一个encoder <spanclass="math inline">\(f\)</span>，其loss定义为 <spanclass="math display">\[L_{BT} = \sum_{i=1}^{d} (1-F_{ii})^2 + \lambda \sum_{i=1}^{d}\sum_{j\neq i} F_{ij}^2\tag{1}\]</span> 其中 <span class="math display">\[F_{ij} = \mathbb{E}_{x \in B} \mathbb{E}_{x_{1},x_{2}\in A(x)}[f_{i}(x_{1})f_{j}(x_{2})]\tag{2}\]</span> 代表对于batch <spanclass="math inline">\(B\)</span>中数据<spanclass="math inline">\(x\)</span>，其不同视图<spanclass="math inline">\(x_{1},x_{2}\)</span>在第<spanclass="math inline">\(i,j\)</span>个特征的乘积，<spanclass="math inline">\(d\)</span>是embedding size 整个<spanclass="math inline">\((1)\)</span>式就代表，希望同一样本的不同视图在相同特征上尽可能一直，在不同特征上尽量不相关从而，利用encoder <spanclass="math inline">\(f\)</span>，就可以在dataset <spanclass="math inline">\(D\)</span>上，训练一个分类器<spanclass="math inline">\(g_{D}(f)\)</span>用于下游任务。</p><p>对于dataset distillation，我们需要生成一个比原始dataset<spanclass="math inline">\(D_{real}\)</span>小得多的<spanclass="math inline">\(D_{syn}\)</span>，同时满足在<spanclass="math inline">\(D_{syn}\)</span>上训练得到的encoder <spanclass="math inline">\(f_{\theta_{syn}}\)</span>，与在<spanclass="math inline">\(D_{real}\)</span>上得到的<spanclass="math inline">\(f_{\theta_{real}}\)</span>应当尽量接近，这可以表述为<span class="math display">\[D_{syn}^* = argmin_{D_{syn}} \mathbb{E}_{x \sim D_{real}}D(f_{\theta_{syn}}(x), f_{\theta_{real}}(x))\tag{3}\]</span> 其中<span class="math inline">\(D\)</span>用于衡量两者距离</p><p>SL中常用MATCHING TRAINING TRAJECTORIES来进行datasetdistillation，具体来说，就是希望在两个dataset上训练的<spanclass="math inline">\(f\)</span>，其参数优化轨迹是类似的，loss定义为<span class="math display">\[L_{DD}(D_{syn}) = \frac{||\hat{\theta}_{t+N} -\theta^*_{t+M}||^2}{||\theta^*_{t} - \theta^*_{t+M}||^2}\tag{4}\]</span> 其中<span class="math inline">\(\theta^*\)</span>是在<spanclass="math inline">\(D_{real}\)</span>上训练的参数，<spanclass="math inline">\(\hat{\theta}\)</span>是在<spanclass="math inline">\(D_{syn}\)</span>上训练的参数，上式分子最小化N步之后与在原本数据集上M步之后的差距，分母消除专家轨迹本身的尺度影响注意到由不同的数据出发，训练得到的参数优化轨迹是会有一定的偏差的，作者证明在SSL下loss受batch内数据的影响很大，方差很大，而每一个小batch的高方差，会导致参数训练轨迹的累计高方差。轨迹方差大，那么收敛就会慢，从而训练轨迹也会变长，恶性循环。<img src="https://s2.loli.net/2025/08/11/J6cH8UbSWAwgMRr.png" /></p><p>相比之下，SL的方差较小，那么轨迹长度也会小（收敛快），是利于参数优化轨迹的拟合的。因此作者尝试找到一种方式，将原本在SSL任务上训练得到的f，转化为用SL任务训练得到。</p><p>作者用KD来非常巧妙地实现了这种转化。具体来说，先在<spanclass="math inline">\(D_{real}\)</span>上无监督训练一个teacher encoder<spanclass="math inline">\(f_{\theta_{T}}\)</span>，然后将SL任务定义为：在dataset上训练一个student<span class="math inline">\(f&#39;\)</span>，其目标就是拟合<spanclass="math inline">\(f_{\theta_{T}}\)</span>，此时任务有了groundtruth，就已经是一个SL任务了，从而实现SSL向SL的转化。那么按照轨迹匹配的目标，我们先在<spanclass="math inline">\(D_{real}\)</span>上训student，<spanclass="math inline">\(f_{\theta^*}\)</span>，其Loss自然表示为 <spanclass="math display">\[\mathbb{E}_{x_{i}\in D_{real}}L_{MSE}(f_{\theta^*}(x_{i}),f_{\theta^T}(x_{i}))\tag{5}\]</span>其参数优化路径就是前文提及的专家轨迹了。之后我们再在初始化好的<spanclass="math inline">\(D_{syn}\)</span>上训<spanclass="math inline">\(f_{\hat{\theta}}\)</span>，其Loss的设计，类似<spanclass="math inline">\((5)\)</span>，表示为 <span class="math display">\[\mathbb{E}_{x_{i}\in D_{real}}L_{MSE}(f_{\hat{\theta}}(x_{i}),f_{\theta^T}(x_{i}))\tag{6}\]</span> 轨迹匹配时，首先选一个epoch <spanclass="math inline">\(t\)</span>，并令<spanclass="math inline">\(\hat{\theta}_{t} =\theta^*_{t}\)</span>，然后从第<spanclass="math inline">\(t\)</span>步之后，利用<spanclass="math inline">\((5),(6)\)</span>，分别对在<spanclass="math inline">\(D_{real}\)</span>和<spanclass="math inline">\(D_{syn}\)</span>上训练的<spanclass="math inline">\(f_{\theta^*},f_{\hat{\theta}}\)</span>进行参数更新，并依据<spanclass="math inline">\((4)\)</span>式得到两者轨迹匹配的Loss <spanclass="math inline">\(L_{DD}\)</span>，最终用<spanclass="math inline">\(L_{DD}\)</span>更新<spanclass="math inline">\(D_{syn}\)</span>即可。</p><p>实际实现的时候还有一些细节，比如<spanclass="math inline">\(f_{\theta^*}\)</span>的训练，是同时训了K个，之后轨迹匹配时，随机选一个expert的训练轨迹进行匹配，用以减少随机影响。整体流程如下<img src="https://s2.loli.net/2025/08/11/iStqXHFWE9R5wOg.png"alt="600" /></p><p>总结下来，作者利用KD，巧妙地将对encoder的训练任务范式由SSL转化为SL，从而减轻了轨迹匹配中的方差的影响，进而可以将SLdataset distillation中轨迹匹配方法自然地迁移到SSL中，非常巧妙。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+      <tag>KD</tag>
+      
+      <tag>Pruning</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Distilling the Knowledge in Data Pruning</title>
+    <link href="/posts/9e785f75/"/>
+    <url>/posts/9e785f75/</url>
+    
+    <content type="html"><![CDATA[<p>原本对训练dataset进行pruning之后直接进行模型训练就结束了，本文提出，原本的基于全dataset训练的模型可以作为Teacher，对在pruneddataset上训练的Student进行蒸馏，这会取得更好的效果。 首先介绍一下DatasetPruning，这其实与WeightPruning是类似的，都是对基本组成元素定义一个重要性，然后依据重要性进行pruning。同时定义剪枝比例<spanclass="math inline">\(f =\frac{N_{f}}{N}\)</span>代表保留的数据比例，其中<spanclass="math inline">\(N,N_{f}\)</span>分别代表原始数据集大小，剪枝后的数据集大小整体Loss表示为 <span class="math display">\[L_{\theta} = (1-\alpha) L_{cls}(\theta) + \alpha L_{KD}(\theta)\]</span> 其中前者代表学生在pruned dataset上训练的CELoss，后者代表教师与学生的KD Loss。这里<spanclass="math inline">\(\alpha\)</span>的设计也有点意思。事实上随着剪枝比例<spanclass="math inline">\(f\)</span>的降低，留下的都是一些学习难度较大的样本，其中的噪声较多，此时在全dataset上训练过的教师就能提供很好的指导作用[1]。因此<spanclass="math inline">\(f\)</span>降低时，KD所占的权重应当扩大，即<spanclass="math inline">\(\alpha\)</span>与<spanclass="math inline">\(f\)</span>应当是成反比的。 至于在构造pruneddata的时候，具体的pruning策略，作者直接选择了随机pruning。这是因为作者发现，在加入KD之后，与复杂的修剪方法相比，在使用简单随机修剪的同时结合KD 可以达到相当或更高的准确性。</p><figure><img src="https://s2.loli.net/2025/08/11/ZbOSxzMqK9HksfY.png"alt="600" /><figcaption aria-hidden="true">600</figcaption></figure><p>这一点还是很有意思的。</p><p>训练时还有一个有意思的现象 <imgsrc="https://s2.loli.net/2025/08/11/tVDBiw6XhOGjmQK.png" alt="400" />当剪枝比例<spanclass="math inline">\(f\)</span>比较低的时候，面对同一个学生，用规模较低的教师对其进行蒸馏反而有更好的效果，并且这一现象关于蒸馏温度是鲁棒的。这其实有点反直觉，作者也没有给出很好的解释。不过这一现象在<spanclass="math inline">\(f\)</span>较高的时候就不存在了。</p><p>总体来说，引入KD之后，对dataset的pruning策略可以变得异常简单（完全随机pruning）而不会带来显著的模型性能下降（甚至还有上升）。不过其实也可以直接从KD的视角来观察这一训练范式：<strong>它其实就是在教师训练好之后，对教师训练用的dataset进行pruning，然后直接做KD。</strong>从这一视角来看，做datasetpruning可能就显得有些多余了，不如直接做KD？</p><h2 id="reference">Reference</h2><p>[1] Das, R., &amp; Sanghavi, S. (2023). UnderstandingSelf-Distillation in the Presence of Label Noise.</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+      <tag>KD</tag>
+      
+      <tag>Compression</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>DA-KD: Difficulty-Aware Knowledge Distillation for  Efficient Large Language Models</title>
     <link href="/posts/e27147d6/"/>
     <url>/posts/e27147d6/</url>
