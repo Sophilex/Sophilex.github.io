@@ -18,26 +18,28 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="推荐任务中，item的输入顺序可能会影响模型推荐结果">
+    <meta name="description" content="对Best-of-N的生成结果显式表示成一种策略，并蒸馏给模型，将N次推理成功压缩到一次">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Evaluating Position Bias in Large Language Model Recommendations">
-<meta property="og:url" content="https://sophilex.github.io/posts/871e7e59/index.html">
+<meta property="og:title" content="BOND: Aligning LLMs with Best-of-N distillation">
+<meta property="og:url" content="https://sophilex.github.io/posts/bb161de0/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="推荐任务中，item的输入顺序可能会影响模型推荐结果">
+<meta property="og:description" content="对Best-of-N的生成结果显式表示成一种策略，并蒸馏给模型，将N次推理成功压缩到一次">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/mc1.jpg">
-<meta property="article:published_time" content="2025-08-10T16:06:18.000Z">
-<meta property="article:modified_time" content="2025-08-10T16:10:30.028Z">
+<meta property="og:image" content="https://sophilex.github.io/img/lxh0.webp">
+<meta property="article:published_time" content="2025-08-18T02:35:34.000Z">
+<meta property="article:modified_time" content="2025-08-18T02:41:43.096Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="LLM">
+<meta property="article:tag" content="KD">
+<meta property="article:tag" content="RLHF">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/mc1.jpg">
+<meta name="twitter:image" content="https://sophilex.github.io/img/lxh0.webp">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>Evaluating Position Bias in Large Language Model Recommendations - Sophilex‘s Blog</title>
+  <title>BOND: Aligning LLMs with Best-of-N distillation - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -237,13 +239,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/mc1.jpg') no-repeat center center; background-size: cover;">
+     style="background: url('/img/lxh0.webp') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Evaluating Position Bias in Large Language Model Recommendations"></span>
+            <span id="subtitle" data-typed-text="BOND: Aligning LLMs with Best-of-N distillation"></span>
           
         </div>
 
@@ -259,8 +261,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-08-11 00:06" pubdate>
-          2025年8月11日 凌晨
+        <time datetime="2025-08-18 10:35" pubdate>
+          2025年8月18日 上午
         </time>
       </span>
     
@@ -271,7 +273,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          572 字
+          880 字
         
       </span>
     
@@ -282,7 +284,7 @@
         
         
         
-          5 分钟
+          8 分钟
         
       </span>
     
@@ -327,51 +329,86 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">Evaluating Position Bias in Large Language Model Recommendations</h1>
+            <h1 id="seo-header">BOND: Aligning LLMs with Best-of-N distillation</h1>
             
             
               <div class="markdown-body">
                 
-                <p>指出LLM
-Rec的时候，模型给出的推荐结果可能会受到item输入顺序的影响。输入的prompt格式如下
-<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lasso">Based <span class="hljs-keyword">on</span> the user’s preferences, can you rank the following items, item1, item2,<span class="hljs-params">...</span>?<br></code></pre></td></tr></table></figure>
-那么item列表打乱之后，得到的推荐序列结果也可能会与原本有很大的差异。
-为了衡量这种现象的程度，作者设计了一个指标用于计算两个序列的相似性 <span
+                <h2 id="main">Main</h2>
+<p>Best-of-N是一个很好的推理时策略，但是需要进行N次推理，成本有点大，作者希望进行一次推理就能达到与其一致的生成效果。作者的想法是，抽象出BoN的策略<span
+class="math inline">\(\pi_{BoN}\)</span>，然后让模型策略<span
+class="math inline">\(\pi\)</span>与<span
+class="math inline">\(\pi_{BoN}\)</span>进行对齐，如此对齐之后，就只用实现一次推理。这其实也可以看成是一种蒸馏。
+<span class="math inline">\(\pi_{BoN}\)</span>显式建模出来的结果是 <span
 class="math display">\[
-\tau = \frac{ n_{c} -n_{d} }{\frac{1}{2}n(n-1)}
+\pi_{BoN}(y) = \pi_{ref}(y) \times p_{\leq}(y)^{N-1} \times
+\sum_{i=1}^{N} \left[ \frac{p_{&lt;}(y)}{p_{\leq}(y)}
+\right]^{i-1}\tag{1}
 \]</span> 其中<span
-class="math inline">\(n\)</span>是item序列长度，也是最终推荐列表的长度。<span
-class="math inline">\(n_{c}\)</span> 代表pairs ordered the same way in
-both rankings，那么<span class="math inline">\(n_{d}\)</span>就代表pairs
-ordered differently in two rankings。那么这个<span
-class="math inline">\(\tau\)</span>越大，就代表两个序列越相似，这么设计的合理性还是很直观的。
-为了衡量模型受input position
-bias的影响程度，可以计算其在原始item序列<span
-class="math inline">\(K\)</span>以及reversed <span
-class="math inline">\(K\)</span>下推荐序列之间的<span
-class="math inline">\(\tau\)</span>(Positional Consistency
-(<strong>PC</strong>))，也可以计算其在<span
-class="math inline">\(K\)</span>的不同shuffle下推荐结果的两两平均<span
-class="math inline">\(\tau\)</span>(Output Similarity
-(<strong>Sim</strong>))</p>
-<p>接下来先看看作者是如何尝试降低input position bias对模型的影响的 <img
-src="https://s2.loli.net/2025/08/11/aDJGYEwPjh9uFxA.png" srcset="/img/loadings.gif" lazyload
-alt="600" /></p>
-<p>设计非常直观，每次推荐时只取出推荐序列的top1，然后将剩下的item重新给llm进行推荐任务，最后将n-1次推荐结果合在一起得到最终推荐结果。如果一次性给n个item排序太难的话，就把任务进行拆解。这里每次只取出top1，记为RISE@1</p>
-<figure>
-<img src="https://s2.loli.net/2025/08/11/1v9euDLQ6WYsZoP.png" srcset="/img/loadings.gif" lazyload
-alt="600" />
-<figcaption aria-hidden="true">600</figcaption>
-</figure>
-<p>这里<span class="math inline">\(K\)</span>代表序列长度，Positional
-Consistency (<strong>PC</strong>)，Output Similarity
-(<strong>Sim</strong>)的含义如前所述。首先可以看到RISE@1在缓解input
-position bias上确实是有帮助的，只是其在Amazon Books上的推荐效果(Recall,
-NDCG)反而落后挺多，说服力不是很足。</p>
-<p>总之，本文提出模型在推荐任务中得到的结果会受到input position
-bias的影响，并指出对推荐任务进行拆解有助于缓解该现象。
-但是没有尝试解释这一现象的内在原因，以及其具体是如何影响推荐性能的。这个bias本身的描述也不甚清晰，推荐结果中两个item之间的相对顺序的改变，是只受到它们在input中相对顺序的影响吗，还是与其它item也有关？
-不过现象本身还是挺有意思的。</p>
+class="math inline">\(\pi_{ref}\)</span>是原始策略，<span
+class="math inline">\(p_{\leq}(y) = \mathbb{P}_{y&#39; \sim
+\pi_{ref}}[r(y&#39;)\leq r(y)]\)</span>代表依据<span
+class="math inline">\(\pi_{ref}\)</span>生成的token <span
+class="math inline">\(y&#39;\)</span>，依照奖励模型<span
+class="math inline">\(r\)</span>，不优于<span
+class="math inline">\(y\)</span>的概率，<span
+class="math inline">\(p_{&lt;}(y)\)</span>也是同理。
+作者还提供了BoN与RLHF的关系。RLHF的目标一般是 <span
+class="math display">\[
+\pi_{RLHF} = argmax_{\pi} \mathbb{E}_{\pi}[r(y)] - \beta
+D(\pi||\pi_{ref})\tag{2}
+\]</span>
+一方面希望尽可能获得更多的奖励，同时要求学习到的策略与原始策略不要偏离太远。根据上式可以得到<span
+class="math inline">\(\pi_{RLHF}\)</span>的显式解，简单表示为 <span
+class="math display">\[
+\pi_{RLHF}(y) \propto \pi_{ref}(y)\exp\left( \frac{1}{\beta}r(y)
+\right)\tag{3}
+\]</span> 证明可以参考[1] (Appendix A)。将<span
+class="math inline">\((1)\)</span>与<span
+class="math inline">\((3)\)</span>的形式进行对比，实际上就可以得到<span
+class="math inline">\(\pi_{BoN}\)</span>下的奖励函数 <span
+class="math display">\[
+r_{BoN}(y) = \log p_{\leq}(y) + \frac{1}{N-1} \log \sum_{i=1}^{N} \left[
+\frac{p_{&lt;}(y)}{p_{\leq}(y)}\right]^{i-1}\tag{4}
+\]</span> 这里<span class="math inline">\(\frac{1}{N-1}\)</span>是<span
+class="math inline">\(p_{\leq}(y)^{N-1}\)</span>带来的。同时不难注意到此时RLHF中关于KL项的系数<span
+class="math inline">\(\beta =
+N-1\)</span>，这为理解BoN提供了RLHF的视角。即BoN中的采样次数<span
+class="math inline">\(N\)</span>，代表了RLHF中KL项的约束强度。N越大，<span
+class="math inline">\(\beta\)</span>越大，越倾向于在RLHF中进行KL对齐。
+<img src="https://s2.loli.net/2025/08/18/uG4ZP8qNzsSTIMU.png" srcset="/img/loadings.gif" lazyload />
+同时，<span
+class="math inline">\(r_{BoN}\)</span>中每一项都是log的形式，因此其对于较高值并不会有明显偏大的奖励，但对较小值会有很大的惩罚，相比起鼓励good
+case，BoN其实更加侧重于避免bad case。此外，不管是<span
+class="math inline">\(p_{\leq}(y)\)</span>还是<span
+class="math inline">\(p_{&lt;}(y)\)</span>，提供的都是相对大小，或者说rank信息，因此其对reward会更加鲁棒。
+这段分析还是很有意思的。</p>
+<p>不管怎么样，根据<span
+class="math inline">\((1)\)</span>式，接下来可以以<span
+class="math inline">\(\pi_{BoN}\)</span>作为学习目标，尝试得到BoN的生成效果。这里涉及三个问题
+* 如何计算<span class="math inline">\(p_{&lt;}, p_{\leq}\)</span> *
+如何对齐两个策略，即<span class="math inline">\((2)\)</span>式中<span
+class="math inline">\(D\)</span>的选择 * N的选择
+对于第一点，作者选择直接蒙特卡洛采样进行估计，表示为 <span
+class="math display">\[
+\hat{p}_{\leq}(y) = \frac{1}{k}\sum_{i=1}^{k} [r(y_{i})\leq r(y)]\tag{5}
+\]</span>
+对于第二点，KL和RKL各有优劣，作者选择将两者进行加权结合，也称为Jeffreys
+divergence。这一选择与之前的认知[2]相符 最后，关于<span
+class="math inline">\(N\)</span>的选择，其影响如下 <img
+src="https://s2.loli.net/2025/08/18/bYu79x45aIMvHSw.png" srcset="/img/loadings.gif" lazyload />
+一个大的N，可以带来好的效果，但是可能带来更大误差，以及成本大。作者选择用一种迭代的方式来近似一个大的N的效果。
+<img src="https://s2.loli.net/2025/08/18/CpZjzf1Eb9cYkO6.png" srcset="/img/loadings.gif" lazyload />
+基于的事实是，在一次BoN优化之后，再进行一次BoN优化，相当于做了一个Bo<span
+class="math inline">\(N^2\)</span>的优化。因此最后实现时，每次只需要取<span
+class="math inline">\(N=2\)</span>，然后多次迭代来更新策略<span
+class="math inline">\(\pi\)</span> 非常优雅的一篇文章。</p>
+<h2 id="reference">Reference</h2>
+<p>[1] Rafailov, R., Sharma, A., Mitchell, E., Ermon, S., Manning, C.D.,
+&amp; Finn, C. (2023). Direct Preference Optimization: Your Language
+Model is Secretly a Reward Model. </p>
+<p>[2] <a target="_blank" rel="noopener" href="https://sophilex.top/posts/418a878e/slide.pdf">Different
+Designs For LLM KD Loss</a></p>
 
                 
               </div>
@@ -409,6 +446,10 @@ bias的影响，并指出对推荐任务进行拆解有助于缓解该现象。
       
         <a href="/tags/LLM/" class="print-no-link">#LLM</a>
       
+        <a href="/tags/KD/" class="print-no-link">#KD</a>
+      
+        <a href="/tags/RLHF/" class="print-no-link">#RLHF</a>
+      
     </div>
   
 </div>
@@ -419,8 +460,8 @@ bias的影响，并指出对推荐任务进行拆解有助于缓解该现象。
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Evaluating Position Bias in Large Language Model Recommendations</div>
-      <div>https://sophilex.github.io/posts/871e7e59/</div>
+      <div>BOND: Aligning LLMs with Best-of-N distillation</div>
+      <div>https://sophilex.github.io/posts/bb161de0/</div>
     </div>
     <div class="license-meta">
       
@@ -432,7 +473,7 @@ bias的影响，并指出对推荐任务进行拆解有助于缓解该现象。
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年8月11日</div>
+          <div>2025年8月18日</div>
         </div>
       
       
@@ -464,18 +505,12 @@ bias的影响，并指出对推荐任务进行拆解有助于缓解该现象。
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/bb161de0/" title="BOND: Aligning LLMs with Best-of-N distillation">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">BOND: Aligning LLMs with Best-of-N distillation</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/16b1e492/" title="DATASET DISTILLATION VIA KNOWLEDGE DISTILLATION: TOWARDS EFFICIENT SELF-SUPERVISED PRETRAINING OF DEEP NETWORKS">
-                        <span class="hidden-mobile">DATASET DISTILLATION VIA KNOWLEDGE DISTILLATION: TOWARDS EFFICIENT SELF-SUPERVISED PRETRAINING OF DEEP NETWORKS</span>
+                      <a href="/posts/871e7e59/" title="Evaluating Position Bias in Large Language Model Recommendations">
+                        <span class="hidden-mobile">Evaluating Position Bias in Large Language Model Recommendations</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

@@ -2,6 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://sophilex.github.io/posts/bb161de0/</loc>
+    
+    <lastmod>2025-08-18</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://sophilex.github.io/posts/871e7e59/</loc>
     
     <lastmod>2025-08-10</lastmod>
@@ -629,6 +638,13 @@
   
   <url>
     <loc>https://sophilex.github.io/tags/Pruning/</loc>
+    <lastmod>2025-08-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://sophilex.github.io/tags/RLHF/</loc>
     <lastmod>2025-08-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
