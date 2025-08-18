@@ -27,7 +27,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://sophilex.github.io/img/lxh0.webp">
 <meta property="article:published_time" content="2025-08-18T02:35:34.000Z">
-<meta property="article:modified_time" content="2025-08-18T02:41:43.096Z">
+<meta property="article:modified_time" content="2025-08-18T02:45:42.965Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="LLM">
 <meta property="article:tag" content="KD">
@@ -352,8 +352,8 @@ class="math inline">\(\pi_{ref}\)</span>生成的token <span
 class="math inline">\(y&#39;\)</span>，依照奖励模型<span
 class="math inline">\(r\)</span>，不优于<span
 class="math inline">\(y\)</span>的概率，<span
-class="math inline">\(p_{&lt;}(y)\)</span>也是同理。
-作者还提供了BoN与RLHF的关系。RLHF的目标一般是 <span
+class="math inline">\(p_{&lt;}(y)\)</span>也是同理。</p>
+<p>作者还提供了BoN与RLHF的关系。RLHF的目标一般是 <span
 class="math display">\[
 \pi_{RLHF} = argmax_{\pi} \mathbb{E}_{\pi}[r(y)] - \beta
 D(\pi||\pi_{ref})\tag{2}
@@ -375,34 +375,38 @@ class="math inline">\(p_{\leq}(y)^{N-1}\)</span>带来的。同时不难注意�
 class="math inline">\(\beta =
 N-1\)</span>，这为理解BoN提供了RLHF的视角。即BoN中的采样次数<span
 class="math inline">\(N\)</span>，代表了RLHF中KL项的约束强度。N越大，<span
-class="math inline">\(\beta\)</span>越大，越倾向于在RLHF中进行KL对齐。
-<img src="https://s2.loli.net/2025/08/18/uG4ZP8qNzsSTIMU.png" srcset="/img/loadings.gif" lazyload />
-同时，<span
+class="math inline">\(\beta\)</span>越大，越倾向于在RLHF中进行KL对齐。</p>
+<p><img src="https://s2.loli.net/2025/08/18/uG4ZP8qNzsSTIMU.png" srcset="/img/loadings.gif" lazyload /></p>
+<p>同时，<span
 class="math inline">\(r_{BoN}\)</span>中每一项都是log的形式，因此其对于较高值并不会有明显偏大的奖励，但对较小值会有很大的惩罚，相比起鼓励good
 case，BoN其实更加侧重于避免bad case。此外，不管是<span
 class="math inline">\(p_{\leq}(y)\)</span>还是<span
-class="math inline">\(p_{&lt;}(y)\)</span>，提供的都是相对大小，或者说rank信息，因此其对reward会更加鲁棒。
-这段分析还是很有意思的。</p>
+class="math inline">\(p_{&lt;}(y)\)</span>，提供的都是相对大小，或者说rank信息，因此其对reward会更加鲁棒。这段分析还是很有意思的。</p>
 <p>不管怎么样，根据<span
 class="math inline">\((1)\)</span>式，接下来可以以<span
 class="math inline">\(\pi_{BoN}\)</span>作为学习目标，尝试得到BoN的生成效果。这里涉及三个问题
-* 如何计算<span class="math inline">\(p_{&lt;}, p_{\leq}\)</span> *
-如何对齐两个策略，即<span class="math inline">\((2)\)</span>式中<span
-class="math inline">\(D\)</span>的选择 * N的选择
-对于第一点，作者选择直接蒙特卡洛采样进行估计，表示为 <span
+* 如何计算<span class="math inline">\(p_{&lt;}, p_{\leq}\)</span></p>
+<ul>
+<li><p>如何对齐两个策略，即<span
+class="math inline">\((2)\)</span>式中<span
+class="math inline">\(D\)</span>的选择</p></li>
+<li><p>N的选择</p></li>
+</ul>
+<p>对于第一点，作者选择直接蒙特卡洛采样进行估计，表示为 <span
 class="math display">\[
 \hat{p}_{\leq}(y) = \frac{1}{k}\sum_{i=1}^{k} [r(y_{i})\leq r(y)]\tag{5}
 \]</span>
 对于第二点，KL和RKL各有优劣，作者选择将两者进行加权结合，也称为Jeffreys
-divergence。这一选择与之前的认知[2]相符 最后，关于<span
-class="math inline">\(N\)</span>的选择，其影响如下 <img
-src="https://s2.loli.net/2025/08/18/bYu79x45aIMvHSw.png" srcset="/img/loadings.gif" lazyload />
+divergence。这一选择与之前的认知[2]相符</p>
+<p>最后，关于<span class="math inline">\(N\)</span>的选择，其影响如下
+<img src="https://s2.loli.net/2025/08/18/bYu79x45aIMvHSw.png" srcset="/img/loadings.gif" lazyload />
 一个大的N，可以带来好的效果，但是可能带来更大误差，以及成本大。作者选择用一种迭代的方式来近似一个大的N的效果。
 <img src="https://s2.loli.net/2025/08/18/CpZjzf1Eb9cYkO6.png" srcset="/img/loadings.gif" lazyload />
 基于的事实是，在一次BoN优化之后，再进行一次BoN优化，相当于做了一个Bo<span
 class="math inline">\(N^2\)</span>的优化。因此最后实现时，每次只需要取<span
 class="math inline">\(N=2\)</span>，然后多次迭代来更新策略<span
-class="math inline">\(\pi\)</span> 非常优雅的一篇文章。</p>
+class="math inline">\(\pi\)</span></p>
+<p>非常优雅的一篇文章。</p>
 <h2 id="reference">Reference</h2>
 <p>[1] Rafailov, R., Sharma, A., Mitchell, E., Ermon, S., Manning, C.D.,
 &amp; Finn, C. (2023). Direct Preference Optimization: Your Language
