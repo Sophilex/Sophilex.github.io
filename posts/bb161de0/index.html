@@ -27,7 +27,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://sophilex.github.io/img/lxh0.webp">
 <meta property="article:published_time" content="2025-08-18T02:35:34.000Z">
-<meta property="article:modified_time" content="2025-08-18T02:45:42.965Z">
+<meta property="article:modified_time" content="2025-08-18T03:06:30.400Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="LLM">
 <meta property="article:tag" content="KD">
@@ -273,7 +273,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          880 字
+          874 字
         
       </span>
     
@@ -338,13 +338,13 @@
 <p>Best-of-N是一个很好的推理时策略，但是需要进行N次推理，成本有点大，作者希望进行一次推理就能达到与其一致的生成效果。作者的想法是，抽象出BoN的策略<span
 class="math inline">\(\pi_{BoN}\)</span>，然后让模型策略<span
 class="math inline">\(\pi\)</span>与<span
-class="math inline">\(\pi_{BoN}\)</span>进行对齐，如此对齐之后，就只用实现一次推理。这其实也可以看成是一种蒸馏。
-<span class="math inline">\(\pi_{BoN}\)</span>显式建模出来的结果是 <span
-class="math display">\[
+class="math inline">\(\pi_{BoN}\)</span>进行对齐。这其实也可以看成是一种蒸馏。</p>
+<p><span class="math inline">\(\pi_{BoN}\)</span>显式建模出来的结果是
+<span class="math display">\[
 \pi_{BoN}(y) = \pi_{ref}(y) \times p_{\leq}(y)^{N-1} \times
 \sum_{i=1}^{N} \left[ \frac{p_{&lt;}(y)}{p_{\leq}(y)}
 \right]^{i-1}\tag{1}
-\]</span> 其中<span
+\]</span> 具体证明参考论文Appendix A.。其中<span
 class="math inline">\(\pi_{ref}\)</span>是原始策略，<span
 class="math inline">\(p_{\leq}(y) = \mathbb{P}_{y&#39; \sim
 \pi_{ref}}[r(y&#39;)\leq r(y)]\)</span>代表依据<span
