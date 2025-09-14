@@ -27,7 +27,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://sophilex.github.io/img/lxh1.webp">
 <meta property="article:published_time" content="2025-09-14T13:13:35.000Z">
-<meta property="article:modified_time" content="2025-09-14T13:22:45.227Z">
+<meta property="article:modified_time" content="2025-09-14T14:23:17.837Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="KD">
 <meta property="article:tag" content="Dataset_Condensation">
@@ -383,7 +383,7 @@ class="math inline">\(0,1\)</span>两个值，是离散的，并不能直接用�
 class="math inline">\(S\)</span>，<span
 class="math inline">\((u,i)\)</span>对的分数<span
 class="math inline">\(S_{(u,i)}\in \mathbb{R}\)</span>，然后依据<span
-class="math inline">\(S_{(u,i)}\)</span>的大小，gumbal采样出较为重要的<span
+class="math inline">\(S_{(u,i)}\)</span>的大小，采样出较为重要的<span
 class="math inline">\((u,i)\)</span>对，用于构造合成数据集<span
 class="math inline">\(D^s\)</span>。这里采样操作是不可微的，因此需要调整为gumbal-softmax。此时分数是连续值，因此也就可以用梯度下降来优化了。</p>
 <p>关于这一点，本文的思路其实是类似的，同样构造一个参数矩阵<span
