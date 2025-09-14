@@ -4,6 +4,33 @@
   
   
   <entry>
+    <title>Dataset Condensation for Recommendation</title>
+    <link href="/posts/fb443351/"/>
+    <url>/posts/fb443351/</url>
+    
+    <content type="html"><![CDATA[<p>推荐数据集蒸馏的普遍问题是：</p><ul><li>对于用户的潜在兴趣，往往会被忽略</li><li>难以生成<strong>离散</strong>的user-item交互信息</li></ul><p>首先回顾一下推荐数据集蒸馏操作的基本框架</p><p>记<span class="math inline">\(\Phi: U\times I\rightarrow\mathbb{R}\)</span>代表在对应数据集上训练的推荐模型。对于原始数据集<spanclass="math inline">\(D\in R^{|U|\times|I|}\)</span>，要找到一个较小的数据集<spanclass="math inline">\(D^s\)</span>，其应当满足 <spanclass="math display">\[\underset{D^s}{argmin}\  \underset{(u,i,r)\simD^{val}}{\mathbb{E}}[l(\theta_{D^s}^*(u,i),r)]\ \ \ s.t. \theta_{D^s}^*= \underset{\theta}{argmin}\  \underset{(u,i,r)\sim D^{s}}{\mathbb{E}}[l(\Phi(u,i),r)]\tag{1}\]</span> 其中<spanclass="math inline">\(D^{val}\)</span>是一个验证集，<spanclass="math inline">\(l(\cdot)\)</span>代表对应的可微的loss，其监督模型<spanclass="math inline">\(\Phi\)</span>关于用户<spanclass="math inline">\(u\)</span>对<spanclass="math inline">\(i\)</span>的评分结果。这是一个经典的数据集蒸馏的双层优化问题，其中内层优化对应的模型，外层优化数据集。这里合成数据集<spanclass="math inline">\(D^s\)</span>与<spanclass="math inline">\(D\)</span>一样代表user-item交互信息，其应当是参数化的，然后通过<spanclass="math inline">\((1)\)</span>式进行优化。</p><p>对于第一点，用户未交互的item并不一定是其不感兴趣的，这一隐式关系在原始数据集中通过大量信息的学习也许是可以挖掘出来的，但是当数据集压缩之后，难度可能会变大，因此作者希望在压缩数据集中也能反映出user的潜在感兴趣item。</p><p>实现上，首先需要提前训练一个模型<spanclass="math inline">\(f_{p}\)</span>，找出每一个user的潜在感兴趣item，这些item应当是user未交互过的，从中取出前topK，作为该user的潜在感兴趣item，形式化来说，<span class="math display">\[TopK(u) = \{ i| i = arg\ \text{IsTopK} f_{p}(u,i&#39;), i&#39;\inI&#39;(u) \}\tag{2}\]</span> 其中<span class="math inline">\(I&#39;(u)\)</span>就代表<spanclass="math inline">\(u\)</span>未交互过的item集合。那么接下来，只需要将<span class="math display">\[D^{ps} = \{ (u,i)|u\in U, i\in TopK(u)\}\tag{3}\]</span></p><p>加入原始数据集<spanclass="math inline">\(D\)</span>，就得到最终<strong>增强过的数据集<spanclass="math inline">\(D^{p}\)</span></strong>，其保留原始数据集信息的同时，帮助挖掘出了用户的隐藏兴趣，更有利于数据集质量的提升。整体来说，这一操作还是非常自然，符合直觉的，并且从之后的实验来看，这一操作的收益是很大的。<img src="https://s2.loli.net/2025/09/14/gAltfHaWNhZFOcq.png"alt="|400" /> 关于这里的推荐模型<spanclass="math inline">\(f_{p}\)</span>的选择，跟正常做推荐没啥区别，LighGCN，MF，XSimGCL之类的都是可以的，文中也有不同<spanclass="math inline">\(f_{p}\)</span>选择的对比实验，这里略过。</p><p>接下来是关于<strong>离散</strong>的user-item交互信息的生成。由于交互信息中，每一个<spanclass="math inline">\((u,i)\)</span>对的值只有<spanclass="math inline">\(0,1\)</span>两个值，是离散的，并不能直接用梯度下降进行优化。针对这一点，[1]提出重新构造一个参数矩阵<spanclass="math inline">\(S\)</span>，<spanclass="math inline">\((u,i)\)</span>对的分数<spanclass="math inline">\(S_{(u,i)}\in \mathbb{R}\)</span>，然后依据<spanclass="math inline">\(S_{(u,i)}\)</span>的大小，gumbal采样出较为重要的<spanclass="math inline">\((u,i)\)</span>对，用于构造合成数据集<spanclass="math inline">\(D^s\)</span>。这里采样操作是不可微的，因此需要调整为gumbal-softmax。此时分数是连续值，因此也就可以用梯度下降来优化了。</p><p>关于这一点，本文的思路其实是类似的，同样构造一个参数矩阵<spanclass="math inline">\(S\)</span>，但是<spanclass="math inline">\((u,i)\)</span>对的分数<spanclass="math inline">\(S_{u,i}\in(0,1)\)</span>，然后通过Bernoulli采样得到<spanclass="math inline">\(M\)</span>，代表<spanclass="math inline">\((u,i)\)</span>是否在<spanclass="math inline">\(D^s\)</span>中应该有交互，并用<spanclass="math inline">\(M\)</span>构造合成数据集<spanclass="math inline">\(D^s\)</span>。即 <span class="math display">\[P(M|S) = \prod_{(u,i)\inD^p}(S_{u,i})^{M_{u,i}}(1-S_{u,i})^{1-M_{u,i}}\tag{4}\]</span> 同时还需要对<spanclass="math inline">\(||M||_{0}\)</span>进行限制，因为我们需要限制最终合成数据集的规模，其应当满足<span class="math display">\[||M||_{0} \leq r|D|\tag{5}\]</span> 通过<span class="math inline">\((4)\)</span>式，可以将对<spanclass="math inline">\(M\)</span>的限制转化到参数<spanclass="math inline">\(S\)</span>上，即<spanclass="math inline">\((5)\)</span>式可以转化为 <spanclass="math display">\[\mathbb{E}_{p(M|S)}||M_{0}|| = \sum_{(u,i)\in D^p}S_{u,i} =||S||_{1}\tag{6}\]</span> 这就是参数上关于数据集规模的限制，后续<spanclass="math inline">\(S\)</span>在进行更新之后，会额外做一步投影操作将其投影到对应的合法空间，即满足<spanclass="math inline">\(||S||_{1}\leqr|D|,S_{u,i}\in[0,1]\)</span>的空间内</p><p>但是注意到Bernoulli采样操作本身也是不可微的，因此还需要做一些操作。此时外层优化dataset的过程中，Loss表示为<span class="math display">\[\Phi(S) = \mathbb{E}_{p(M|S)}L(\theta^*(M)), s.t.\ \ \theta^*(M) =\underset{\theta}{argmin}\ \hat{L}(\theta;M)\tag{7}\]</span> 从而梯度可以表示为 <span class="math display">\[\begin{flalign}\nabla_{S}\Phi(S) &amp;= \mathbb{E}_{p(M|S)}L(\theta^*(M))\\&amp;= \nabla_{S} \int L(\theta^*(M))p(M|S)dM\\&amp;= \int L(\theta^*(M)) \frac{\nabla_{S}p(M|S)}{p(M|S)}p(M|S)dM\\&amp;= \int L(\theta^*(M)) \nabla_{S}\ln p(M|S)\ p(M|S)dM\\&amp;= \mathbb{E}_{p(M|S)}L(\theta^*(M))\nabla_{S}\ln p(M|S)\tag{8}\end{flalign}\]</span>通过策略梯度，我们现在可以直接估计出Loss对参数S的梯度，并且这一操作只需要forward计算出<spanclass="math inline">\(L(\theta^*(M))\)</span>，以及一个非常好算的<spanclass="math inline">\(\nabla_{S}\ln p(M|S)\)</span>，这一点只需要对<spanclass="math inline">\((4)\)</span>式做一些变形即可。</p><p>最终参数<span class="math inline">\(S\)</span>的更新形式为 <spanclass="math display">\[S \leftarrow Pc(S - \eta L(\theta^*(M))\nabla_{S}\ln p(M|S))\tag{9}\]</span> 这里<spanclass="math inline">\(Pc(\cdot)\)</span>操作就是为了将<spanclass="math inline">\(S\)</span>投影到合法空间内</p><p>从而，同样是对交互信息进行重参数化建模，同样是有不可微的采样操作以及对应的补救措施，但是本文相对于[1]，实现了一次forward就可以计算梯度，时间上会有巨大的优势，这一点在下图中会更加直观<img src="https://s2.loli.net/2025/09/14/67HCKwFZsNzIOVB.png"alt="|400" />此外，为了进一步减少计算成本，内部推荐模型优化的时候，只进行了一步更新，然后就进行梯度对齐。</p><blockquote><p>"The intuition behind is that the loss decreases after first stepoptimization of the inner model training is strong enough to providecomprehensive information to guide the outer data update"</p></blockquote><p>从下图的结果来看，压缩前先增强数据集这一步的质量收益是很大的，并且one-stepupdate以及REINFORCE极大压缩了计算成本。 <imgsrc="https://s2.loli.net/2025/09/14/enty5mEAu16ZarX.png" /></p><blockquote><p><strong>reducing the dataset size by 75% and approximating 98% of theoriginal performance on Dianping and about 90% on otherdatasets</strong><br /><strong>Besides, our framework is significantly faster than theprevalent gradient matching solver (e.g., 8× in dataset Ciao forupdating the data for 100 epochs)</strong></p></blockquote><p>总结一下，压缩前先增强数据集，显式表达user的隐藏兴趣，提升数据集质量。REINFORCE实现前向传播即可估计外层优化的梯度，同时内层优化使用one-stepupdate，压缩计算成本。</p><h2 id="reference">Reference</h2><p>[1] Sachdeva, N., Dhaliwal, M.P., Wu, C., &amp; McAuley, J. (2022).Infinite Recommendation Networks: A Data-Centric Approach. In NeurIPS,22.</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>KD</tag>
+      
+      <tag>Dataset_Condensation</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>BOND: Aligning LLMs with Best-of-N distillation</title>
     <link href="/posts/bb161de0/"/>
     <url>/posts/bb161de0/</url>

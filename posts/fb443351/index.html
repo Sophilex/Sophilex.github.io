@@ -18,28 +18,27 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="对Best-of-N的生成结果显式表示成一种策略，并蒸馏给模型，将N次推理成功压缩到一次">
+    <meta name="description" content="推荐数据集蒸馏">
 <meta property="og:type" content="article">
-<meta property="og:title" content="BOND: Aligning LLMs with Best-of-N distillation">
-<meta property="og:url" content="https://sophilex.github.io/posts/bb161de0/index.html">
+<meta property="og:title" content="Dataset Condensation for Recommendation">
+<meta property="og:url" content="https://sophilex.github.io/posts/fb443351/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="对Best-of-N的生成结果显式表示成一种策略，并蒸馏给模型，将N次推理成功压缩到一次">
+<meta property="og:description" content="推荐数据集蒸馏">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/lxh0.webp">
-<meta property="article:published_time" content="2025-08-18T02:35:34.000Z">
-<meta property="article:modified_time" content="2025-08-18T03:06:55.470Z">
+<meta property="og:image" content="https://sophilex.github.io/img/lxh1.webp">
+<meta property="article:published_time" content="2025-09-14T13:13:35.000Z">
+<meta property="article:modified_time" content="2025-09-14T13:22:45.227Z">
 <meta property="article:author" content="Sophilex">
-<meta property="article:tag" content="LLM">
 <meta property="article:tag" content="KD">
-<meta property="article:tag" content="RLHF">
+<meta property="article:tag" content="Dataset_Condensation">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/lxh0.webp">
+<meta name="twitter:image" content="https://sophilex.github.io/img/lxh1.webp">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>BOND: Aligning LLMs with Best-of-N distillation - Sophilex‘s Blog</title>
+  <title>Dataset Condensation for Recommendation - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -239,13 +238,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/lxh0.webp') no-repeat center center; background-size: cover;">
+     style="background: url('/img/lxh1.webp') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="BOND: Aligning LLMs with Best-of-N distillation"></span>
+            <span id="subtitle" data-typed-text="Dataset Condensation for Recommendation"></span>
           
         </div>
 
@@ -261,8 +260,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-08-18 10:35" pubdate>
-          2025年8月18日 上午
+        <time datetime="2025-09-14 21:13" pubdate>
+          2025年9月14日 晚上
         </time>
       </span>
     
@@ -273,7 +272,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          874 字
+          1.6k 字
         
       </span>
     
@@ -284,7 +283,7 @@
         
         
         
-          8 分钟
+          14 分钟
         
       </span>
     
@@ -329,91 +328,140 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">BOND: Aligning LLMs with Best-of-N distillation</h1>
+            <h1 id="seo-header">Dataset Condensation for Recommendation</h1>
             
             
               <div class="markdown-body">
                 
-                <h2 id="main">Main</h2>
-<p>Best-of-N是一个很好的推理时策略，但是需要进行N次推理，成本有点大，作者希望进行一次推理就能达到与其一致的生成效果。作者的想法是，抽象出BoN的策略<span
-class="math inline">\(\pi_{BoN}\)</span>，然后让模型策略<span
-class="math inline">\(\pi\)</span>与<span
-class="math inline">\(\pi_{BoN}\)</span>进行对齐。这其实也可以看成是一种蒸馏。</p>
-<p><span class="math inline">\(\pi_{BoN}\)</span>显式建模出来的结果是
-<span class="math display">\[
-\pi_{BoN}(y) = \pi_{ref}(y) \times p_{\leq}(y)^{N-1} \times
-\sum_{i=1}^{N} \left[ \frac{p_{&lt;}(y)}{p_{\leq}(y)}
-\right]^{i-1}\tag{1}
-\]</span> 具体证明参考论文Appendix A.。其中<span
-class="math inline">\(\pi_{ref}\)</span>是原始策略，<span
-class="math inline">\(p_{\leq}(y) = \mathbb{P}_{y&#39; \sim
-\pi_{ref}}[r(y&#39;)\leq r(y)]\)</span>代表依据<span
-class="math inline">\(\pi_{ref}\)</span>生成的token <span
-class="math inline">\(y&#39;\)</span>，依照奖励模型<span
-class="math inline">\(r\)</span>，不优于<span
-class="math inline">\(y\)</span>的概率，<span
-class="math inline">\(p_{&lt;}(y)\)</span>也是同理。</p>
-<p>作者还提供了BoN与RLHF的关系。RLHF的目标一般是 <span
-class="math display">\[
-\pi_{RLHF} = argmax_{\pi} \mathbb{E}_{\pi}[r(y)] - \beta
-D(\pi||\pi_{ref})\tag{2}
-\]</span>
-一方面希望尽可能获得更多的奖励，同时要求学习到的策略与原始策略不要偏离太远。根据上式可以得到<span
-class="math inline">\(\pi_{RLHF}\)</span>的显式解，简单表示为 <span
-class="math display">\[
-\pi_{RLHF}(y) \propto \pi_{ref}(y)\exp\left( \frac{1}{\beta}r(y)
-\right)\tag{3}
-\]</span> 证明可以参考[1] (Appendix A)。将<span
-class="math inline">\((1)\)</span>与<span
-class="math inline">\((3)\)</span>的形式进行对比，实际上就可以得到<span
-class="math inline">\(\pi_{BoN}\)</span>下的奖励函数 <span
-class="math display">\[
-r_{BoN}(y) = \log p_{\leq}(y) + \frac{1}{N-1} \log \sum_{i=1}^{N} \left[
-\frac{p_{&lt;}(y)}{p_{\leq}(y)}\right]^{i-1}\tag{4}
-\]</span> 这里<span class="math inline">\(\frac{1}{N-1}\)</span>是<span
-class="math inline">\(p_{\leq}(y)^{N-1}\)</span>带来的。同时不难注意到此时RLHF中关于KL项的系数<span
-class="math inline">\(\beta =
-N-1\)</span>，这为理解BoN提供了RLHF的视角。即BoN中的采样次数<span
-class="math inline">\(N\)</span>，代表了RLHF中KL项的约束强度。N越大，<span
-class="math inline">\(\beta\)</span>越大，越倾向于在RLHF中进行KL对齐。</p>
-<p><img src="https://s2.loli.net/2025/08/18/uG4ZP8qNzsSTIMU.png" srcset="/img/loadings.gif" lazyload /></p>
-<p>同时，<span
-class="math inline">\(r_{BoN}\)</span>中每一项都是log的形式，因此其对于较高值并不会有明显偏大的奖励，但对较小值会有很大的惩罚，相比起鼓励good
-case，BoN其实更加侧重于避免bad case。此外，不管是<span
-class="math inline">\(p_{\leq}(y)\)</span>还是<span
-class="math inline">\(p_{&lt;}(y)\)</span>，提供的都是相对大小，或者说rank信息，因此其对reward会更加鲁棒。这段分析还是很有意思的。</p>
-<p>不管怎么样，根据<span
-class="math inline">\((1)\)</span>式，接下来可以以<span
-class="math inline">\(\pi_{BoN}\)</span>作为学习目标，尝试得到BoN的生成效果。这里涉及三个问题</p>
+                <p>推荐数据集蒸馏的普遍问题是：</p>
 <ul>
-<li><p>如何计算<span class="math inline">\(p_{&lt;},
-p_{\leq}\)</span></p></li>
-<li><p>如何对齐两个策略，即<span
-class="math inline">\((2)\)</span>式中<span
-class="math inline">\(D\)</span>的选择</p></li>
-<li><p>N的选择</p></li>
+<li>对于用户的潜在兴趣，往往会被忽略</li>
+<li>难以生成<strong>离散</strong>的user-item交互信息</li>
 </ul>
-<p>对于第一点，作者选择直接蒙特卡洛采样进行估计，表示为 <span
+<p>首先回顾一下推荐数据集蒸馏操作的基本框架</p>
+<p>记<span class="math inline">\(\Phi: U\times I\rightarrow
+\mathbb{R}\)</span>代表在对应数据集上训练的推荐模型。对于原始数据集<span
+class="math inline">\(D\in R^{|U|\times
+|I|}\)</span>，要找到一个较小的数据集<span
+class="math inline">\(D^s\)</span>，其应当满足 <span
 class="math display">\[
-\hat{p}_{\leq}(y) = \frac{1}{k}\sum_{i=1}^{k} [r(y_{i})\leq r(y)]\tag{5}
+\underset{D^s}{argmin}\  \underset{(u,i,r)\sim
+D^{val}}{\mathbb{E}}[l(\theta_{D^s}^*(u,i),r)]\ \ \ s.t. \theta_{D^s}^*
+= \underset{\theta}{argmin}\  \underset{(u,i,r)\sim D^{s}}{\mathbb{E}}
+[l(\Phi(u,i),r)]\tag{1}
+\]</span> 其中<span
+class="math inline">\(D^{val}\)</span>是一个验证集，<span
+class="math inline">\(l(\cdot)\)</span>代表对应的可微的loss，其监督模型<span
+class="math inline">\(\Phi\)</span>关于用户<span
+class="math inline">\(u\)</span>对<span
+class="math inline">\(i\)</span>的评分结果。
+这是一个经典的数据集蒸馏的双层优化问题，其中内层优化对应的模型，外层优化数据集。这里合成数据集<span
+class="math inline">\(D^s\)</span>与<span
+class="math inline">\(D\)</span>一样代表user-item交互信息，其应当是参数化的，然后通过<span
+class="math inline">\((1)\)</span>式进行优化。</p>
+<p>对于第一点，用户未交互的item并不一定是其不感兴趣的，这一隐式关系在原始数据集中通过大量信息的学习也许是可以挖掘出来的，但是当数据集压缩之后，难度可能会变大，因此作者希望在压缩数据集中也能反映出user的潜在感兴趣item。</p>
+<p>实现上，首先需要提前训练一个模型<span
+class="math inline">\(f_{p}\)</span>，找出每一个user的潜在感兴趣item，这些item应当是user未交互过的，从中取出前topK，作为该user的潜在感兴趣item，形式化来说，
+<span class="math display">\[
+TopK(u) = \{ i| i = arg\ \text{IsTopK} f_{p}(u,i&#39;), i&#39;\in
+I&#39;(u) \}\tag{2}
+\]</span> 其中<span class="math inline">\(I&#39;(u)\)</span>就代表<span
+class="math inline">\(u\)</span>未交互过的item集合。那么接下来，只需要将
+<span class="math display">\[
+D^{ps} = \{ (u,i)|u\in U, i\in TopK(u)\}\tag{3}
+\]</span></p>
+<p>加入原始数据集<span
+class="math inline">\(D\)</span>，就得到最终<strong>增强过的数据集<span
+class="math inline">\(D^{p}\)</span></strong>，其保留原始数据集信息的同时，帮助挖掘出了用户的隐藏兴趣，更有利于数据集质量的提升。整体来说，这一操作还是非常自然，符合直觉的，并且从之后的实验来看，这一操作的收益是很大的。
+<img src="https://s2.loli.net/2025/09/14/gAltfHaWNhZFOcq.png" srcset="/img/loadings.gif" lazyload
+alt="|400" /> 关于这里的推荐模型<span
+class="math inline">\(f_{p}\)</span>的选择，跟正常做推荐没啥区别，LighGCN，MF，XSimGCL之类的都是可以的，文中也有不同<span
+class="math inline">\(f_{p}\)</span>选择的对比实验，这里略过。</p>
+<p>接下来是关于<strong>离散</strong>的user-item交互信息的生成。由于交互信息中，每一个<span
+class="math inline">\((u,i)\)</span>对的值只有<span
+class="math inline">\(0,1\)</span>两个值，是离散的，并不能直接用梯度下降进行优化。针对这一点，[1]提出重新构造一个参数矩阵<span
+class="math inline">\(S\)</span>，<span
+class="math inline">\((u,i)\)</span>对的分数<span
+class="math inline">\(S_{(u,i)}\in \mathbb{R}\)</span>，然后依据<span
+class="math inline">\(S_{(u,i)}\)</span>的大小，gumbal采样出较为重要的<span
+class="math inline">\((u,i)\)</span>对，用于构造合成数据集<span
+class="math inline">\(D^s\)</span>。这里采样操作是不可微的，因此需要调整为gumbal-softmax。此时分数是连续值，因此也就可以用梯度下降来优化了。</p>
+<p>关于这一点，本文的思路其实是类似的，同样构造一个参数矩阵<span
+class="math inline">\(S\)</span>，但是<span
+class="math inline">\((u,i)\)</span>对的分数<span
+class="math inline">\(S_{u,i}\in
+(0,1)\)</span>，然后通过Bernoulli采样得到<span
+class="math inline">\(M\)</span>，代表<span
+class="math inline">\((u,i)\)</span>是否在<span
+class="math inline">\(D^s\)</span>中应该有交互，并用<span
+class="math inline">\(M\)</span>构造合成数据集<span
+class="math inline">\(D^s\)</span>。即 <span class="math display">\[
+P(M|S) = \prod_{(u,i)\in
+D^p}(S_{u,i})^{M_{u,i}}(1-S_{u,i})^{1-M_{u,i}}\tag{4}
+\]</span> 同时还需要对<span
+class="math inline">\(||M||_{0}\)</span>进行限制，因为我们需要限制最终合成数据集的规模，其应当满足
+<span class="math display">\[
+||M||_{0} \leq r|D|\tag{5}
+\]</span> 通过<span class="math inline">\((4)\)</span>式，可以将对<span
+class="math inline">\(M\)</span>的限制转化到参数<span
+class="math inline">\(S\)</span>上，即<span
+class="math inline">\((5)\)</span>式可以转化为 <span
+class="math display">\[
+\mathbb{E}_{p(M|S)}||M_{0}|| = \sum_{(u,i)\in D^p}S_{u,i} =
+||S||_{1}\tag{6}
+\]</span> 这就是参数上关于数据集规模的限制，后续<span
+class="math inline">\(S\)</span>在进行更新之后，会额外做一步投影操作将其投影到对应的合法空间，即满足<span
+class="math inline">\(||S||_{1}\leq
+r|D|,S_{u,i}\in[0,1]\)</span>的空间内</p>
+<p>但是注意到Bernoulli采样操作本身也是不可微的，因此还需要做一些操作。此时外层优化dataset的过程中，Loss表示为
+<span class="math display">\[
+\Phi(S) = \mathbb{E}_{p(M|S)}L(\theta^*(M)), s.t.\ \ \theta^*(M) =
+\underset{\theta}{argmin}\ \hat{L}(\theta;M)\tag{7}
+\]</span> 从而梯度可以表示为 <span class="math display">\[
+\begin{flalign}
+\nabla_{S}\Phi(S) &amp;= \mathbb{E}_{p(M|S)}L(\theta^*(M))\\
+&amp;= \nabla_{S} \int L(\theta^*(M))p(M|S)dM\\
+&amp;= \int L(\theta^*(M)) \frac{\nabla_{S}p(M|S)}{p(M|S)}p(M|S)dM\\
+&amp;= \int L(\theta^*(M)) \nabla_{S}\ln p(M|S)\ p(M|S)dM\\
+&amp;= \mathbb{E}_{p(M|S)}L(\theta^*(M))\nabla_{S}\ln p(M|S)\tag{8}
+\end{flalign}
 \]</span>
-对于第二点，KL和RKL各有优劣，作者选择将两者进行加权结合，也称为Jeffreys
-divergence。这一选择与之前的认知[2]相符</p>
-<p>最后，关于<span class="math inline">\(N\)</span>的选择，其影响如下
-<img src="https://s2.loli.net/2025/08/18/bYu79x45aIMvHSw.png" srcset="/img/loadings.gif" lazyload />
-一个大的N，可以带来好的效果，但是可能带来更大误差，以及成本大。作者选择用一种迭代的方式来近似一个大的N的效果。
-<img src="https://s2.loli.net/2025/08/18/CpZjzf1Eb9cYkO6.png" srcset="/img/loadings.gif" lazyload />
-基于的事实是，在一次BoN优化之后，再进行一次BoN优化，相当于做了一个Bo<span
-class="math inline">\(N^2\)</span>的优化。因此最后实现时，每次只需要取<span
-class="math inline">\(N=2\)</span>，然后多次迭代来更新策略<span
-class="math inline">\(\pi\)</span></p>
-<p>非常优雅的一篇文章。</p>
+通过策略梯度，我们现在可以直接估计出Loss对参数S的梯度，并且这一操作只需要forward计算出<span
+class="math inline">\(L(\theta^*(M))\)</span>，以及一个非常好算的<span
+class="math inline">\(\nabla_{S}\ln p(M|S)\)</span>，这一点只需要对<span
+class="math inline">\((4)\)</span>式做一些变形即可。</p>
+<p>最终参数<span class="math inline">\(S\)</span>的更新形式为 <span
+class="math display">\[
+S \leftarrow Pc(S - \eta L(\theta^*(M))\nabla_{S}\ln p(M|S))\tag{9}
+\]</span> 这里<span
+class="math inline">\(Pc(\cdot)\)</span>操作就是为了将<span
+class="math inline">\(S\)</span>投影到合法空间内</p>
+<p>从而，同样是对交互信息进行重参数化建模，同样是有不可微的采样操作以及对应的补救措施，但是本文相对于[1]，实现了一次forward就可以计算梯度，时间上会有巨大的优势，这一点在下图中会更加直观
+<img src="https://s2.loli.net/2025/09/14/67HCKwFZsNzIOVB.png" srcset="/img/loadings.gif" lazyload
+alt="|400" />
+此外，为了进一步减少计算成本，内部推荐模型优化的时候，只进行了一步更新，然后就进行梯度对齐。</p>
+<blockquote>
+<p>"The intuition behind is that the loss decreases after first step
+optimization of the inner model training is strong enough to provide
+comprehensive information to guide the outer data update"</p>
+</blockquote>
+<p>从下图的结果来看，压缩前先增强数据集这一步的质量收益是很大的，并且one-step
+update以及REINFORCE极大压缩了计算成本。 <img
+src="https://s2.loli.net/2025/09/14/enty5mEAu16ZarX.png" srcset="/img/loadings.gif" lazyload /></p>
+<blockquote>
+<p><strong>reducing the dataset size by 75% and approximating 98% of the
+original performance on Dianping and about 90% on other
+datasets</strong><br />
+<strong>Besides, our framework is significantly faster than the
+prevalent gradient matching solver (e.g., 8× in dataset Ciao for
+updating the data for 100 epochs)</strong></p>
+</blockquote>
+<p>总结一下，压缩前先增强数据集，显式表达user的隐藏兴趣，提升数据集质量。REINFORCE实现前向传播即可估计外层优化的梯度，同时内层优化使用one-step
+update，压缩计算成本。</p>
 <h2 id="reference">Reference</h2>
-<p>[1] Rafailov, R., Sharma, A., Mitchell, E., Ermon, S., Manning, C.D.,
-&amp; Finn, C. (2023). Direct Preference Optimization: Your Language
-Model is Secretly a Reward Model. </p>
-<p>[2] <a target="_blank" rel="noopener" href="https://sophilex.top/posts/418a878e/slide.pdf">Different
-Designs For LLM KD Loss</a></p>
+<p>[1] Sachdeva, N., Dhaliwal, M.P., Wu, C., &amp; McAuley, J. (2022).
+Infinite Recommendation Networks: A Data-Centric Approach. In NeurIPS,
+22.</p>
 
                 
               </div>
@@ -449,11 +497,9 @@ Designs For LLM KD Loss</a></p>
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/LLM/" class="print-no-link">#LLM</a>
-      
         <a href="/tags/KD/" class="print-no-link">#KD</a>
       
-        <a href="/tags/RLHF/" class="print-no-link">#RLHF</a>
+        <a href="/tags/Dataset-Condensation/" class="print-no-link">#Dataset_Condensation</a>
       
     </div>
   
@@ -465,8 +511,8 @@ Designs For LLM KD Loss</a></p>
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>BOND: Aligning LLMs with Best-of-N distillation</div>
-      <div>https://sophilex.github.io/posts/bb161de0/</div>
+      <div>Dataset Condensation for Recommendation</div>
+      <div>https://sophilex.github.io/posts/fb443351/</div>
     </div>
     <div class="license-meta">
       
@@ -478,7 +524,7 @@ Designs For LLM KD Loss</a></p>
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年8月18日</div>
+          <div>2025年9月14日</div>
         </div>
       
       
@@ -510,18 +556,12 @@ Designs For LLM KD Loss</a></p>
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/fb443351/" title="Dataset Condensation for Recommendation">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Dataset Condensation for Recommendation</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/871e7e59/" title="Evaluating Position Bias in Large Language Model Recommendations">
-                        <span class="hidden-mobile">Evaluating Position Bias in Large Language Model Recommendations</span>
+                      <a href="/posts/bb161de0/" title="BOND: Aligning LLMs with Best-of-N distillation">
+                        <span class="hidden-mobile">BOND: Aligning LLMs with Best-of-N distillation</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
