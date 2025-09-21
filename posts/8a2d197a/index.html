@@ -18,27 +18,26 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="推荐数据集蒸馏">
+    <meta name="description" content="关于LLM中的异常大激活值，以及其与attention sink的关系，将其解释为模型中统一且固定的bias，挺有意思的">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Dataset Condensation for Recommendation">
-<meta property="og:url" content="https://sophilex.github.io/posts/fb443351/index.html">
+<meta property="og:title" content="Massive Activations in Large Language Models">
+<meta property="og:url" content="https://sophilex.github.io/posts/8a2d197a/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="推荐数据集蒸馏">
+<meta property="og:description" content="关于LLM中的异常大激活值，以及其与attention sink的关系，将其解释为模型中统一且固定的bias，挺有意思的">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/lxh1.webp">
-<meta property="article:published_time" content="2025-09-14T13:13:35.000Z">
-<meta property="article:modified_time" content="2025-09-14T14:23:17.837Z">
+<meta property="og:image" content="https://sophilex.github.io/img/mc8.png">
+<meta property="article:published_time" content="2025-09-21T14:44:08.000Z">
+<meta property="article:modified_time" content="2025-09-21T14:53:36.091Z">
 <meta property="article:author" content="Sophilex">
-<meta property="article:tag" content="KD">
-<meta property="article:tag" content="Dataset_Condensation">
+<meta property="article:tag" content="LLM">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/lxh1.webp">
+<meta name="twitter:image" content="https://sophilex.github.io/img/mc8.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>Dataset Condensation for Recommendation - Sophilex‘s Blog</title>
+  <title>Massive Activations in Large Language Models - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -238,13 +237,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/lxh1.webp') no-repeat center center; background-size: cover;">
+     style="background: url('/img/mc8.png') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Dataset Condensation for Recommendation"></span>
+            <span id="subtitle" data-typed-text="Massive Activations in Large Language Models"></span>
           
         </div>
 
@@ -260,8 +259,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-09-14 21:13" pubdate>
-          2025年9月14日 晚上
+        <time datetime="2025-09-21 22:44" pubdate>
+          2025年9月21日 晚上
         </time>
       </span>
     
@@ -272,7 +271,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.6k 字
+          615 字
         
       </span>
     
@@ -283,7 +282,7 @@
         
         
         
-          14 分钟
+          6 分钟
         
       </span>
     
@@ -328,140 +327,50 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">Dataset Condensation for Recommendation</h1>
+            <h1 id="seo-header">Massive Activations in Large Language Models</h1>
             
             
               <div class="markdown-body">
                 
-                <p>推荐数据集蒸馏的普遍问题是：</p>
-<ul>
-<li>对于用户的潜在兴趣，往往会被忽略</li>
-<li>难以生成<strong>离散</strong>的user-item交互信息</li>
-</ul>
-<p>首先回顾一下推荐数据集蒸馏操作的基本框架</p>
-<p>记<span class="math inline">\(\Phi: U\times I\rightarrow
-\mathbb{R}\)</span>代表在对应数据集上训练的推荐模型。对于原始数据集<span
-class="math inline">\(D\in R^{|U|\times
-|I|}\)</span>，要找到一个较小的数据集<span
-class="math inline">\(D^s\)</span>，其应当满足 <span
-class="math display">\[
-\underset{D^s}{argmin}\  \underset{(u,i,r)\sim
-D^{val}}{\mathbb{E}}[l(\theta_{D^s}^*(u,i),r)]\ \ \ s.t. \theta_{D^s}^*
-= \underset{\theta}{argmin}\  \underset{(u,i,r)\sim D^{s}}{\mathbb{E}}
-[l(\Phi(u,i),r)]\tag{1}
-\]</span> 其中<span
-class="math inline">\(D^{val}\)</span>是一个验证集，<span
-class="math inline">\(l(\cdot)\)</span>代表对应的可微的loss，其监督模型<span
-class="math inline">\(\Phi\)</span>关于用户<span
-class="math inline">\(u\)</span>对<span
-class="math inline">\(i\)</span>的评分结果。
-这是一个经典的数据集蒸馏的双层优化问题，其中内层优化对应的模型，外层优化数据集。这里合成数据集<span
-class="math inline">\(D^s\)</span>与<span
-class="math inline">\(D\)</span>一样代表user-item交互信息，其应当是参数化的，然后通过<span
-class="math inline">\((1)\)</span>式进行优化。</p>
-<p>对于第一点，用户未交互的item并不一定是其不感兴趣的，这一隐式关系在原始数据集中通过大量信息的学习也许是可以挖掘出来的，但是当数据集压缩之后，难度可能会变大，因此作者希望在压缩数据集中也能反映出user的潜在感兴趣item。</p>
-<p>实现上，首先需要提前训练一个模型<span
-class="math inline">\(f_{p}\)</span>，找出每一个user的潜在感兴趣item，这些item应当是user未交互过的，从中取出前topK，作为该user的潜在感兴趣item，形式化来说，
-<span class="math display">\[
-TopK(u) = \{ i| i = arg\ \text{IsTopK} f_{p}(u,i&#39;), i&#39;\in
-I&#39;(u) \}\tag{2}
-\]</span> 其中<span class="math inline">\(I&#39;(u)\)</span>就代表<span
-class="math inline">\(u\)</span>未交互过的item集合。那么接下来，只需要将
-<span class="math display">\[
-D^{ps} = \{ (u,i)|u\in U, i\in TopK(u)\}\tag{3}
-\]</span></p>
-<p>加入原始数据集<span
-class="math inline">\(D\)</span>，就得到最终<strong>增强过的数据集<span
-class="math inline">\(D^{p}\)</span></strong>，其保留原始数据集信息的同时，帮助挖掘出了用户的隐藏兴趣，更有利于数据集质量的提升。整体来说，这一操作还是非常自然，符合直觉的，并且从之后的实验来看，这一操作的收益是很大的。
-<img src="https://s2.loli.net/2025/09/14/gAltfHaWNhZFOcq.png" srcset="/img/loadings.gif" lazyload
-alt="|400" /> 关于这里的推荐模型<span
-class="math inline">\(f_{p}\)</span>的选择，跟正常做推荐没啥区别，LighGCN，MF，XSimGCL之类的都是可以的，文中也有不同<span
-class="math inline">\(f_{p}\)</span>选择的对比实验，这里略过。</p>
-<p>接下来是关于<strong>离散</strong>的user-item交互信息的生成。由于交互信息中，每一个<span
-class="math inline">\((u,i)\)</span>对的值只有<span
-class="math inline">\(0,1\)</span>两个值，是离散的，并不能直接用梯度下降进行优化。针对这一点，[1]提出重新构造一个参数矩阵<span
-class="math inline">\(S\)</span>，<span
-class="math inline">\((u,i)\)</span>对的分数<span
-class="math inline">\(S_{(u,i)}\in \mathbb{R}\)</span>，然后依据<span
-class="math inline">\(S_{(u,i)}\)</span>的大小，采样出较为重要的<span
-class="math inline">\((u,i)\)</span>对，用于构造合成数据集<span
-class="math inline">\(D^s\)</span>。这里采样操作是不可微的，因此需要调整为gumbal-softmax。此时分数是连续值，因此也就可以用梯度下降来优化了。</p>
-<p>关于这一点，本文的思路其实是类似的，同样构造一个参数矩阵<span
-class="math inline">\(S\)</span>，但是<span
-class="math inline">\((u,i)\)</span>对的分数<span
-class="math inline">\(S_{u,i}\in
-(0,1)\)</span>，然后通过Bernoulli采样得到<span
-class="math inline">\(M\)</span>，代表<span
-class="math inline">\((u,i)\)</span>是否在<span
-class="math inline">\(D^s\)</span>中应该有交互，并用<span
-class="math inline">\(M\)</span>构造合成数据集<span
-class="math inline">\(D^s\)</span>。即 <span class="math display">\[
-P(M|S) = \prod_{(u,i)\in
-D^p}(S_{u,i})^{M_{u,i}}(1-S_{u,i})^{1-M_{u,i}}\tag{4}
-\]</span> 同时还需要对<span
-class="math inline">\(||M||_{0}\)</span>进行限制，因为我们需要限制最终合成数据集的规模，其应当满足
-<span class="math display">\[
-||M||_{0} \leq r|D|\tag{5}
-\]</span> 通过<span class="math inline">\((4)\)</span>式，可以将对<span
-class="math inline">\(M\)</span>的限制转化到参数<span
-class="math inline">\(S\)</span>上，即<span
-class="math inline">\((5)\)</span>式可以转化为 <span
-class="math display">\[
-\mathbb{E}_{p(M|S)}||M_{0}|| = \sum_{(u,i)\in D^p}S_{u,i} =
-||S||_{1}\tag{6}
-\]</span> 这就是参数上关于数据集规模的限制，后续<span
-class="math inline">\(S\)</span>在进行更新之后，会额外做一步投影操作将其投影到对应的合法空间，即满足<span
-class="math inline">\(||S||_{1}\leq
-r|D|,S_{u,i}\in[0,1]\)</span>的空间内</p>
-<p>但是注意到Bernoulli采样操作本身也是不可微的，因此还需要做一些操作。此时外层优化dataset的过程中，Loss表示为
-<span class="math display">\[
-\Phi(S) = \mathbb{E}_{p(M|S)}L(\theta^*(M)), s.t.\ \ \theta^*(M) =
-\underset{\theta}{argmin}\ \hat{L}(\theta;M)\tag{7}
-\]</span> 从而梯度可以表示为 <span class="math display">\[
-\begin{flalign}
-\nabla_{S}\Phi(S) &amp;= \mathbb{E}_{p(M|S)}L(\theta^*(M))\\
-&amp;= \nabla_{S} \int L(\theta^*(M))p(M|S)dM\\
-&amp;= \int L(\theta^*(M)) \frac{\nabla_{S}p(M|S)}{p(M|S)}p(M|S)dM\\
-&amp;= \int L(\theta^*(M)) \nabla_{S}\ln p(M|S)\ p(M|S)dM\\
-&amp;= \mathbb{E}_{p(M|S)}L(\theta^*(M))\nabla_{S}\ln p(M|S)\tag{8}
-\end{flalign}
-\]</span>
-通过策略梯度，我们现在可以直接估计出Loss对参数S的梯度，并且这一操作只需要forward计算出<span
-class="math inline">\(L(\theta^*(M))\)</span>，以及一个非常好算的<span
-class="math inline">\(\nabla_{S}\ln p(M|S)\)</span>，这一点只需要对<span
-class="math inline">\((4)\)</span>式做一些变形即可。</p>
-<p>最终参数<span class="math inline">\(S\)</span>的更新形式为 <span
-class="math display">\[
-S \leftarrow Pc(S - \eta L(\theta^*(M))\nabla_{S}\ln p(M|S))\tag{9}
-\]</span> 这里<span
-class="math inline">\(Pc(\cdot)\)</span>操作就是为了将<span
-class="math inline">\(S\)</span>投影到合法空间内</p>
-<p>从而，同样是对交互信息进行重参数化建模，同样是有不可微的采样操作以及对应的补救措施，但是本文相对于[1]，实现了一次forward就可以计算梯度，时间上会有巨大的优势，这一点在下图中会更加直观
-<img src="https://s2.loli.net/2025/09/14/67HCKwFZsNzIOVB.png" srcset="/img/loadings.gif" lazyload
-alt="|400" />
-此外，为了进一步减少计算成本，内部推荐模型优化的时候，只进行了一步更新，然后就进行梯度对齐。</p>
+                <h2 id="massive-activation">Massive Activation</h2>
+<p>探究了LLM中的massive activation。</p>
+<ol type="1">
+<li><p>LLM中某些activation具有巨大的magnitude，其值比普通activation的多了好几个数量级，并且它们的数量相当稀少，在每个模型中基本只有2-4个，但是确实是普遍存在的<img
+src="https://s2.loli.net/2025/09/21/EYloPMDjWeq4Cwu.png" srcset="/img/loadings.gif" lazyload /></p></li>
+<li><p>关于这种massive
+activation的存在：往往是在某一层之后突然就出现的，然后会<strong>一直持续</strong>，在末尾几层消失</p></li>
+</ol>
 <blockquote>
-<p>"The intuition behind is that the loss decreases after first step
-optimization of the inner model training is strong enough to provide
-comprehensive information to guide the outer data update"</p>
+<p>"we have shown that their values largely stay constant in middle
+layers"</p>
+<p>"Massive activations exist and remain as largely constant values
+throughout most of the intermediate layers. They emerge in the initial
+layers and start to diminish in the last few layers"</p>
 </blockquote>
-<p>从下图的结果来看，压缩前先增强数据集这一步的质量收益是很大的，并且one-step
-update以及REINFORCE极大压缩了计算成本。 <img
-src="https://s2.loli.net/2025/09/14/enty5mEAu16ZarX.png" srcset="/img/loadings.gif" lazyload /></p>
-<blockquote>
-<p><strong>reducing the dataset size by 75% and approximating 98% of the
-original performance on Dianping and about 90% on other
-datasets</strong><br />
-<strong>Besides, our framework is significantly faster than the
-prevalent gradient matching solver (e.g., 8× in dataset Ciao for
-updating the data for 100 epochs)</strong></p>
-</blockquote>
-<p>总结一下，压缩前先增强数据集，显式表达user的隐藏兴趣，提升数据集质量。REINFORCE实现前向传播即可估计外层优化的梯度，同时内层优化使用one-step
-update，压缩计算成本。</p>
-<h2 id="reference">Reference</h2>
-<p>[1] Sachdeva, N., Dhaliwal, M.P., Wu, C., &amp; McAuley, J. (2022).
-Infinite Recommendation Networks: A Data-Centric Approach. In NeurIPS,
-22.</p>
+<p><img
+src="https://s2.loli.net/2025/09/21/lAirI6Ez8M4gwSV.png" srcset="/img/loadings.gif" lazyload />这意味着它们不是通过多层逐渐积累的结果，而是由其它机制引起的</p>
+<p>从feature的角度来看，它们往往出现在<strong>较少</strong>且<strong>固定</strong>的维度上</p>
+<p>从token的角度来看，这种massive
+activation往往出现在起始token以及分隔符等位置<img
+src="https://s2.loli.net/2025/09/21/PTmDSCHJlEBzyiR.png" srcset="/img/loadings.gif" lazyload /> 3.
+关于它们的作用，作者分别做了两种对比实验：在其第一次出现的时候，将其置为0，或者直接置为不同输入下的经验平均值<img
+src="https://s2.loli.net/2025/09/21/Y8qclT9DBWoMwHC.png" srcset="/img/loadings.gif" lazyload />
+不难看出，将这些极少数的维度置为0，带来了毁灭性的性能下降，但是将其鲁莽地置为平均值，几乎没有带来性能下降，这意味着这种activation的值是相当稳定的，并且<strong>几乎不随输入而变化</strong>，所以作者将其视为模型中的固定且重要的偏差。</p>
+<p>从这一角度可以尝试理解为什么massive
+activation往往出现在起始token以及分隔符等位置。对于分隔符，其往往没有具体含义，从而适合存储此类偏差。而如果在一些具有丰富语义的token上存储massive
+activation的话，可以导致输入信息的丢失。对于出现在起始token，作者的解释为<img
+src="https://s2.loli.net/2025/09/21/RbTNYALPye6DKqk.png" srcset="/img/loadings.gif" lazyload /></p>
+<h2 id="effects-on-attention">Effects on Attention</h2>
+<p>attention sink现象是指self
+attention的注意力权重中，大部分都集中在第一个token上，而这一现象也可以与Massive
+Attention关联 <img
+src="https://s2.loli.net/2025/09/21/2BgjRI8MVwJPGlv.png" srcset="/img/loadings.gif" lazyload /></p>
+<p>不难看出，实际上注意力分数较高的部分，都是与massive
+activation相关联的token，这为attention提供了新的解释</p>
+<p>事实上，如果将<strong>massive
+activation对应维度对注意力分数的贡献</strong>提取出来（关于某个token
+k），其分布也基本是不变的，这为之前的bias的说法提供了依据。<img
+src="https://s2.loli.net/2025/09/21/tmglZI52A3jC74p.png" srcset="/img/loadings.gif" lazyload />可以看到，其分布在不同输入中高度一致，同时在不同token中也高度一致，一方面说明其稳定性，另一方面印证了<strong>其作为统一的bias的作用</strong>。这种说法还是挺有意思的。</p>
 
                 
               </div>
@@ -497,9 +406,7 @@ Infinite Recommendation Networks: A Data-Centric Approach. In NeurIPS,
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/KD/" class="print-no-link">#KD</a>
-      
-        <a href="/tags/Dataset-Condensation/" class="print-no-link">#Dataset_Condensation</a>
+        <a href="/tags/LLM/" class="print-no-link">#LLM</a>
       
     </div>
   
@@ -511,8 +418,8 @@ Infinite Recommendation Networks: A Data-Centric Approach. In NeurIPS,
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Dataset Condensation for Recommendation</div>
-      <div>https://sophilex.github.io/posts/fb443351/</div>
+      <div>Massive Activations in Large Language Models</div>
+      <div>https://sophilex.github.io/posts/8a2d197a/</div>
     </div>
     <div class="license-meta">
       
@@ -524,7 +431,7 @@ Infinite Recommendation Networks: A Data-Centric Approach. In NeurIPS,
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年9月14日</div>
+          <div>2025年9月21日</div>
         </div>
       
       
@@ -556,18 +463,12 @@ Infinite Recommendation Networks: A Data-Centric Approach. In NeurIPS,
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/4a91a6ca/" title="TD3: Tucker Decomposition Based Dataset Distillation Method for Sequential Recommendation">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">TD3: Tucker Decomposition Based Dataset Distillation Method for Sequential Recommendation</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/bb161de0/" title="BOND: Aligning LLMs with Best-of-N distillation">
-                        <span class="hidden-mobile">BOND: Aligning LLMs with Best-of-N distillation</span>
+                      <a href="/posts/4a91a6ca/" title="TD3: Tucker Decomposition Based Dataset Distillation Method for Sequential Recommendation">
+                        <span class="hidden-mobile">TD3: Tucker Decomposition Based Dataset Distillation Method for Sequential Recommendation</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

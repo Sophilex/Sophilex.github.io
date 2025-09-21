@@ -4,6 +4,56 @@
   
   
   <entry>
+    <title>Massive Activations in Large Language Models</title>
+    <link href="/posts/8a2d197a/"/>
+    <url>/posts/8a2d197a/</url>
+    
+    <content type="html"><![CDATA[<h2 id="massive-activation">Massive Activation</h2><p>探究了LLM中的massive activation。</p><ol type="1"><li><p>LLM中某些activation具有巨大的magnitude，其值比普通activation的多了好几个数量级，并且它们的数量相当稀少，在每个模型中基本只有2-4个，但是确实是普遍存在的<imgsrc="https://s2.loli.net/2025/09/21/EYloPMDjWeq4Cwu.png" /></p></li><li><p>关于这种massiveactivation的存在：往往是在某一层之后突然就出现的，然后会<strong>一直持续</strong>，在末尾几层消失</p></li></ol><blockquote><p>"we have shown that their values largely stay constant in middlelayers"</p><p>"Massive activations exist and remain as largely constant valuesthroughout most of the intermediate layers. They emerge in the initiallayers and start to diminish in the last few layers"</p></blockquote><p><imgsrc="https://s2.loli.net/2025/09/21/lAirI6Ez8M4gwSV.png" />这意味着它们不是通过多层逐渐积累的结果，而是由其它机制引起的</p><p>从feature的角度来看，它们往往出现在<strong>较少</strong>且<strong>固定</strong>的维度上</p><p>从token的角度来看，这种massiveactivation往往出现在起始token以及分隔符等位置<imgsrc="https://s2.loli.net/2025/09/21/PTmDSCHJlEBzyiR.png" /> 3.关于它们的作用，作者分别做了两种对比实验：在其第一次出现的时候，将其置为0，或者直接置为不同输入下的经验平均值<imgsrc="https://s2.loli.net/2025/09/21/Y8qclT9DBWoMwHC.png" />不难看出，将这些极少数的维度置为0，带来了毁灭性的性能下降，但是将其鲁莽地置为平均值，几乎没有带来性能下降，这意味着这种activation的值是相当稳定的，并且<strong>几乎不随输入而变化</strong>，所以作者将其视为模型中的固定且重要的偏差。</p><p>从这一角度可以尝试理解为什么massiveactivation往往出现在起始token以及分隔符等位置。对于分隔符，其往往没有具体含义，从而适合存储此类偏差。而如果在一些具有丰富语义的token上存储massiveactivation的话，可以导致输入信息的丢失。对于出现在起始token，作者的解释为<imgsrc="https://s2.loli.net/2025/09/21/RbTNYALPye6DKqk.png" /></p><h2 id="effects-on-attention">Effects on Attention</h2><p>attention sink现象是指selfattention的注意力权重中，大部分都集中在第一个token上，而这一现象也可以与MassiveAttention关联 <imgsrc="https://s2.loli.net/2025/09/21/2BgjRI8MVwJPGlv.png" /></p><p>不难看出，实际上注意力分数较高的部分，都是与massiveactivation相关联的token，这为attention提供了新的解释</p><p>事实上，如果将<strong>massiveactivation对应维度对注意力分数的贡献</strong>提取出来（关于某个tokenk），其分布也基本是不变的，这为之前的bias的说法提供了依据。<imgsrc="https://s2.loli.net/2025/09/21/tmglZI52A3jC74p.png" />可以看到，其分布在不同输入中高度一致，同时在不同token中也高度一致，一方面说明其稳定性，另一方面印证了<strong>其作为统一的bias的作用</strong>。这种说法还是挺有意思的。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>TD3: Tucker Decomposition Based Dataset Distillation Method for Sequential Recommendation</title>
+    <link href="/posts/4a91a6ca/"/>
+    <url>/posts/4a91a6ca/</url>
+    
+    <content type="html"><![CDATA[<p><img src="https://s2.loli.net/2025/09/21/3KWlInuc7bi2GBw.png" /></p><p>主要针对序列推荐数据集的蒸馏。传统的推荐数据集蒸馏方法通常生成独立的合成交互，这些交互无法捕捉<strong>序列数据固有的时间依赖性</strong>，简单地将独立生成的交互组织成序列并不能保证保留时间上的依赖信息。此外，推荐数据集蒸馏自然面对着<strong>数据离散性</strong>对优化的挑战。普遍的解决手段是item参数化，优化得到其分数，然后依分数采样得到最终数据集。但是这也导致一个问题：参数量与数据集大小强相关，对计算，优化的压力都很大。</p><p>首先，原始数据集表示为<span class="math inline">\(\tau =\{x_{i}\}_{i=1}^{|\tau|}, \ x_{i} = [x_{ij}\inV]_{j=1}^{|x_{i}|}\)</span>，用户，样本集合为<spanclass="math inline">\(U,V\)</span>。要合成的序列推荐数据集，可以参数化表示为<spanclass="math inline">\(S\in R^{\mu \times \zeta \times|V|}\)</span>，分别代表user，时间t，以及每一个item的概率。</p><p>内部推荐模型做优化的时候，对于每一个交互，作者并没有选择一个固定的item的embedding作为输入，而是将<spanclass="math inline">\(S\)</span>的最后一维与提前训好的embedding矩阵相乘，相当于对候选items的embedding做了加权。这当然也是有道理的，本身<spanclass="math inline">\(S\)</span>也是学习得到的，不过这一点与之前工作还是不太一样的。事实上这种操作也带来了一个好处：最后不需要对item依据分数采样，也就省去了诸如DconRec中引入gumbalsoftmax之类的麻烦。</p><p>说回面临的挑战，其中之一是参数量与数据集强相关。直接将参数规模做到与数据集规模解耦在推荐场景下可能不是特别现实？不过对参数矩阵引入分解还是可以极大缓解参数压力。作者引入Tucker分解，将<spanclass="math inline">\(S\in R^{\mu \times \zeta \times|V|}\)</span>分解为<span class="math inline">\(S = G \times_{1} U\times_{2} T\times_{3} E\)</span>。其中<span class="math inline">\(G\in\mathbb{R}^{d_{1},d_{2},d_{3}}\)</span>用于建模其余因子之间的关系，<spanclass="math inline">\(U\in \mathbb{R}^{\mu \timesd_{1}}\)</span>表示合成用户的相关信息，<span class="math inline">\(E\in\mathbb{R}^{\zeta \times d_{2}}\)</span>表示时间信息，<spanclass="math inline">\(P\in \mathbb{R}^{|V|\timesd_{3}}\)</span>代表item信息。Tucker分解固定将张量分解为四个小张量，这里作者直接赋予了它们与推荐场景相关的含义，也算有道理吧。其中<spanclass="math inline">\(E\)</span>可以直接用embedding信息替换，不需要训练，其它矩阵梯度下降优化。</p><p>至于两层优化的对应手段，比较常规，内层用KLD对齐要预测item的概率。<strong>当然考虑到前面提到的序列依赖性，这里不能只对齐最后一个item，前面的item也要对齐</strong>。外层就是推荐模型的feature对齐。</p><p>亮点还是提出参数量随数据集规模增长这个问题以及Tucker分解的引入，分解得到的三个因子刚刚好对应了矩阵<spanclass="math inline">\(S\)</span>的三个维度hhh。这块可能也还有发展空间。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Dataset_Condensation</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Dataset Condensation for Recommendation</title>
     <link href="/posts/fb443351/"/>
     <url>/posts/fb443351/</url>
