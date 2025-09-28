@@ -18,26 +18,27 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="关于LLM中的异常大激活值，以及其与attention sink的关系，将其解释为模型中统一且固定的bias，挺有意思的">
+    <meta name="description" content="学生生成SGO时，教师在必要时给予干预，压缩理论误差上界">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Massive Activations in Large Language Models">
-<meta property="og:url" content="https://sophilex.github.io/posts/8a2d197a/index.html">
+<meta property="og:title" content="FROM CORRECTION TO MASTERY: REINFORCED DISTILLATION OF LARGE LANGUAGE MODEL AGENTS">
+<meta property="og:url" content="https://sophilex.github.io/posts/498af5ab/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="关于LLM中的异常大激活值，以及其与attention sink的关系，将其解释为模型中统一且固定的bias，挺有意思的">
+<meta property="og:description" content="学生生成SGO时，教师在必要时给予干预，压缩理论误差上界">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/mc8.png">
-<meta property="article:published_time" content="2025-09-21T14:44:08.000Z">
-<meta property="article:modified_time" content="2025-09-21T14:53:36.091Z">
+<meta property="og:image" content="https://sophilex.github.io/img/mc1.jpg">
+<meta property="article:published_time" content="2025-09-28T14:06:13.000Z">
+<meta property="article:modified_time" content="2025-09-28T14:24:50.300Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="LLM">
+<meta property="article:tag" content="KD">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/mc8.png">
+<meta name="twitter:image" content="https://sophilex.github.io/img/mc1.jpg">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>Massive Activations in Large Language Models - Sophilex‘s Blog</title>
+  <title>FROM CORRECTION TO MASTERY: REINFORCED DISTILLATION OF LARGE LANGUAGE MODEL AGENTS - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -237,13 +238,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/mc8.png') no-repeat center center; background-size: cover;">
+     style="background: url('/img/mc1.jpg') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Massive Activations in Large Language Models"></span>
+            <span id="subtitle" data-typed-text="FROM CORRECTION TO MASTERY: REINFORCED DISTILLATION OF LARGE LANGUAGE MODEL AGENTS"></span>
           
         </div>
 
@@ -259,8 +260,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-09-21 22:44" pubdate>
-          2025年9月21日 晚上
+        <time datetime="2025-09-28 22:06" pubdate>
+          2025年9月28日 晚上
         </time>
       </span>
     
@@ -271,7 +272,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          615 字
+          684 字
         
       </span>
     
@@ -327,50 +328,48 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">Massive Activations in Large Language Models</h1>
+            <h1 id="seo-header">FROM CORRECTION TO MASTERY: REINFORCED DISTILLATION OF LARGE LANGUAGE MODEL AGENTS</h1>
             
             
               <div class="markdown-body">
                 
-                <h2 id="massive-activation">Massive Activation</h2>
-<p>探究了LLM中的massive activation。</p>
-<ol type="1">
-<li><p>LLM中某些activation具有巨大的magnitude，其值比普通activation的多了好几个数量级，并且它们的数量相当稀少，在每个模型中基本只有2-4个，但是确实是普遍存在的<img
-src="https://s2.loli.net/2025/09/21/EYloPMDjWeq4Cwu.png" srcset="/img/loadings.gif" lazyload /></p></li>
-<li><p>关于这种massive
-activation的存在：往往是在某一层之后突然就出现的，然后会<strong>一直持续</strong>，在末尾几层消失</p></li>
-</ol>
+                <p>对agent
+distillation的优化。以往KD范式普遍是对一条策略直接进行对齐，其中数据来自TGO或者是SGO。之前的工作已经证明SGO对于缓解学生的exposure
+bias存在帮助，但是SGO本身往往也面临着exposure bias的影响。 <img
+src="https://s2.loli.net/2025/09/28/ESe7T1Us64qBi8v.png" srcset="/img/loadings.gif" lazyload /></p>
+<h2 id="trajectory-generation">Trajectory Generation</h2>
+<p><img src="https://s2.loli.net/2025/09/28/ymUCMdcXWs4qG9u.png" srcset="/img/loadings.gif" lazyload /></p>
+<p>这里证明，当不存在其它干预的时候，学生生成策略会随着策略长度而存在平方级别的误差。因此尝试在学生生成SGO的时候引入教师进行干预：当学生生成第一个错误action
+<span
+class="math inline">\(a_{k}\)</span>的时候，教师才进行介入并且将其改为正确结果<span
+class="math inline">\(a_{k}&#39;\)</span>，然后学生在<span
+class="math inline">\(a_{k}&#39;\)</span>的基础上重新生成下一个action，从而得到action序列为
+<span class="math inline">\(a_{1},a_{2},\dots
+a_{k-1},a_{k}&#39;,a_{k+1},\dots\)</span></p>
+<p>由此得到的教师介入过的SGO‘，<strong>其误差相对于策略长度，可以控制在线性范围内</strong>
+<img src="https://s2.loli.net/2025/09/28/JfNWyomHDnOPGFZ.png" srcset="/img/loadings.gif" lazyload /></p>
+<h2 id="sft-based-on-sgo">SFT Based On SGO'</h2>
+<p>接下来就是利用生成好的数据对学生进行Behavior
+Cloning对齐。对于每一条策略，以往的方法往往是对齐最后一个action，但是此时每一条策略中往往会存在多个教师介入过的，学生生成效果差的action，在这些地方进行对齐往往能有更好的效果。与此同时，一条策略也可以进行多次对齐，数据效率更高。
+<img src="https://s2.loli.net/2025/09/28/m5TRBZXE8KaCLut.png" srcset="/img/loadings.gif" lazyload /></p>
+<h2 id="rl-phase">RL Phase</h2>
+<p>使用GRPO进行RL训练。RL面临的常见问题：稀疏奖励，以及长轨迹导致的梯度估计方差过大</p>
+<p>与SFT环节类似，在不同的教师纠正过的地方添加reward并进行对齐，这就同时解决了上述两个问题。对于reward的具体设置：如果最终结果正确的话，会有一个更大的reward
+<span
+class="math inline">\(R_{final}\)</span>。同时在中间部分为了区分不同token的效果，reward设置为
+<img src="https://s2.loli.net/2025/09/28/UVH1ju4eA79JtEb.png" srcset="/img/loadings.gif" lazyload />
+其中<span
+class="math inline">\(a_{k}^{\pi_{E}}\)</span>是教师纠正结果，<span
+class="math inline">\(a_{k}^{orig}\)</span>是学生原始action。如果学生学到了教师的正确action，会有更大的reward，如果其避免了原本的错误，但是依然没有达到教师的结果，会有一个较小的reward。</p>
 <blockquote>
-<p>"we have shown that their values largely stay constant in middle
-layers"</p>
-<p>"Massive activations exist and remain as largely constant values
-throughout most of the intermediate layers. They emerge in the initial
-layers and start to diminish in the last few layers"</p>
+<p>This reward scheme provides informative credit assignment at the
+student’s weakest step, while maintaining prioritization of final task
+success</p>
 </blockquote>
-<p><img
-src="https://s2.loli.net/2025/09/21/lAirI6Ez8M4gwSV.png" srcset="/img/loadings.gif" lazyload />这意味着它们不是通过多层逐渐积累的结果，而是由其它机制引起的</p>
-<p>从feature的角度来看，它们往往出现在<strong>较少</strong>且<strong>固定</strong>的维度上</p>
-<p>从token的角度来看，这种massive
-activation往往出现在起始token以及分隔符等位置<img
-src="https://s2.loli.net/2025/09/21/PTmDSCHJlEBzyiR.png" srcset="/img/loadings.gif" lazyload /> 3.
-关于它们的作用，作者分别做了两种对比实验：在其第一次出现的时候，将其置为0，或者直接置为不同输入下的经验平均值<img
-src="https://s2.loli.net/2025/09/21/Y8qclT9DBWoMwHC.png" srcset="/img/loadings.gif" lazyload />
-不难看出，将这些极少数的维度置为0，带来了毁灭性的性能下降，但是将其鲁莽地置为平均值，几乎没有带来性能下降，这意味着这种activation的值是相当稳定的，并且<strong>几乎不随输入而变化</strong>，所以作者将其视为模型中的固定且重要的偏差。</p>
-<p>从这一角度可以尝试理解为什么massive
-activation往往出现在起始token以及分隔符等位置。对于分隔符，其往往没有具体含义，从而适合存储此类偏差。而如果在一些具有丰富语义的token上存储massive
-activation的话，可以导致输入信息的丢失。对于出现在起始token，作者的解释为<img
-src="https://s2.loli.net/2025/09/21/RbTNYALPye6DKqk.png" srcset="/img/loadings.gif" lazyload /></p>
-<h2 id="effects-on-attention">Effects on Attention</h2>
-<p>attention sink现象是指self
-attention的注意力权重中，大部分都集中在第一个token上，而这一现象也可以与Massive
-Attention关联 <img
-src="https://s2.loli.net/2025/09/21/2BgjRI8MVwJPGlv.png" srcset="/img/loadings.gif" lazyload /></p>
-<p>不难看出，实际上注意力分数较高的部分，都是与massive
-activation相关联的token，这为attention提供了新的解释</p>
-<p>事实上，如果将<strong>massive
-activation对应维度对注意力分数的贡献</strong>提取出来（关于某个token
-k），其分布也基本是不变的，这为之前的bias的说法提供了依据。<img
-src="https://s2.loli.net/2025/09/21/tmglZI52A3jC74p.png" srcset="/img/loadings.gif" lazyload />可以看到，其分布在不同输入中高度一致，同时在不同token中也高度一致，一方面说明其稳定性，另一方面印证了<strong>其作为统一的bias的作用</strong>。这种说法还是挺有意思的。</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>精华在于引入教师的纠正，但同时又保留了大部分学生的推理结果，让生成的SGO匹配学生当前性能，又不会具有过大的误差。</p>
+<p><strong>以及，学生是被允许自由探索，与环境交互的，这可能可以带来新路线，这也是为什么<span
+class="math inline">\(reward_{final}\)</span>会有最大的值。而自由探索，在原始蒸馏中应当是没有的，因此由其得到的模型也没有向上扩展的空间</strong></p>
 
                 
               </div>
@@ -408,6 +407,8 @@ src="https://s2.loli.net/2025/09/21/tmglZI52A3jC74p.png" srcset="/img/loadings.g
       
         <a href="/tags/LLM/" class="print-no-link">#LLM</a>
       
+        <a href="/tags/KD/" class="print-no-link">#KD</a>
+      
     </div>
   
 </div>
@@ -418,8 +419,8 @@ src="https://s2.loli.net/2025/09/21/tmglZI52A3jC74p.png" srcset="/img/loadings.g
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Massive Activations in Large Language Models</div>
-      <div>https://sophilex.github.io/posts/8a2d197a/</div>
+      <div>FROM CORRECTION TO MASTERY: REINFORCED DISTILLATION OF LARGE LANGUAGE MODEL AGENTS</div>
+      <div>https://sophilex.github.io/posts/498af5ab/</div>
     </div>
     <div class="license-meta">
       
@@ -431,7 +432,7 @@ src="https://s2.loli.net/2025/09/21/tmglZI52A3jC74p.png" srcset="/img/loadings.g
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年9月21日</div>
+          <div>2025年9月28日</div>
         </div>
       
       
@@ -463,18 +464,12 @@ src="https://s2.loli.net/2025/09/21/tmglZI52A3jC74p.png" srcset="/img/loadings.g
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/b9cc2e20/" title="Delta Knowledge Distillation for Large Language Models">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Delta Knowledge Distillation for Large Language Models</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/4a91a6ca/" title="TD3: Tucker Decomposition Based Dataset Distillation Method for Sequential Recommendation">
-                        <span class="hidden-mobile">TD3: Tucker Decomposition Based Dataset Distillation Method for Sequential Recommendation</span>
+                      <a href="/posts/300ec667/" title="Merge-of-Thought Distillation">
+                        <span class="hidden-mobile">Merge-of-Thought Distillation</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

@@ -18,26 +18,27 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="关于LLM中的异常大激活值，以及其与attention sink的关系，将其解释为模型中统一且固定的bias，挺有意思的">
+    <meta name="description" content="将KD的对齐目标变为模型更新的变化量，而不是固定的token概率分布">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Massive Activations in Large Language Models">
-<meta property="og:url" content="https://sophilex.github.io/posts/8a2d197a/index.html">
+<meta property="og:title" content="Delta Knowledge Distillation for Large Language Models">
+<meta property="og:url" content="https://sophilex.github.io/posts/b9cc2e20/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="关于LLM中的异常大激活值，以及其与attention sink的关系，将其解释为模型中统一且固定的bias，挺有意思的">
+<meta property="og:description" content="将KD的对齐目标变为模型更新的变化量，而不是固定的token概率分布">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/mc8.png">
-<meta property="article:published_time" content="2025-09-21T14:44:08.000Z">
-<meta property="article:modified_time" content="2025-09-21T14:53:36.091Z">
+<meta property="og:image" content="https://sophilex.github.io/img/wlq1.jpg">
+<meta property="article:published_time" content="2025-09-28T14:05:31.000Z">
+<meta property="article:modified_time" content="2025-09-28T14:24:50.296Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="LLM">
+<meta property="article:tag" content="KD">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/mc8.png">
+<meta name="twitter:image" content="https://sophilex.github.io/img/wlq1.jpg">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>Massive Activations in Large Language Models - Sophilex‘s Blog</title>
+  <title>Delta Knowledge Distillation for Large Language Models - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -237,13 +238,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/mc8.png') no-repeat center center; background-size: cover;">
+     style="background: url('/img/wlq1.jpg') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Massive Activations in Large Language Models"></span>
+            <span id="subtitle" data-typed-text="Delta Knowledge Distillation for Large Language Models"></span>
           
         </div>
 
@@ -259,8 +260,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-09-21 22:44" pubdate>
-          2025年9月21日 晚上
+        <time datetime="2025-09-28 22:05" pubdate>
+          2025年9月28日 晚上
         </time>
       </span>
     
@@ -271,7 +272,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          615 字
+          346 字
         
       </span>
     
@@ -282,7 +283,7 @@
         
         
         
-          6 分钟
+          3 分钟
         
       </span>
     
@@ -327,50 +328,41 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">Massive Activations in Large Language Models</h1>
+            <h1 id="seo-header">Delta Knowledge Distillation for Large Language Models</h1>
             
             
               <div class="markdown-body">
                 
-                <h2 id="massive-activation">Massive Activation</h2>
-<p>探究了LLM中的massive activation。</p>
-<ol type="1">
-<li><p>LLM中某些activation具有巨大的magnitude，其值比普通activation的多了好几个数量级，并且它们的数量相当稀少，在每个模型中基本只有2-4个，但是确实是普遍存在的<img
-src="https://s2.loli.net/2025/09/21/EYloPMDjWeq4Cwu.png" srcset="/img/loadings.gif" lazyload /></p></li>
-<li><p>关于这种massive
-activation的存在：往往是在某一层之后突然就出现的，然后会<strong>一直持续</strong>，在末尾几层消失</p></li>
-</ol>
-<blockquote>
-<p>"we have shown that their values largely stay constant in middle
-layers"</p>
-<p>"Massive activations exist and remain as largely constant values
-throughout most of the intermediate layers. They emerge in the initial
-layers and start to diminish in the last few layers"</p>
-</blockquote>
-<p><img
-src="https://s2.loli.net/2025/09/21/lAirI6Ez8M4gwSV.png" srcset="/img/loadings.gif" lazyload />这意味着它们不是通过多层逐渐积累的结果，而是由其它机制引起的</p>
-<p>从feature的角度来看，它们往往出现在<strong>较少</strong>且<strong>固定</strong>的维度上</p>
-<p>从token的角度来看，这种massive
-activation往往出现在起始token以及分隔符等位置<img
-src="https://s2.loli.net/2025/09/21/PTmDSCHJlEBzyiR.png" srcset="/img/loadings.gif" lazyload /> 3.
-关于它们的作用，作者分别做了两种对比实验：在其第一次出现的时候，将其置为0，或者直接置为不同输入下的经验平均值<img
-src="https://s2.loli.net/2025/09/21/Y8qclT9DBWoMwHC.png" srcset="/img/loadings.gif" lazyload />
-不难看出，将这些极少数的维度置为0，带来了毁灭性的性能下降，但是将其鲁莽地置为平均值，几乎没有带来性能下降，这意味着这种activation的值是相当稳定的，并且<strong>几乎不随输入而变化</strong>，所以作者将其视为模型中的固定且重要的偏差。</p>
-<p>从这一角度可以尝试理解为什么massive
-activation往往出现在起始token以及分隔符等位置。对于分隔符，其往往没有具体含义，从而适合存储此类偏差。而如果在一些具有丰富语义的token上存储massive
-activation的话，可以导致输入信息的丢失。对于出现在起始token，作者的解释为<img
-src="https://s2.loli.net/2025/09/21/RbTNYALPye6DKqk.png" srcset="/img/loadings.gif" lazyload /></p>
-<h2 id="effects-on-attention">Effects on Attention</h2>
-<p>attention sink现象是指self
-attention的注意力权重中，大部分都集中在第一个token上，而这一现象也可以与Massive
-Attention关联 <img
-src="https://s2.loli.net/2025/09/21/2BgjRI8MVwJPGlv.png" srcset="/img/loadings.gif" lazyload /></p>
-<p>不难看出，实际上注意力分数较高的部分，都是与massive
-activation相关联的token，这为attention提供了新的解释</p>
-<p>事实上，如果将<strong>massive
-activation对应维度对注意力分数的贡献</strong>提取出来（关于某个token
-k），其分布也基本是不变的，这为之前的bias的说法提供了依据。<img
-src="https://s2.loli.net/2025/09/21/tmglZI52A3jC74p.png" srcset="/img/loadings.gif" lazyload />可以看到，其分布在不同输入中高度一致，同时在不同token中也高度一致，一方面说明其稳定性，另一方面印证了<strong>其作为统一的bias的作用</strong>。这种说法还是挺有意思的。</p>
+                <p>LLM蒸馏中，指出学生直接模仿教师的分布是欠妥的，因为两者的能力不同，可以尝试学习教师从预训练到SFT后的转变路径。
+<img src="https://s2.loli.net/2025/09/28/FgW17y6tkQjGbZe.png" srcset="/img/loadings.gif" lazyload /></p>
+<p>具体来说，给定<span
+class="math inline">\(\pi_{s}^{raw}(y|x)\)</span>代表学生的原始预测分布，<span
+class="math inline">\(\pi_{t}^{raw}(y|x)\)</span>代表教师SFT前的预测分布，<span
+class="math inline">\(\pi_{t}^{ft}(y|x)\)</span>代表教师SFT之后的预测分布，希望找到一个目标分布<span
+class="math inline">\(\pi_{s}^*(y|x)\)</span>，能够借鉴到教师从预训练到SFT之后的转变
+&gt; align the finetuning trajectory of the small model with that of the
+large model by matching their respective behavior shifts</p>
+<p>记 <span class="math display">\[
+\Delta(p_{1},p_{2})(y|x) = \frac{p_{1}(y|x)}{p_{2}(y|x)}\tag{1}
+\]</span> 代表目标分布<span
+class="math inline">\(p_{1}\)</span>，原始分布<span
+class="math inline">\(p_{2}\)</span>之间的相对关系，那么对于上述内容，可以表述为
+<span class="math display">\[
+\Delta(\pi_{s}^{*}, \pi_{t}^{ft})(y|x) \propto \Delta(\pi_{s}^{raw},
+\pi_{t}^{raw})(y|x)^\alpha \tag{2}
+\]</span> 这里<span
+class="math inline">\(\alpha\)</span>用于控制对齐的强度。将<span
+class="math inline">\((1)\)</span>代入<span
+class="math inline">\((2)\)</span>之后，可以得到 <span
+class="math display">\[
+\pi_{s}^*(y|x) = \frac{1}{Z(x,y)} \pi_{t}^{ft}(y|x) \left(
+\frac{\pi_{s}^{raw}(y|x)}{\pi_{t}^{raw}(y|x)} \right)^\alpha \tag{3}
+\]</span> 其中<span class="math inline">\(Z(x,y)\)</span>是归一化项</p>
+<p>然后用KLD将学生参数分布<span
+class="math inline">\(\pi_{\theta}(y|x)\)</span>与目标分布<span
+class="math inline">\(\pi_{s}^{*}(y|x)\)</span>进行对齐即可。同时添加与ground
+truth的对齐。
+这种完全增量的更新目标相对以前还是挺不一样的，有一定道理，值得借鉴。</p>
 
                 
               </div>
@@ -408,6 +400,8 @@ src="https://s2.loli.net/2025/09/21/tmglZI52A3jC74p.png" srcset="/img/loadings.g
       
         <a href="/tags/LLM/" class="print-no-link">#LLM</a>
       
+        <a href="/tags/KD/" class="print-no-link">#KD</a>
+      
     </div>
   
 </div>
@@ -418,8 +412,8 @@ src="https://s2.loli.net/2025/09/21/tmglZI52A3jC74p.png" srcset="/img/loadings.g
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Massive Activations in Large Language Models</div>
-      <div>https://sophilex.github.io/posts/8a2d197a/</div>
+      <div>Delta Knowledge Distillation for Large Language Models</div>
+      <div>https://sophilex.github.io/posts/b9cc2e20/</div>
     </div>
     <div class="license-meta">
       
@@ -431,7 +425,7 @@ src="https://s2.loli.net/2025/09/21/tmglZI52A3jC74p.png" srcset="/img/loadings.g
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年9月21日</div>
+          <div>2025年9月28日</div>
         </div>
       
       
@@ -463,9 +457,9 @@ src="https://s2.loli.net/2025/09/21/tmglZI52A3jC74p.png" srcset="/img/loadings.g
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/b9cc2e20/" title="Delta Knowledge Distillation for Large Language Models">
+                      <a href="/posts/300ec667/" title="Merge-of-Thought Distillation">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Delta Knowledge Distillation for Large Language Models</span>
+                        <span class="hidden-mobile">Merge-of-Thought Distillation</span>
                         <span class="visible-mobile">上一篇</span>
                       </a>
                     
@@ -473,8 +467,8 @@ src="https://s2.loli.net/2025/09/21/tmglZI52A3jC74p.png" srcset="/img/loadings.g
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/4a91a6ca/" title="TD3: Tucker Decomposition Based Dataset Distillation Method for Sequential Recommendation">
-                        <span class="hidden-mobile">TD3: Tucker Decomposition Based Dataset Distillation Method for Sequential Recommendation</span>
+                      <a href="/posts/8a2d197a/" title="Massive Activations in Large Language Models">
+                        <span class="hidden-mobile">Massive Activations in Large Language Models</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

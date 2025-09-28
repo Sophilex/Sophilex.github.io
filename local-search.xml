@@ -4,6 +4,87 @@
   
   
   <entry>
+    <title>FROM CORRECTION TO MASTERY: REINFORCED DISTILLATION OF LARGE LANGUAGE MODEL AGENTS</title>
+    <link href="/posts/498af5ab/"/>
+    <url>/posts/498af5ab/</url>
+    
+    <content type="html"><![CDATA[<p>对agentdistillation的优化。以往KD范式普遍是对一条策略直接进行对齐，其中数据来自TGO或者是SGO。之前的工作已经证明SGO对于缓解学生的exposurebias存在帮助，但是SGO本身往往也面临着exposure bias的影响。 <imgsrc="https://s2.loli.net/2025/09/28/ESe7T1Us64qBi8v.png" /></p><h2 id="trajectory-generation">Trajectory Generation</h2><p><img src="https://s2.loli.net/2025/09/28/ymUCMdcXWs4qG9u.png" /></p><p>这里证明，当不存在其它干预的时候，学生生成策略会随着策略长度而存在平方级别的误差。因此尝试在学生生成SGO的时候引入教师进行干预：当学生生成第一个错误action<spanclass="math inline">\(a_{k}\)</span>的时候，教师才进行介入并且将其改为正确结果<spanclass="math inline">\(a_{k}&#39;\)</span>，然后学生在<spanclass="math inline">\(a_{k}&#39;\)</span>的基础上重新生成下一个action，从而得到action序列为<span class="math inline">\(a_{1},a_{2},\dotsa_{k-1},a_{k}&#39;,a_{k+1},\dots\)</span></p><p>由此得到的教师介入过的SGO‘，<strong>其误差相对于策略长度，可以控制在线性范围内</strong><img src="https://s2.loli.net/2025/09/28/JfNWyomHDnOPGFZ.png" /></p><h2 id="sft-based-on-sgo">SFT Based On SGO'</h2><p>接下来就是利用生成好的数据对学生进行BehaviorCloning对齐。对于每一条策略，以往的方法往往是对齐最后一个action，但是此时每一条策略中往往会存在多个教师介入过的，学生生成效果差的action，在这些地方进行对齐往往能有更好的效果。与此同时，一条策略也可以进行多次对齐，数据效率更高。<img src="https://s2.loli.net/2025/09/28/m5TRBZXE8KaCLut.png" /></p><h2 id="rl-phase">RL Phase</h2><p>使用GRPO进行RL训练。RL面临的常见问题：稀疏奖励，以及长轨迹导致的梯度估计方差过大</p><p>与SFT环节类似，在不同的教师纠正过的地方添加reward并进行对齐，这就同时解决了上述两个问题。对于reward的具体设置：如果最终结果正确的话，会有一个更大的reward<spanclass="math inline">\(R_{final}\)</span>。同时在中间部分为了区分不同token的效果，reward设置为<img src="https://s2.loli.net/2025/09/28/UVH1ju4eA79JtEb.png" />其中<spanclass="math inline">\(a_{k}^{\pi_{E}}\)</span>是教师纠正结果，<spanclass="math inline">\(a_{k}^{orig}\)</span>是学生原始action。如果学生学到了教师的正确action，会有更大的reward，如果其避免了原本的错误，但是依然没有达到教师的结果，会有一个较小的reward。</p><blockquote><p>This reward scheme provides informative credit assignment at thestudent’s weakest step, while maintaining prioritization of final tasksuccess</p></blockquote><h2 id="conclusion">Conclusion</h2><p>精华在于引入教师的纠正，但同时又保留了大部分学生的推理结果，让生成的SGO匹配学生当前性能，又不会具有过大的误差。</p><p><strong>以及，学生是被允许自由探索，与环境交互的，这可能可以带来新路线，这也是为什么<spanclass="math inline">\(reward_{final}\)</span>会有最大的值。而自由探索，在原始蒸馏中应当是没有的，因此由其得到的模型也没有向上扩展的空间</strong></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+      <tag>KD</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Merge-of-Thought Distillation</title>
+    <link href="/posts/300ec667/"/>
+    <url>/posts/300ec667/</url>
+    
+    <content type="html"><![CDATA[<p>主要是对LLM COTKD中教师监督范式的改进，尝试将复杂推理能力从多个大模型教师转移到一个更加紧凑的学生模型，在数学题目等数据集上有更好表现。目前可以将教师监督分为：单教师监督(<strong>STD</strong>,Single-Teacher Distillation)，多教师监督(MTD, Multi-TeacherDistillation)。前者很好理解，假定了存在一个足够强大的教师模型，对于不同数据集，不同学生，都能给出足够好的指导。但是现有的结论是</p><blockquote><p>different students have different “best teachers,” and even for thesame student the best teacher can vary across datasets</p></blockquote><p>既然不存在永远最好的教师，而每次重新选择一个好的教师成本又会很大，那么multi-teacherKD可能会是一个解决方案。COT蒸馏的时候，对于multi-teacher的利用，可以直接将所有teacher的COT直接聚集起来，然后打乱，一起扔给student学习。这样做的好处是，可以聚集不同教师的能力，期望能让学生从各个方面得到强化。但是COT本身，随着长度的增加，会包含累积的噪声，以及教师能力本身也对COT质量有影响，从而直接引入多个教师的COT，也可能会带来许多噪声。</p><p><img src="https://s2.loli.net/2025/09/28/HrNxX6PzDu9ECy5.png" />在两个数学数据集上，当学生模型规模比较小(8B)的时候，MTD相比不同singleteacher的STD结果，会有一定优势。但是当模型规模上去(30B)的时候，MTD的结果不优于任何一个singleteacher的STD结果。作者对此的解释是</p><blockquote><p>as the scales of the student model and the teacher model becomeincreasingly close, the student model is more susceptible to theinfluence of teachers with closer distributions, thereby collaspe MTDinto Best STD</p></blockquote><p>即，当学生规模上去时，其更可能受一个教师的影响，从而MTD退化为STD，此时其它教师的COT的噪声可能就会被放大，从而导致MTD不如STD。这种操作在scale之后失效，归根结底是不同教师信息之间没有经过协调。因此作者提出MOT。</p><ul><li>首先，对于不同的教师<spanclass="math inline">\(t_{k}\)</span>，单独用其COT微调一个学生模型的副本<spanclass="math inline">\(s_{k}\)</span>，这一步的操作其实与STD训练是一样的</li><li>从而得到<span class="math inline">\(k\)</span>个学生模型的副本<spanclass="math inline">\(s_{1},s_{2},\dotss_{k}\)</span>，将它们的参数直接取平均 <spanclass="math inline">\(\theta^{t} = \frac{1}{k}\sum_{i=1}^{k}\theta^{t,k}\)</span></li><li>得到<spanclass="math inline">\(\theta^t\)</span>之后，重复上述两个步骤，进而得到<spanclass="math inline">\(\theta^{t+1},\dots, \theta^T\)</span></li></ul><p>期望通过多轮迭代，让不同教师之间的信息收敛，缓解MTD中不同信息互相冲突的情况。回到图1，也不难看出，MOT在绝大部分数据集，模型规模上都取得了领先。</p><h2 id="conclusion">Conclusion</h2><p>单个教师可能在某些时候确实是不够的。SGO监督的时候，教师对SGO可能也并不能有很好的认知，此时聚集多个教师的信息可能会有一定帮助。</p><p>另外，一个经验性的结论：</p><blockquote><p>相比于直接要求基础模型学习各个方面的能力（通过multi-loss或者multi-teacher），可能更应该对其在各个方面单独训练，然后再尝试合在一起。</p></blockquote>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+      <tag>KD</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Delta Knowledge Distillation for Large Language Models</title>
+    <link href="/posts/b9cc2e20/"/>
+    <url>/posts/b9cc2e20/</url>
+    
+    <content type="html"><![CDATA[<p>LLM蒸馏中，指出学生直接模仿教师的分布是欠妥的，因为两者的能力不同，可以尝试学习教师从预训练到SFT后的转变路径。<img src="https://s2.loli.net/2025/09/28/FgW17y6tkQjGbZe.png" /></p><p>具体来说，给定<spanclass="math inline">\(\pi_{s}^{raw}(y|x)\)</span>代表学生的原始预测分布，<spanclass="math inline">\(\pi_{t}^{raw}(y|x)\)</span>代表教师SFT前的预测分布，<spanclass="math inline">\(\pi_{t}^{ft}(y|x)\)</span>代表教师SFT之后的预测分布，希望找到一个目标分布<spanclass="math inline">\(\pi_{s}^*(y|x)\)</span>，能够借鉴到教师从预训练到SFT之后的转变&gt; align the finetuning trajectory of the small model with that of thelarge model by matching their respective behavior shifts</p><p>记 <span class="math display">\[\Delta(p_{1},p_{2})(y|x) = \frac{p_{1}(y|x)}{p_{2}(y|x)}\tag{1}\]</span> 代表目标分布<spanclass="math inline">\(p_{1}\)</span>，原始分布<spanclass="math inline">\(p_{2}\)</span>之间的相对关系，那么对于上述内容，可以表述为<span class="math display">\[\Delta(\pi_{s}^{*}, \pi_{t}^{ft})(y|x) \propto \Delta(\pi_{s}^{raw},\pi_{t}^{raw})(y|x)^\alpha \tag{2}\]</span> 这里<spanclass="math inline">\(\alpha\)</span>用于控制对齐的强度。将<spanclass="math inline">\((1)\)</span>代入<spanclass="math inline">\((2)\)</span>之后，可以得到 <spanclass="math display">\[\pi_{s}^*(y|x) = \frac{1}{Z(x,y)} \pi_{t}^{ft}(y|x) \left(\frac{\pi_{s}^{raw}(y|x)}{\pi_{t}^{raw}(y|x)} \right)^\alpha \tag{3}\]</span> 其中<span class="math inline">\(Z(x,y)\)</span>是归一化项</p><p>然后用KLD将学生参数分布<spanclass="math inline">\(\pi_{\theta}(y|x)\)</span>与目标分布<spanclass="math inline">\(\pi_{s}^{*}(y|x)\)</span>进行对齐即可。同时添加与groundtruth的对齐。这种完全增量的更新目标相对以前还是挺不一样的，有一定道理，值得借鉴。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+      <tag>KD</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Massive Activations in Large Language Models</title>
     <link href="/posts/8a2d197a/"/>
     <url>/posts/8a2d197a/</url>

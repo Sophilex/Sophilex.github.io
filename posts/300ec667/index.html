@@ -18,26 +18,27 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="关于LLM中的异常大激活值，以及其与attention sink的关系，将其解释为模型中统一且固定的bias，挺有意思的">
+    <meta name="description" content="KD时，对不同教师来源的信息做了一个巧妙的融合处理">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Massive Activations in Large Language Models">
-<meta property="og:url" content="https://sophilex.github.io/posts/8a2d197a/index.html">
+<meta property="og:title" content="Merge-of-Thought Distillation">
+<meta property="og:url" content="https://sophilex.github.io/posts/300ec667/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="关于LLM中的异常大激活值，以及其与attention sink的关系，将其解释为模型中统一且固定的bias，挺有意思的">
+<meta property="og:description" content="KD时，对不同教师来源的信息做了一个巧妙的融合处理">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/mc8.png">
-<meta property="article:published_time" content="2025-09-21T14:44:08.000Z">
-<meta property="article:modified_time" content="2025-09-21T14:53:36.091Z">
+<meta property="og:image" content="https://sophilex.github.io/img/j8.jpg">
+<meta property="article:published_time" content="2025-09-28T14:05:57.000Z">
+<meta property="article:modified_time" content="2025-09-28T14:24:50.293Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="LLM">
+<meta property="article:tag" content="KD">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/mc8.png">
+<meta name="twitter:image" content="https://sophilex.github.io/img/j8.jpg">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>Massive Activations in Large Language Models - Sophilex‘s Blog</title>
+  <title>Merge-of-Thought Distillation - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -237,13 +238,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/mc8.png') no-repeat center center; background-size: cover;">
+     style="background: url('/img/j8.jpg') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Massive Activations in Large Language Models"></span>
+            <span id="subtitle" data-typed-text="Merge-of-Thought Distillation"></span>
           
         </div>
 
@@ -259,8 +260,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-09-21 22:44" pubdate>
-          2025年9月21日 晚上
+        <time datetime="2025-09-28 22:05" pubdate>
+          2025年9月28日 晚上
         </time>
       </span>
     
@@ -271,7 +272,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          615 字
+          776 字
         
       </span>
     
@@ -282,7 +283,7 @@
         
         
         
-          6 分钟
+          7 分钟
         
       </span>
     
@@ -327,50 +328,54 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">Massive Activations in Large Language Models</h1>
+            <h1 id="seo-header">Merge-of-Thought Distillation</h1>
             
             
               <div class="markdown-body">
                 
-                <h2 id="massive-activation">Massive Activation</h2>
-<p>探究了LLM中的massive activation。</p>
-<ol type="1">
-<li><p>LLM中某些activation具有巨大的magnitude，其值比普通activation的多了好几个数量级，并且它们的数量相当稀少，在每个模型中基本只有2-4个，但是确实是普遍存在的<img
-src="https://s2.loli.net/2025/09/21/EYloPMDjWeq4Cwu.png" srcset="/img/loadings.gif" lazyload /></p></li>
-<li><p>关于这种massive
-activation的存在：往往是在某一层之后突然就出现的，然后会<strong>一直持续</strong>，在末尾几层消失</p></li>
-</ol>
+                <p>主要是对LLM COT
+KD中教师监督范式的改进，尝试将复杂推理能力从多个大模型教师转移到一个更加紧凑的学生模型，在数学题目等数据集上有更好表现。目前可以将教师监督分为：单教师监督(<strong>STD</strong>,
+Single-Teacher Distillation)，多教师监督(MTD, Multi-Teacher
+Distillation)。前者很好理解，假定了存在一个足够强大的教师模型，对于不同数据集，不同学生，都能给出足够好的指导。但是现有的结论是</p>
 <blockquote>
-<p>"we have shown that their values largely stay constant in middle
-layers"</p>
-<p>"Massive activations exist and remain as largely constant values
-throughout most of the intermediate layers. They emerge in the initial
-layers and start to diminish in the last few layers"</p>
+<p>different students have different “best teachers,” and even for the
+same student the best teacher can vary across datasets</p>
 </blockquote>
-<p><img
-src="https://s2.loli.net/2025/09/21/lAirI6Ez8M4gwSV.png" srcset="/img/loadings.gif" lazyload />这意味着它们不是通过多层逐渐积累的结果，而是由其它机制引起的</p>
-<p>从feature的角度来看，它们往往出现在<strong>较少</strong>且<strong>固定</strong>的维度上</p>
-<p>从token的角度来看，这种massive
-activation往往出现在起始token以及分隔符等位置<img
-src="https://s2.loli.net/2025/09/21/PTmDSCHJlEBzyiR.png" srcset="/img/loadings.gif" lazyload /> 3.
-关于它们的作用，作者分别做了两种对比实验：在其第一次出现的时候，将其置为0，或者直接置为不同输入下的经验平均值<img
-src="https://s2.loli.net/2025/09/21/Y8qclT9DBWoMwHC.png" srcset="/img/loadings.gif" lazyload />
-不难看出，将这些极少数的维度置为0，带来了毁灭性的性能下降，但是将其鲁莽地置为平均值，几乎没有带来性能下降，这意味着这种activation的值是相当稳定的，并且<strong>几乎不随输入而变化</strong>，所以作者将其视为模型中的固定且重要的偏差。</p>
-<p>从这一角度可以尝试理解为什么massive
-activation往往出现在起始token以及分隔符等位置。对于分隔符，其往往没有具体含义，从而适合存储此类偏差。而如果在一些具有丰富语义的token上存储massive
-activation的话，可以导致输入信息的丢失。对于出现在起始token，作者的解释为<img
-src="https://s2.loli.net/2025/09/21/RbTNYALPye6DKqk.png" srcset="/img/loadings.gif" lazyload /></p>
-<h2 id="effects-on-attention">Effects on Attention</h2>
-<p>attention sink现象是指self
-attention的注意力权重中，大部分都集中在第一个token上，而这一现象也可以与Massive
-Attention关联 <img
-src="https://s2.loli.net/2025/09/21/2BgjRI8MVwJPGlv.png" srcset="/img/loadings.gif" lazyload /></p>
-<p>不难看出，实际上注意力分数较高的部分，都是与massive
-activation相关联的token，这为attention提供了新的解释</p>
-<p>事实上，如果将<strong>massive
-activation对应维度对注意力分数的贡献</strong>提取出来（关于某个token
-k），其分布也基本是不变的，这为之前的bias的说法提供了依据。<img
-src="https://s2.loli.net/2025/09/21/tmglZI52A3jC74p.png" srcset="/img/loadings.gif" lazyload />可以看到，其分布在不同输入中高度一致，同时在不同token中也高度一致，一方面说明其稳定性，另一方面印证了<strong>其作为统一的bias的作用</strong>。这种说法还是挺有意思的。</p>
+<p>既然不存在永远最好的教师，而每次重新选择一个好的教师成本又会很大，那么multi-teacher
+KD可能会是一个解决方案。COT蒸馏的时候，对于multi-teacher的利用，可以直接将所有teacher的COT直接聚集起来，然后打乱，一起扔给student学习。
+这样做的好处是，可以聚集不同教师的能力，期望能让学生从各个方面得到强化。但是COT本身，随着长度的增加，会包含累积的噪声，以及教师能力本身也对COT质量有影响，从而直接引入多个教师的COT，也可能会带来许多噪声。</p>
+<p><img src="https://s2.loli.net/2025/09/28/HrNxX6PzDu9ECy5.png" srcset="/img/loadings.gif" lazyload />
+在两个数学数据集上，当学生模型规模比较小(8B)的时候，MTD相比不同single
+teacher的STD结果，会有一定优势。但是当模型规模上去(30B)的时候，MTD的结果不优于任何一个single
+teacher的STD结果。作者对此的解释是</p>
+<blockquote>
+<p>as the scales of the student model and the teacher model become
+increasingly close, the student model is more susceptible to the
+influence of teachers with closer distributions, thereby collaspe MTD
+into Best STD</p>
+</blockquote>
+<p>即，当学生规模上去时，其更可能受一个教师的影响，从而MTD退化为STD，此时其它教师的COT的噪声可能就会被放大，从而导致MTD不如STD。
+这种操作在scale之后失效，归根结底是不同教师信息之间没有经过协调。因此作者提出MOT。</p>
+<ul>
+<li>首先，对于不同的教师<span
+class="math inline">\(t_{k}\)</span>，单独用其COT微调一个学生模型的副本<span
+class="math inline">\(s_{k}\)</span>，这一步的操作其实与STD训练是一样的</li>
+<li>从而得到<span class="math inline">\(k\)</span>个学生模型的副本<span
+class="math inline">\(s_{1},s_{2},\dots
+s_{k}\)</span>，将它们的参数直接取平均 <span
+class="math inline">\(\theta^{t} = \frac{1}{k}\sum_{i=1}^{k}
+\theta^{t,k}\)</span></li>
+<li>得到<span
+class="math inline">\(\theta^t\)</span>之后，重复上述两个步骤，进而得到<span
+class="math inline">\(\theta^{t+1},\dots, \theta^T\)</span></li>
+</ul>
+<p>期望通过多轮迭代，让不同教师之间的信息收敛，缓解MTD中不同信息互相冲突的情况。回到图1，也不难看出，MOT在绝大部分数据集，模型规模上都取得了领先。</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>单个教师可能在某些时候确实是不够的。SGO监督的时候，教师对SGO可能也并不能有很好的认知，此时聚集多个教师的信息可能会有一定帮助。</p>
+<p>另外，一个经验性的结论：</p>
+<blockquote>
+<p>相比于直接要求基础模型学习各个方面的能力（通过multi-loss或者multi-teacher），可能更应该对其在各个方面单独训练，然后再尝试合在一起。</p>
+</blockquote>
 
                 
               </div>
@@ -408,6 +413,8 @@ src="https://s2.loli.net/2025/09/21/tmglZI52A3jC74p.png" srcset="/img/loadings.g
       
         <a href="/tags/LLM/" class="print-no-link">#LLM</a>
       
+        <a href="/tags/KD/" class="print-no-link">#KD</a>
+      
     </div>
   
 </div>
@@ -418,8 +425,8 @@ src="https://s2.loli.net/2025/09/21/tmglZI52A3jC74p.png" srcset="/img/loadings.g
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Massive Activations in Large Language Models</div>
-      <div>https://sophilex.github.io/posts/8a2d197a/</div>
+      <div>Merge-of-Thought Distillation</div>
+      <div>https://sophilex.github.io/posts/300ec667/</div>
     </div>
     <div class="license-meta">
       
@@ -431,7 +438,7 @@ src="https://s2.loli.net/2025/09/21/tmglZI52A3jC74p.png" srcset="/img/loadings.g
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年9月21日</div>
+          <div>2025年9月28日</div>
         </div>
       
       
@@ -463,9 +470,9 @@ src="https://s2.loli.net/2025/09/21/tmglZI52A3jC74p.png" srcset="/img/loadings.g
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/b9cc2e20/" title="Delta Knowledge Distillation for Large Language Models">
+                      <a href="/posts/498af5ab/" title="FROM CORRECTION TO MASTERY: REINFORCED DISTILLATION OF LARGE LANGUAGE MODEL AGENTS">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Delta Knowledge Distillation for Large Language Models</span>
+                        <span class="hidden-mobile">FROM CORRECTION TO MASTERY: REINFORCED DISTILLATION OF LARGE LANGUAGE MODEL AGENTS</span>
                         <span class="visible-mobile">上一篇</span>
                       </a>
                     
@@ -473,8 +480,8 @@ src="https://s2.loli.net/2025/09/21/tmglZI52A3jC74p.png" srcset="/img/loadings.g
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/4a91a6ca/" title="TD3: Tucker Decomposition Based Dataset Distillation Method for Sequential Recommendation">
-                        <span class="hidden-mobile">TD3: Tucker Decomposition Based Dataset Distillation Method for Sequential Recommendation</span>
+                      <a href="/posts/b9cc2e20/" title="Delta Knowledge Distillation for Large Language Models">
+                        <span class="hidden-mobile">Delta Knowledge Distillation for Large Language Models</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
