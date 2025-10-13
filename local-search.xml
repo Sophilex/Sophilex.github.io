@@ -4,6 +4,60 @@
   
   
   <entry>
+    <title>Scaling Up Dataset Distillation to ImageNet-1K with Constant Memory</title>
+    <link href="/posts/b581fc49/"/>
+    <url>/posts/b581fc49/</url>
+    
+    <content type="html"><![CDATA[<p>针对MTT的一些优化。MTT通过匹配在不同数据集上训练的模型参数，来优化<spanclass="math inline">\(C_{sync}\)</span>. 其损失函数为 <spanclass="math display">\[L =\frac{||\hat{\theta}_{t+T}-\theta^*_{t+M}||_{2}^2}{||\theta^*_{t+T}-\theta^*_{t+M}||_{2}^2}\tag{1}\]</span> 其中<spanclass="math inline">\(\theta^*_{t}\)</span>代表模型在原始数据集<spanclass="math inline">\(C_{pre}\)</span>上训练时第t步的参数，再在此基础上，<spanclass="math inline">\(\hat{\theta}_{t+T}\)</span>代表在合成数据<spanclass="math inline">\(C_{sync}\)</span>上再训练<spanclass="math inline">\(T\)</span>步之后的参数，其中<spanclass="math inline">\(T\ll M\)</span></p><p>注意到 <span class="math display">\[\hat{\theta}_{t+T} = \theta^*_{t} - \beta\nabla_{l}(\theta^*_{t};\hat{X}_{0}) - \beta\nabla_{\theta}l(\hat{\theta}_{t+1};\hat{X}_{1}) - \dots \beta\nabla_{\theta}l(\hat{\theta}_{t+T-1};\hat{X}_{T-1})\tag{2}\]</span> 从而 <span class="math display">\[L&#39; = ||\hat{\theta}_{t+T}-\theta^*_{t+M}||_{2}^2 = ||\theta^*_{t} -\beta\sum_{i=0}^{T-1}\nabla_{\theta}l(\hat{\theta}_{t+i};\hat{X}_{i})-\theta^*_{t+M}||_{2}^2\tag{3}\]</span> 注意到对于任意<spanclass="math inline">\(\tilde{X}_{i}\)</span>，有 <spanclass="math display">\[\frac{\partial L&#39;}{\partial \tilde{X}_{i}} = \frac{\partialL&#39;}{\partial \hat{\theta}_{t+T}}\frac{\hat{\theta}_{t+T}}{\partial\tilde{X}_{i}}\tag{4}\]</span> 由于<spanclass="math inline">\(\hat{\theta}_{t+T}\)</span>的存在，需要将共<spanclass="math inline">\(T\)</span>步的所有梯度都保存下来，从而导致巨大的显存消耗。事实上可以对<span class="math inline">\((3)\)</span>式进行变形，得到<span class="math display">\[\begin{flalign}L&#39; &amp;= ||\theta^*_{t} - \beta\sum_{i=0}^{T-1}\nabla_{\theta}l(\hat{\theta}_{t+i};\hat{X}_{i})-\theta^*_{t+M}||_{2}^2\\&amp;=  \beta^2||\sum_{i=0}^{T-1}\nabla_{\theta}l(\hat{\theta}_{t+i};\hat{X}_{i})||_{2}^2-2\beta(\sum_{i=0}^{T-1}\nabla_{\theta}l(\hat{\theta}_{t+i};\hat{X}_{i}))^T(\theta_{t}^* -\theta^*_{t+M})+C \tag{5}\end{flalign}\]</span> 其中<span class="math inline">\(C = ||\theta_{t}^* -\theta^*_{t+M}||_{2}^2\)</span>，是一个常数</p><p>从<span class="math inline">\((5)\)</span>式出发，可以将<spanclass="math inline">\((4)\)</span>式转化为 <span class="math display">\[\frac{\partial L&#39;}{\partial \tilde{X}_{i}} = 2\beta^2 G^T\frac{\partial}{\partial \tilde{X}_{i}}\nabla_{\theta}l(\hat{\theta}_{t+i};\hat{X}_{i}) - 2\beta\frac{\partial}{\partial\tilde{X}_{i}}(\nabla_{\theta}l(\hat{\theta}_{t+i};\hat{X}_{i}))(\theta_{t}^*- \theta^*_{t+M}) \tag{6}\]</span> 其中<span class="math inline">\(G = \sum_{i=0}^{T-1}\nabla_{l}(\hat{\theta}_{t+i};\hat{X}_{i})\)</span></p><p>在<span class="math inline">\((6)\)</span>式中，第二项只与每一个<spanclass="math inline">\(\tilde{X}_{i}\)</span>有关，只有第二项中<spanclass="math inline">\(G^T\)</span>是与全体步骤的梯度有关的，而其作为梯度之和，可以提前计算好，从而整体显存与迭代步数<spanclass="math inline">\(T\)</span>可以做到不相关，从而显存占用从<spanclass="math inline">\(O(T)\)</span>压到了<spanclass="math inline">\(O(1)\)</span>整体来看，只是对梯度的求法做了一个变形，但确实带来了很好的效果。</p><p>另一点在于标签的使用。作者发现原始的0/1 hardlabel，收敛性差，但如果换成<spanclass="math inline">\((0,1)\)</span>之间的softlabel，会有更好效果。因此作者使用目标步长<spanclass="math inline">\(\theta_{t+M}^*\)</span>的参数作为教师，生成softlabel概率分布。这一点其实与KD是一致的。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>KD</tag>
+      
+      <tag>Dataset_Condensation</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Squeeze, Recover and Relabel: Dataset Condensation at ImageNet Scale From A New Perspective</title>
+    <link href="/posts/750bb55b/"/>
+    <url>/posts/750bb55b/</url>
+    
+    <content type="html"><![CDATA[<p>以往的datasetdistillation都是基于耦合的双层优化的，内层优化模型关于syntheticdataset的参数，外层优化syntheticdataset。但是当原始数据集很大/模型很大的时候，这一双层优化过程的速度就会很慢。作者提出对这一过程进行解耦，从而将原本的平方复杂度降低至线性。<img src="https://s2.loli.net/2025/10/13/Ty54tuAEn3F7JvK.png" width="500"></p><p>其阶段可以分为三个部分 <imgsrc="https://s2.loli.net/2025/10/13/hNnfx9b3qyUcjVR.png" /></p><p>首先进行数据集信息的凝练，将其存入模型参数中。 <spanclass="math display">\[\theta_{T} = argmin_{\theta}L_{T}(\theta)\tag{1}\]</span>这一步实现起来并没有多余设计，就是让模型在原始数据集上进行训练，并冻结参数。不过作者指出，数据集的一部分重要信息，是由BN中的mean和variance记录的，因此后续需要用BN的信息进行对齐。但是ViT中使用的是LayerNorm，因此作者也将其修改为BN。注意这里模型在数据集上训练的目的是存储数据集信息，而不是单纯跑到最优性能，因此将ViT的Norm手段修改为BN，虽然性能会掉，但是是可以接受的。</p><p>其次，就是用上一步凝练得到的数据集信息，还原回合成数据集 <spanclass="math display">\[argmin_{C_{syn}} l(\Phi_{\theta_{T}}(\tilde{X}_{syn}, y)) +R_{reg}\tag{2}\]</span> <spanclass="math inline">\((2)\)</span>式中第一部分就是上一步冻结参数的模型<spanclass="math inline">\(\theta_{T}\)</span>在合成数据集<spanclass="math inline">\(C_{syn}\)</span>的一个batch <spanclass="math inline">\(\tilde{X}_{syn}\)</span>上的loss，第二部分是正则化项。注意这里<spanclass="math inline">\(\theta_{T}\)</span>是被冻结的，因此是在单纯优化<spanclass="math inline">\(C_{syn}\)</span></p><p>为了更好对齐数据集，会使用上一轮计算的BN中的mean和variance <imgsrc="https://s2.loli.net/2025/10/13/xo8YqEOKIQBfAFN.png" /></p><p>此外，作者每次是随机在合成数据上截取一个固定大小的区域进行参数优化，从而防止过拟合。</p><p>最后一步，对合成数据集重新进行label标注，这一步使用<spanclass="math inline">\(\theta_{T}\)</span>即可 <spanclass="math display">\[\tilde{y} = \Phi_{\theta_{T}}(\tilde{X}_{R})\tag{3}\]</span> 那么之后就可以用其它数据集在<spanclass="math inline">\(C_{syn}\)</span>上进行训练了 <spanclass="math display">\[L_{syn} = -\sum_{i} \tilde{y}_{i}\log\Phi_{\theta_{C_{syn}}}(\tilde{X}_{R_{i}})\tag{4}\]</span></p><p>总体来说，通过先固定原始数据集<spanclass="math inline">\(C_{pre}\)</span>的信息，让<spanclass="math inline">\(C_{syn}\)</span>来匹配这一信息，可以将原本耦合的两层优化解耦，实现线性复杂度。相比之下，原本是先让模型学习<spanclass="math inline">\(C_{syn}\)</span>上的信息，再用<spanclass="math inline">\(C_{pre}\)</span>来评判模型，就会繁琐很多。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>KD</tag>
+      
+      <tag>Dataset_Condensation</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>FROM CORRECTION TO MASTERY: REINFORCED DISTILLATION OF LARGE LANGUAGE MODEL AGENTS</title>
     <link href="/posts/498af5ab/"/>
     <url>/posts/498af5ab/</url>

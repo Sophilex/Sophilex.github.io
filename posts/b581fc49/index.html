@@ -18,27 +18,27 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="学生生成SGO时，教师在必要时给予干预，压缩理论误差上界">
+    <meta name="description" content="优化MTT，使其可以scale到更大规模的cv数据集上">
 <meta property="og:type" content="article">
-<meta property="og:title" content="FROM CORRECTION TO MASTERY: REINFORCED DISTILLATION OF LARGE LANGUAGE MODEL AGENTS">
-<meta property="og:url" content="https://sophilex.github.io/posts/498af5ab/index.html">
+<meta property="og:title" content="Scaling Up Dataset Distillation to ImageNet-1K with Constant Memory">
+<meta property="og:url" content="https://sophilex.github.io/posts/b581fc49/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="学生生成SGO时，教师在必要时给予干预，压缩理论误差上界">
+<meta property="og:description" content="优化MTT，使其可以scale到更大规模的cv数据集上">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/mc1.jpg">
-<meta property="article:published_time" content="2025-09-28T14:06:13.000Z">
-<meta property="article:modified_time" content="2025-09-28T14:24:50.300Z">
+<meta property="og:image" content="https://sophilex.github.io/img/j0.jpg">
+<meta property="article:published_time" content="2025-10-13T06:07:02.000Z">
+<meta property="article:modified_time" content="2025-10-13T06:43:39.772Z">
 <meta property="article:author" content="Sophilex">
-<meta property="article:tag" content="LLM">
 <meta property="article:tag" content="KD">
+<meta property="article:tag" content="Dataset_Condensation">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/mc1.jpg">
+<meta name="twitter:image" content="https://sophilex.github.io/img/j0.jpg">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>FROM CORRECTION TO MASTERY: REINFORCED DISTILLATION OF LARGE LANGUAGE MODEL AGENTS - Sophilex‘s Blog</title>
+  <title>Scaling Up Dataset Distillation to ImageNet-1K with Constant Memory - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -238,13 +238,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/mc1.jpg') no-repeat center center; background-size: cover;">
+     style="background: url('/img/j0.jpg') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="FROM CORRECTION TO MASTERY: REINFORCED DISTILLATION OF LARGE LANGUAGE MODEL AGENTS"></span>
+            <span id="subtitle" data-typed-text="Scaling Up Dataset Distillation to ImageNet-1K with Constant Memory"></span>
           
         </div>
 
@@ -260,8 +260,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-09-28 22:06" pubdate>
-          2025年9月28日 晚上
+        <time datetime="2025-10-13 14:07" pubdate>
+          2025年10月13日 下午
         </time>
       </span>
     
@@ -272,7 +272,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          684 字
+          707 字
         
       </span>
     
@@ -328,48 +328,78 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">FROM CORRECTION TO MASTERY: REINFORCED DISTILLATION OF LARGE LANGUAGE MODEL AGENTS</h1>
+            <h1 id="seo-header">Scaling Up Dataset Distillation to ImageNet-1K with Constant Memory</h1>
             
             
               <div class="markdown-body">
                 
-                <p>对agent
-distillation的优化。以往KD范式普遍是对一条策略直接进行对齐，其中数据来自TGO或者是SGO。之前的工作已经证明SGO对于缓解学生的exposure
-bias存在帮助，但是SGO本身往往也面临着exposure bias的影响。 <img
-src="https://s2.loli.net/2025/09/28/ESe7T1Us64qBi8v.png" srcset="/img/loadings.gif" lazyload /></p>
-<h2 id="trajectory-generation">Trajectory Generation</h2>
-<p><img src="https://s2.loli.net/2025/09/28/ymUCMdcXWs4qG9u.png" srcset="/img/loadings.gif" lazyload /></p>
-<p>这里证明，当不存在其它干预的时候，学生生成策略会随着策略长度而存在平方级别的误差。因此尝试在学生生成SGO的时候引入教师进行干预：当学生生成第一个错误action
-<span
-class="math inline">\(a_{k}\)</span>的时候，教师才进行介入并且将其改为正确结果<span
-class="math inline">\(a_{k}&#39;\)</span>，然后学生在<span
-class="math inline">\(a_{k}&#39;\)</span>的基础上重新生成下一个action，从而得到action序列为
-<span class="math inline">\(a_{1},a_{2},\dots
-a_{k-1},a_{k}&#39;,a_{k+1},\dots\)</span></p>
-<p>由此得到的教师介入过的SGO‘，<strong>其误差相对于策略长度，可以控制在线性范围内</strong>
-<img src="https://s2.loli.net/2025/09/28/JfNWyomHDnOPGFZ.png" srcset="/img/loadings.gif" lazyload /></p>
-<h2 id="sft-based-on-sgo">SFT Based On SGO'</h2>
-<p>接下来就是利用生成好的数据对学生进行Behavior
-Cloning对齐。对于每一条策略，以往的方法往往是对齐最后一个action，但是此时每一条策略中往往会存在多个教师介入过的，学生生成效果差的action，在这些地方进行对齐往往能有更好的效果。与此同时，一条策略也可以进行多次对齐，数据效率更高。
-<img src="https://s2.loli.net/2025/09/28/m5TRBZXE8KaCLut.png" srcset="/img/loadings.gif" lazyload /></p>
-<h2 id="rl-phase">RL Phase</h2>
-<p>使用GRPO进行RL训练。RL面临的常见问题：稀疏奖励，以及长轨迹导致的梯度估计方差过大</p>
-<p>与SFT环节类似，在不同的教师纠正过的地方添加reward并进行对齐，这就同时解决了上述两个问题。对于reward的具体设置：如果最终结果正确的话，会有一个更大的reward
-<span
-class="math inline">\(R_{final}\)</span>。同时在中间部分为了区分不同token的效果，reward设置为
-<img src="https://s2.loli.net/2025/09/28/UVH1ju4eA79JtEb.png" srcset="/img/loadings.gif" lazyload />
-其中<span
-class="math inline">\(a_{k}^{\pi_{E}}\)</span>是教师纠正结果，<span
-class="math inline">\(a_{k}^{orig}\)</span>是学生原始action。如果学生学到了教师的正确action，会有更大的reward，如果其避免了原本的错误，但是依然没有达到教师的结果，会有一个较小的reward。</p>
-<blockquote>
-<p>This reward scheme provides informative credit assignment at the
-student’s weakest step, while maintaining prioritization of final task
-success</p>
-</blockquote>
-<h2 id="conclusion">Conclusion</h2>
-<p>精华在于引入教师的纠正，但同时又保留了大部分学生的推理结果，让生成的SGO匹配学生当前性能，又不会具有过大的误差。</p>
-<p><strong>以及，学生是被允许自由探索，与环境交互的，这可能可以带来新路线，这也是为什么<span
-class="math inline">\(reward_{final}\)</span>会有最大的值。而自由探索，在原始蒸馏中应当是没有的，因此由其得到的模型也没有向上扩展的空间</strong></p>
+                <p>针对MTT的一些优化。MTT通过匹配在不同数据集上训练的模型参数，来优化<span
+class="math inline">\(C_{sync}\)</span>. 其损失函数为 <span
+class="math display">\[
+L =
+\frac{||\hat{\theta}_{t+T}-\theta^*_{t+M}||_{2}^2}{||\theta^*_{t+T}-\theta^*_{t+M}||_{2}^2}\tag{1}
+\]</span> 其中<span
+class="math inline">\(\theta^*_{t}\)</span>代表模型在原始数据集<span
+class="math inline">\(C_{pre}\)</span>上训练时第t步的参数，再在此基础上，<span
+class="math inline">\(\hat{\theta}_{t+T}\)</span>代表在合成数据<span
+class="math inline">\(C_{sync}\)</span>上再训练<span
+class="math inline">\(T\)</span>步之后的参数，其中<span
+class="math inline">\(T\ll M\)</span></p>
+<p>注意到 <span class="math display">\[
+\hat{\theta}_{t+T} = \theta^*_{t} - \beta
+\nabla_{l}(\theta^*_{t};\hat{X}_{0}) - \beta
+\nabla_{\theta}l(\hat{\theta}_{t+1};\hat{X}_{1}) - \dots \beta
+\nabla_{\theta}l(\hat{\theta}_{t+T-1};\hat{X}_{T-1})\tag{2}
+\]</span> 从而 <span class="math display">\[
+L&#39; = ||\hat{\theta}_{t+T}-\theta^*_{t+M}||_{2}^2 = ||\theta^*_{t} -
+\beta\sum_{i=0}^{T-1}
+\nabla_{\theta}l(\hat{\theta}_{t+i};\hat{X}_{i})-\theta^*_{t+M}||_{2}^2\tag{3}
+\]</span> 注意到对于任意<span
+class="math inline">\(\tilde{X}_{i}\)</span>，有 <span
+class="math display">\[
+\frac{\partial L&#39;}{\partial \tilde{X}_{i}} = \frac{\partial
+L&#39;}{\partial \hat{\theta}_{t+T}}\frac{\hat{\theta}_{t+T}}{\partial
+\tilde{X}_{i}}\tag{4}
+\]</span> 由于<span
+class="math inline">\(\hat{\theta}_{t+T}\)</span>的存在，需要将共<span
+class="math inline">\(T\)</span>步的所有梯度都保存下来，从而导致巨大的显存消耗。
+事实上可以对<span class="math inline">\((3)\)</span>式进行变形，得到
+<span class="math display">\[
+\begin{flalign}
+L&#39; &amp;= ||\theta^*_{t} - \beta\sum_{i=0}^{T-1}
+\nabla_{\theta}l(\hat{\theta}_{t+i};\hat{X}_{i})-\theta^*_{t+M}||_{2}^2
+\\
+&amp;=  \beta^2||\sum_{i=0}^{T-1}
+\nabla_{\theta}l(\hat{\theta}_{t+i};\hat{X}_{i})||_{2}^2-2\beta
+(\sum_{i=0}^{T-1}
+\nabla_{\theta}l(\hat{\theta}_{t+i};\hat{X}_{i}))^T(\theta_{t}^* -
+\theta^*_{t+M})+C \tag{5}
+\end{flalign}
+\]</span> 其中<span class="math inline">\(C = ||\theta_{t}^* -
+\theta^*_{t+M}||_{2}^2\)</span>，是一个常数</p>
+<p>从<span class="math inline">\((5)\)</span>式出发，可以将<span
+class="math inline">\((4)\)</span>式转化为 <span class="math display">\[
+\frac{\partial L&#39;}{\partial \tilde{X}_{i}} = 2\beta^2 G^T
+\frac{\partial}{\partial \tilde{X}_{i}}
+\nabla_{\theta}l(\hat{\theta}_{t+i};\hat{X}_{i}) - 2\beta
+\frac{\partial}{\partial
+\tilde{X}_{i}}(\nabla_{\theta}l(\hat{\theta}_{t+i};\hat{X}_{i}))(\theta_{t}^*
+- \theta^*_{t+M}) \tag{6}
+\]</span> 其中<span class="math inline">\(G = \sum_{i=0}^{T-1}
+\nabla_{l}(\hat{\theta}_{t+i};\hat{X}_{i})\)</span></p>
+<p>在<span class="math inline">\((6)\)</span>式中，第二项只与每一个<span
+class="math inline">\(\tilde{X}_{i}\)</span>有关，只有第二项中<span
+class="math inline">\(G^T\)</span>是与全体步骤的梯度有关的，而其作为梯度之和，可以提前计算好，从而整体显存与迭代步数<span
+class="math inline">\(T\)</span>可以做到不相关，从而显存占用从<span
+class="math inline">\(O(T)\)</span>压到了<span
+class="math inline">\(O(1)\)</span>
+整体来看，只是对梯度的求法做了一个变形，但确实带来了很好的效果。</p>
+<p>另一点在于标签的使用。作者发现原始的0/1 hard
+label，收敛性差，但如果换成<span
+class="math inline">\((0,1)\)</span>之间的soft
+label，会有更好效果。因此作者使用目标步长<span
+class="math inline">\(\theta_{t+M}^*\)</span>的参数作为教师，生成soft
+label概率分布。这一点其实与KD是一致的。</p>
 
                 
               </div>
@@ -405,9 +435,9 @@ class="math inline">\(reward_{final}\)</span>会有最大的值。而自由探�
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/LLM/" class="print-no-link">#LLM</a>
-      
         <a href="/tags/KD/" class="print-no-link">#KD</a>
+      
+        <a href="/tags/Dataset-Condensation/" class="print-no-link">#Dataset_Condensation</a>
       
     </div>
   
@@ -419,8 +449,8 @@ class="math inline">\(reward_{final}\)</span>会有最大的值。而自由探�
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>FROM CORRECTION TO MASTERY: REINFORCED DISTILLATION OF LARGE LANGUAGE MODEL AGENTS</div>
-      <div>https://sophilex.github.io/posts/498af5ab/</div>
+      <div>Scaling Up Dataset Distillation to ImageNet-1K with Constant Memory</div>
+      <div>https://sophilex.github.io/posts/b581fc49/</div>
     </div>
     <div class="license-meta">
       
@@ -432,7 +462,7 @@ class="math inline">\(reward_{final}\)</span>会有最大的值。而自由探�
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年9月28日</div>
+          <div>2025年10月13日</div>
         </div>
       
       
@@ -464,18 +494,12 @@ class="math inline">\(reward_{final}\)</span>会有最大的值。而自由探�
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/750bb55b/" title="Squeeze, Recover and Relabel: Dataset Condensation at ImageNet Scale From A New Perspective">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Squeeze, Recover and Relabel: Dataset Condensation at ImageNet Scale From A New Perspective</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/300ec667/" title="Merge-of-Thought Distillation">
-                        <span class="hidden-mobile">Merge-of-Thought Distillation</span>
+                      <a href="/posts/750bb55b/" title="Squeeze, Recover and Relabel: Dataset Condensation at ImageNet Scale From A New Perspective">
+                        <span class="hidden-mobile">Squeeze, Recover and Relabel: Dataset Condensation at ImageNet Scale From A New Perspective</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
