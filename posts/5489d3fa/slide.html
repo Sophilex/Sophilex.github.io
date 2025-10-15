@@ -325,6 +325,19 @@ $$
 ---
 
 ## Train-Inference Mismatch
+由于模型能力不足，生成token的分布与目标分布存在差距，进而模型训练和推理时面对的前缀是不同的
+
+* Distribution Mismatch (Exposure Bias)
+* Error Accumulation
+
+
+
+Distribution Mismatch会导致Error Accumulation
+
+---
+
+
+## Train-Inference Mismatch
 
 模型推理时，与oracle model的总偏差表示为
 $$
