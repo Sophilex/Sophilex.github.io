@@ -616,6 +616,12 @@ $$
 
 
 
+
+
+
+
+
+
 note:
 困惑度范围为[1,inf), 其倒数范围为(0,1]
 教师越确定，样本权重越大，为了防止一些SGO的权重太小，设了下限0.1
@@ -646,18 +652,18 @@ $$
 ---
 
 
-note:
+
+note: 
 与SGO对齐不一定是完全没用的，还要探究
 
 ---
 
 ## Furture
 
-* 🤔 **student explores, teacher corrects**
+🤔 **student explores, teacher corrects**
 <div style="clear: both;"></div>
+
 <img src="https://s2.loli.net/2025/10/15/h5Cyog7xFwLmnSD.png" style="width: 450px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
-
-
 
 
 
@@ -682,7 +688,7 @@ Lyu, Y., Wang, C., Huang, J., & Xu, T. (2025). From Correction to Mastery: Reinf
 
 ## Furture
 
-* 🤔 **Merge-of-Teachers**
+🤔 **Merge-of-Teachers**
 
 <p class="fragment">
 "different students have different 'best teachers', and even for the same student the best teacher can vary across datasets"
@@ -706,12 +712,34 @@ note:
 并不是一个新鲜的观点，但是需要一种合适的融合方式
 不能指望学生一次掌握所有知识，一点一点喂
 
+---
+
+## Furture
+
+🤔 **align relative information**
+
+<img src="https://s2.loli.net/2025/10/15/nqaDR1p6ZMzLAit.png" style="width: 400px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+$$
+\Delta(p_{1},p_{2})(y|x) = \frac{p_{1}(y|x)}{p_{2}(y|x)}
+$$
+$$
+\Delta(\pi_{s}^{*}, \pi_{t}^{ft})(y|x) \propto \Delta(\pi_{s}^{raw}, \pi_{t}^{raw})(y|x)^\alpha 
+$$
+
+$$
+\pi_{s}^*(y|x) = \frac{1}{Z(x,y)} \pi_{t}^{ft}(y|x) \left( \frac{\pi_{s}^{raw}(y|x)}{\pi_{t}^{raw}(y|x)} \right)^\alpha
+$$
+
+note:
+这种相对关系也可以用于SGO加权
 
 ---
 
 ## Furture
 
-* 🤔 **Explores on model structure**
+🤔 **Explores on model structure**
 
 MoE：训练推理时选择的expert可能不同，从而导致后续差异
 
