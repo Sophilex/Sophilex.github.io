@@ -303,7 +303,7 @@
 
 
 <small>Alephia</small>
-<small>25/10/11</small>
+<small>25/10/15</small>
 
 
 ---
@@ -314,7 +314,421 @@
 $$
 l(q_{\theta},w^{t-1};o) = \mathop{\mathbb{E}}\limits_{w_{t}\sim \textcolor{red}{o}(\cdot|w^{t-1})}\log \frac{o(w_{t}|w^{t-1})}{q_{\theta}(w_{t}|w^{t-1})}
 $$
-由<mark style="background: #FF5582A6;">目标分布o</mark>采样下一个$\text{token}$ $w_{t}$，再进行$\text{KLD}$对齐。</script>
+由<mark style="background: #FF5582A6;">目标分布o</mark>采样下一个$\text{token}$ $w_{t}$，再进行$\text{KLD}$对齐。
+<p class="fragment">
+可以展开得到
+$$
+L(q_{\theta};o) \approx \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{\textcolor{red}{o}}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{q_{\theta}(w_{t}|w^{t-1})}
+$$
+</p>
+
+---
+
+## Train-Inference Mismatch
+
+模型推理时，与oracle model的总偏差表示为
+$$
+\begin{flalign}
+L(q_{\theta};o) &= \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{q_\theta}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{q_{\theta}(w_{t}|w^{t-1})}\\\\
+&= \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{w^{t-1}\sim d_{q_\theta}^{t-1}} D_{KL}(o(\cdot|w^{t-1})||q_{\theta}(\cdot|w^{t-1}))
+\end{flalign}
+$$
+记生成第$t$个token的期望误差为
+$$
+\epsilon_{t} = \mathop{\mathbb{E}}\limits_{\substack{w_{0}^{t-1}\sim d_{o}^t,\  w_{t}\sim o(\cdot| w^{t-1})}} \log \frac{o(w_{t}|w^{t-1})}{q_{\theta}(w_{t}|w^{t-1})}
+$$
+
+<div class="slide-ref">
+Arora, K., Asri, L.E., Bahuleyan, H., & Cheung, J.C. Why Exposure Bias Matters: An Imitation Learning Perspective of Error Accumulation in Language Generation. In ACL, 22
+</div>
+
+note:
+前者是模型推理阶段的loss，由于前缀是模型自己生成的，应当包括分布的偏移误差以及误差的累积部分
+而后者，由于前缀是oracle model自己生成的，期望中只包含分布的偏移误差
+
+---
+
+## Train-Inference Mismatch
+
+$$
+l\epsilon_{\leq l} \leq L_{\leq l}(q_{\theta}) \leq l^2 \epsilon_{\leq l}, \ \ \epsilon_{\leq l}=\frac{1}{l} \sum_{t=1}^{l} \epsilon_{t}
+$$
+$$
+AccErr_{\leq}(l) = \frac{L_{\leq l}(q_{\theta})}{\epsilon_{\leq l}}, \ \ ExAccErr_{\leq}(l) = \frac{L_{\leq l}(q_{\theta}) - l \epsilon_{\leq l}}{l \epsilon_{\leq l}} \cdot 100\%
+$$
+<p class="fragment">
+<img src="https://s2.loli.net/2025/06/24/y16SeLZM2Abxpd7.png" style="width:300px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+</p>
+
+<p class="fragment">
+<img src="https://s2.loli.net/2025/06/25/Ipvehbk95Bza4JY.png" style="width: 300px; height: auto; float: right; margin-top: auto; margin-bottom: auto;border: none;">
+</p>
+
+note:
+如果Distribution Mismatch确实会导致误差累积的话，应当观察到AccErr值是随着序列长度增加而超线性增长的。
+
+---
+
+##  The Utilization of SGO
+引入模型自己推理生成的内容用于训练(**S**tudent **G**enerated **O**utput)
+
+$$
+L_{SGO}(q_{\theta};o) = \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{\textcolor{red}{q_{\theta}}}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{q_{\theta}(w_{t}|w^{t-1})}
+$$
+
+<img src="https://s2.loli.net/2025/06/25/6dEeDws4tZNA2Hu.png" style="width: 450px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+
+
+
+
+
+<img src="https://s2.loli.net/2025/06/25/N2pXnCckbBIfhie.png" style="width: 450px; height: auto; float: right; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+<div class="slide-ref">
+Agarwal, R., Vieillard, N., Zhou, Y., Stańczyk, P., Ramos, S., Geist, M., & Bachem, O.  On-Policy Distillation of Language Models: Learning from Self-Generated Mistakes. In ICLR, 24
+
+Ko, J., Kim, S., Chen, T., & Yun, S. DistiLLM: Towards Streamlined Distillation for Large Language Models. In ICML, 24
+</div>
+
+---
+
+##  The Utilization of SGO
+
+* prepare SGOs for each training sample before distillation
+* **only use SGOs for distillation**
+* update SGOs with latest student parameters during distillation(twice in huawei's work)
+
+"we find that the performance of the ”Distillation by Student” strategy can be enhanced. By periodically updating the student model with its latest parameters during the training process—in our case, twice—and re-generating responses for subsequent distillation, the model’s accuracy is further improved to 63.43%. "
+
+<div class="slide-ref">
+Rang, M., Bi, Z., Zhou, H., Chen, H., Xiao, A., Guo, T., Han, K., Chen, X., & Wang, Y. (2025). Revealing the Power of Post-Training for Small Language Models via Knowledge Distillation
+</div>
+
+note:
+没有与上述工作进行比较：Distillm，GKD
+
+---
+
+## Curves before/after distillation
+before distillation
+<div style="clear: both;"></div>
+<img src="https://s2.loli.net/2025/10/15/MYbSm8JoHcdV2UO.png" style="width: 280px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+
+
+
+
+
+<img src="https://s2.loli.net/2025/10/15/7HGx3LB8DkcE69m.png" style="width: 280px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
+<img src="https://s2.loli.net/2025/10/15/8vl7549anix3CMX.png" style="width: 280px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
+
+after distillation
+<div style="clear: both;"></div>
+<img src="https://s2.loli.net/2025/10/15/WQMj9fkJUGIdot6.png" style="width: 280px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+
+
+
+
+
+<img src="https://s2.loli.net/2025/10/15/p4VICaRDrLznT1Z.png" style="width: 280px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+
+
+
+
+
+
+<img src="https://s2.loli.net/2025/10/15/MZIsxAVwJYgd1Lv.png" style="width: 280px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+
+
+
+
+---
+
+## Curves on different generation ways
+
+Sampling(T=1)
+<div style="clear: both;"></div>
+<img src="https://s2.loli.net/2025/10/15/WQMj9fkJUGIdot6.png" style="width: 280px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+
+
+
+
+
+<img src="https://s2.loli.net/2025/10/15/p4VICaRDrLznT1Z.png" style="width: 280px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+
+
+
+
+
+
+<img src="https://s2.loli.net/2025/10/15/MZIsxAVwJYgd1Lv.png" style="width: 280px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+
+
+
+
+
+<div style="clear: both;"></div>
+
+Greedy
+<div style="clear: both;"></div>
+<div style="clear: both;"></div>
+<img src="https://s2.loli.net/2025/10/15/h1GckKZu7M28S94.png" style="width: 280px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+
+
+
+
+
+
+<img src="https://s2.loli.net/2025/10/15/N5zyWODIYC2VfUE.png" style="width: 280px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+
+
+
+
+
+<img src="https://s2.loli.net/2025/10/15/4hFCXPYl1HoRAvk.png" style="width: 280px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+
+
+
+
+
+
+
+
+
+---
+
+## Curves on various post-training ways
+
+<div style="clear: both;"></div>
+<img src="https://s2.loli.net/2025/10/15/naZiIqPkJgHXA7d.png" style="width: 400px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+
+
+
+
+
+
+
+
+
+<img src="https://s2.loli.net/2025/10/15/CLr6fnTbwWBIgHc.png" style="width: 400px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
+<img src="https://s2.loli.net/2025/10/15/3Gvo6SBJYmpPN5M.png" style="width: 400px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+   
+   
+   
+   
+   
+   
+   
+   
+<div style="float: right; margin-bottom: 500px">on opt-0.1b, dolly datast</div>
+
+
+---
+
+## Questions
+
+* 🤔 The curves collapse in the late generation stage(occurs after post-training)
+
+<img src="https://s2.loli.net/2025/10/15/lVfnboeka6SRM25.png" style="width: 280px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+
+
+
+
+<img src="https://s2.loli.net/2025/10/15/iM2x5XtHsfrld13.png" style="width: 280px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
+
+<div style="float: right">gpt-base before/after sft</div>
+
+<div style="clear: both;"></div>
+<p class="fragment">
+A more powerful oracle model? 
+<br>
+What will happen when model have more powerful long text generation ability?
+</p>
+
+* 🤔 A better model, a higher KLD?
+
+
+
+
+
+note:
+第一个问题中生成模式其实也影响很大，但是并没有显著规律，先不讨论
+distillm整体并没有明显的起伏波动，我更愿意理解为其通过SGO的训练，已经拥有了在错误前缀下的一定纠正能力，从而error accumulation现象可以得到缓解，但是这一点在其它post-training 过程中并没有得到体现。
+
+在其它领域(RL)或许也是如此，模型一定要去探索，一方面可能可以找到更好的解，一方面，训推差异是难以避免的，训练时的探索本身就可以看成提前面对之后会遇到的情况，从而拥有一定的纠正能力
+
+---
+
+## Sample wise weight
+
+$$
+L_{WSGO}(q_{\theta};o) =\sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{w^{t-1}\sim d_{q_{\theta}}^{t-1}} \frac{1}{Q(o;w^{t-1})} D_{KL}(o(\cdot|w^{t-1})||q_{\theta}(\cdot|w^{t-1}))
+$$
+
+![Pasted image 20251015165511](https://s2.loli.net/2025/10/15/YFjfO354lVIUMRX.png)
+
+<img src="https://s2.loli.net/2025/10/15/eFTx1EQb7lzHRdt.png" style="width: 900px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+
+
+
+note:
+困惑度范围为[1,inf), 其倒数范围为(0,1]
+教师越确定，样本权重越大，为了防止一些SGO的权重太小，设了下限0.1
+然后除以mean，使得其期望为1，不用调整学习率
+
+后续可以再试试引入学生信息
+
+---
+
+## Weight of CE Loss with SGO
+
+$$
+Loss = (1-\lambda_{KD}) L_{CE} + \lambda_{KD} L_{KD}
+$$
+<p class="fragment">
+🤔 adaptive weight to $\lambda_{KD}$
+</p>
+
+<img src="https://s2.loli.net/2025/10/15/ZvbPY8yzTigpWd1.png" style="width: 1000px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+
+
+
+
+
+---
+
+
+note:
+与SGO对齐不一定是完全没用的，还要探究
+
+---
+
+## Furture
+
+* 🤔 **student explores, teacher corrects**
+<div style="clear: both;"></div>
+<img src="https://s2.loli.net/2025/10/15/h5Cyog7xFwLmnSD.png" style="width: 450px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="slide-ref">
+Lyu, Y., Wang, C., Huang, J., & Xu, T. (2025). From Correction to Mastery: Reinforced Distillation of Large Language Model Agents.
+</div>
+
+---
+
+## Furture
+
+* 🤔 **Merge-of-Teachers**
+
+<p class="fragment">
+"different students have different 'best teachers', and even for the same student the best teacher can vary across datasets"
+</p>
+<img src="https://s2.loli.net/2025/10/15/3fQB7cOT4hduVFq.png" style="width: 600px; height: auto; float: left; margin-top: auto; margin-bottom: auto;border: none;">
+
+
+
+
+
+
+
+
+
+<div class="slide-ref">
+Shen, Z., Qin, Z., Huang, Z., Chen, H., Hu, J., Zhuang, Y., Lu, G., Chen, G., & Zhao, J. (2025). Merge-of-Thought Distillation. 
+</div>
+
+note:
+直接合并会引入噪声
+并不是一个新鲜的观点，但是需要一种合适的融合方式
+不能指望学生一次掌握所有知识，一点一点喂
+
+
+---
+
+## Furture
+
+* 🤔 **Explores on model structure**
+
+MoE：训练推理时选择的expert可能不同，从而导致后续差异
+
+
+<p class="fragment">
+目前大部分工作聚焦在算法层面
+</p>
+
+<div class="slide-ref">
+https://zhuanlan.zhihu.com/p/1959976628290590602
+</div>
+
+
+---
+
+## Thanks
+</script>
 
                 </section>
             </div>

@@ -346,11 +346,11 @@ Note:
 
 ## Train-Inference Mismatch
 
-模型与目标的总偏差表示为
+模型推理时，与oracle model的总偏差表示为
 $$
 \begin{flalign}
-L(q_{\theta};o) &= \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{o}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{q_{\theta}(w_{t}|w^{t-1})}\\\\
-&= \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{w^{t-1}\sim d_{o}^{t-1}} D_{KL}(o(\cdot|w^{t-1})||q_{\theta}(\cdot|w^{t-1}))
+L(q_{\theta};o) &= \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{q_\theta}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{q_{\theta}(w_{t}|w^{t-1})}\\\\
+&= \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{w^{t-1}\sim d_{q_\theta}^{t-1}} D_{KL}(o(\cdot|w^{t-1})||q_{\theta}(\cdot|w^{t-1}))
 \end{flalign}
 $$
 记生成第$t$个token的期望误差为
