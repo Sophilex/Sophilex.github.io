@@ -18,27 +18,26 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="优化MTT，使其可以scale到更大规模的cv数据集上">
+    <meta name="description" content="llm微调时的一种数据选择策略">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Scaling Up Dataset Distillation to ImageNet-1K with Constant Memory">
-<meta property="og:url" content="https://sophilex.github.io/posts/b581fc49/index.html">
+<meta property="og:title" content="Importance-Aware Data Selection for Efficient LLM Instruction Tuning">
+<meta property="og:url" content="https://sophilex.github.io/posts/7ee4c4ca/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="优化MTT，使其可以scale到更大规模的cv数据集上">
+<meta property="og:description" content="llm微调时的一种数据选择策略">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/j0.jpg">
-<meta property="article:published_time" content="2025-10-13T06:07:02.000Z">
-<meta property="article:modified_time" content="2025-10-13T06:43:39.772Z">
+<meta property="og:image" content="https://sophilex.github.io/img/gm0.avif">
+<meta property="article:published_time" content="2025-11-17T05:25:41.000Z">
+<meta property="article:modified_time" content="2025-11-17T05:36:07.066Z">
 <meta property="article:author" content="Sophilex">
-<meta property="article:tag" content="KD">
-<meta property="article:tag" content="Dataset_Condensation">
+<meta property="article:tag" content="LLM">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/j0.jpg">
+<meta name="twitter:image" content="https://sophilex.github.io/img/gm0.avif">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>Scaling Up Dataset Distillation to ImageNet-1K with Constant Memory - Sophilex‘s Blog</title>
+  <title>Importance-Aware Data Selection for Efficient LLM Instruction Tuning - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -238,13 +237,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/j0.jpg') no-repeat center center; background-size: cover;">
+     style="background: url('/img/gm0.avif') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Scaling Up Dataset Distillation to ImageNet-1K with Constant Memory"></span>
+            <span id="subtitle" data-typed-text="Importance-Aware Data Selection for Efficient LLM Instruction Tuning"></span>
           
         </div>
 
@@ -260,8 +259,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-10-13 14:07" pubdate>
-          2025年10月13日 下午
+        <time datetime="2025-11-17 13:25" pubdate>
+          2025年11月17日 下午
         </time>
       </span>
     
@@ -272,7 +271,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          707 字
+          500 字
         
       </span>
     
@@ -283,7 +282,7 @@
         
         
         
-          6 分钟
+          5 分钟
         
       </span>
     
@@ -328,78 +327,58 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">Scaling Up Dataset Distillation to ImageNet-1K with Constant Memory</h1>
+            <h1 id="seo-header">Importance-Aware Data Selection for Efficient LLM Instruction Tuning</h1>
             
             
               <div class="markdown-body">
                 
-                <p>针对MTT的一些优化。MTT通过匹配在不同数据集上训练的模型参数，来优化<span
-class="math inline">\(C_{sync}\)</span>. 其损失函数为 <span
+                <p>提出llm微调时的一种数据选择策略。利用In Context
+Learning来判断模型在特定指令类型上的表现，从而能够有针对性地选择影响力高的数据。</p>
+<figure>
+<img src="https://s2.loli.net/2025/11/17/FByYM2I76dZPJsN.png" srcset="/img/loadings.gif" lazyload
+alt="500" />
+<figcaption aria-hidden="true">500</figcaption>
+</figure>
+<p>指令微调数据可以表示为<span class="math inline">\(\{(x_{1},y_{1}),
+(x_{2},y_{2}), \dots (x_{n}, y_{n})\}\)</span>，对于每一个<span
+class="math inline">\(x_{i} = (x_{i}^1, x_{i}^2, \dots
+x_{i}^Q)\)</span>，对每一个token做embedding操作，得到 <span
 class="math display">\[
-L =
-\frac{||\hat{\theta}_{t+T}-\theta^*_{t+M}||_{2}^2}{||\theta^*_{t+T}-\theta^*_{t+M}||_{2}^2}\tag{1}
-\]</span> 其中<span
-class="math inline">\(\theta^*_{t}\)</span>代表模型在原始数据集<span
-class="math inline">\(C_{pre}\)</span>上训练时第t步的参数，再在此基础上，<span
-class="math inline">\(\hat{\theta}_{t+T}\)</span>代表在合成数据<span
-class="math inline">\(C_{sync}\)</span>上再训练<span
-class="math inline">\(T\)</span>步之后的参数，其中<span
-class="math inline">\(T\ll M\)</span></p>
-<p>注意到 <span class="math display">\[
-\hat{\theta}_{t+T} = \theta^*_{t} - \beta
-\nabla_{l}(\theta^*_{t};\hat{X}_{0}) - \beta
-\nabla_{\theta}l(\hat{\theta}_{t+1};\hat{X}_{1}) - \dots \beta
-\nabla_{\theta}l(\hat{\theta}_{t+T-1};\hat{X}_{T-1})\tag{2}
-\]</span> 从而 <span class="math display">\[
-L&#39; = ||\hat{\theta}_{t+T}-\theta^*_{t+M}||_{2}^2 = ||\theta^*_{t} -
-\beta\sum_{i=0}^{T-1}
-\nabla_{\theta}l(\hat{\theta}_{t+i};\hat{X}_{i})-\theta^*_{t+M}||_{2}^2\tag{3}
-\]</span> 注意到对于任意<span
-class="math inline">\(\tilde{X}_{i}\)</span>，有 <span
+h_{i}^1, h_{i}^2, \dots h_{i}^Q = E(x_{i}^1, x_{i}^2, \dots x_{i}^Q)
+\]</span> 这里<span
+class="math inline">\(E\)</span>选择的模型是Bge-en-large。从而指令<span
+class="math inline">\(x_{i}\)</span>的embedding结果为 <span
 class="math display">\[
-\frac{\partial L&#39;}{\partial \tilde{X}_{i}} = \frac{\partial
-L&#39;}{\partial \hat{\theta}_{t+T}}\frac{\hat{\theta}_{t+T}}{\partial
-\tilde{X}_{i}}\tag{4}
-\]</span> 由于<span
-class="math inline">\(\hat{\theta}_{t+T}\)</span>的存在，需要将共<span
-class="math inline">\(T\)</span>步的所有梯度都保存下来，从而导致巨大的显存消耗。
-事实上可以对<span class="math inline">\((3)\)</span>式进行变形，得到
-<span class="math display">\[
-\begin{flalign}
-L&#39; &amp;= ||\theta^*_{t} - \beta\sum_{i=0}^{T-1}
-\nabla_{\theta}l(\hat{\theta}_{t+i};\hat{X}_{i})-\theta^*_{t+M}||_{2}^2
-\\
-&amp;=  \beta^2||\sum_{i=0}^{T-1}
-\nabla_{\theta}l(\hat{\theta}_{t+i};\hat{X}_{i})||_{2}^2-2\beta
-(\sum_{i=0}^{T-1}
-\nabla_{\theta}l(\hat{\theta}_{t+i};\hat{X}_{i}))^T(\theta_{t}^* -
-\theta^*_{t+M})+C \tag{5}
-\end{flalign}
-\]</span> 其中<span class="math inline">\(C = ||\theta_{t}^* -
-\theta^*_{t+M}||_{2}^2\)</span>，是一个常数</p>
-<p>从<span class="math inline">\((5)\)</span>式出发，可以将<span
-class="math inline">\((4)\)</span>式转化为 <span class="math display">\[
-\frac{\partial L&#39;}{\partial \tilde{X}_{i}} = 2\beta^2 G^T
-\frac{\partial}{\partial \tilde{X}_{i}}
-\nabla_{\theta}l(\hat{\theta}_{t+i};\hat{X}_{i}) - 2\beta
-\frac{\partial}{\partial
-\tilde{X}_{i}}(\nabla_{\theta}l(\hat{\theta}_{t+i};\hat{X}_{i}))(\theta_{t}^*
-- \theta^*_{t+M}) \tag{6}
-\]</span> 其中<span class="math inline">\(G = \sum_{i=0}^{T-1}
-\nabla_{l}(\hat{\theta}_{t+i};\hat{X}_{i})\)</span></p>
-<p>在<span class="math inline">\((6)\)</span>式中，第二项只与每一个<span
-class="math inline">\(\tilde{X}_{i}\)</span>有关，只有第二项中<span
-class="math inline">\(G^T\)</span>是与全体步骤的梯度有关的，而其作为梯度之和，可以提前计算好，从而整体显存与迭代步数<span
-class="math inline">\(T\)</span>可以做到不相关，从而显存占用从<span
-class="math inline">\(O(T)\)</span>压到了<span
-class="math inline">\(O(1)\)</span>
-整体来看，只是对梯度的求法做了一个变形，但确实带来了很好的效果。</p>
-<p>另一点在于标签的使用。作者发现原始的0/1 hard
-label，收敛性差，但如果换成<span
-class="math inline">\((0,1)\)</span>之间的soft
-label，会有更好效果。因此作者使用目标步长<span
-class="math inline">\(\theta_{t+M}^*\)</span>的参数作为教师，生成soft
-label概率分布。这一点其实与KD是一致的。</p>
+h_{i} = \frac{\sum_{q=1}^{Q}h_{i}^q}{Q}
+\]</span> 之后用cos similarity找到与<span
+class="math inline">\(h_{i}\)</span>最接近的<span
+class="math inline">\(h_{j}, j\neq i\)</span>，从而定义<span
+class="math inline">\((x_{j},y_{j})\)</span>是<span
+class="math inline">\((x_{i}, y_{i})\)</span>的one shot example</p>
+<p>利用one shot example，我们可以定义数据的重要性： <span
+class="math display">\[
+MIWV(x_{i},y_{i}) = L_{\theta}(y_{i}|x_{i},C) - L_{\theta}(y_{i}|x_{i})
+\]</span> 其中<span class="math inline">\(C\)</span>就是<span
+class="math inline">\((x_{i},y_{i})\)</span>的one shot
+example。这里<span class="math inline">\(L_{\theta}(y_{i}|x_{i},C) =
+-\frac{1}{A}\sum_{a=1}^{A}\log
+p(y_{i}^{a}|x_{i},C,y_{i}^{&lt;a})\)</span>就是正常的CE Loss</p>
+<p>之后取MIWV最高的<span
+class="math inline">\(k\%\)</span>数据即可。这里MIWV越高，代表引入与construct类似的one
+shot
+example之后，模型的预测结果并没有多少提升，从而其在该数据上的学习更需要注重。
+需要注意的是，有可能对于样本<span class="math inline">\((x_{i},
+y_{i})\)</span>，其可能并没有非常接近的one shot
+example，引入的最接近的<span
+class="math inline">\((x_{j},y_{j})\)</span>可能反而会阻碍模型预测。这种情况下，该样本的MIWV值也会比较高，从而被采样到，这在一定程度上也保证了训练数据的多样性。</p>
+<p>对数据质量的分析也表示，MIWVtop的样本，其分布质量往往会更好。 <img
+src="https://s2.loli.net/2025/11/17/WevuANiqQG5r29d.png" srcset="/img/loadings.gif" lazyload
+alt="400" /></p>
+<p>最后从实验结果上来看，哪怕仅仅使用前<span
+class="math inline">\(1\%\)</span>的数据，训练效果也比使用全量数据要好，这也代表原始数据是冗余且存在噪声的。这里最优比例在<span
+class="math inline">\(15\%\)</span>左右。 <img
+src="https://s2.loli.net/2025/11/17/BtmwDprndCW5R92.png" srcset="/img/loadings.gif" lazyload
+alt="400" /></p>
 
                 
               </div>
@@ -435,9 +414,7 @@ label概率分布。这一点其实与KD是一致的。</p>
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/KD/" class="print-no-link">#KD</a>
-      
-        <a href="/tags/Dataset-Condensation/" class="print-no-link">#Dataset_Condensation</a>
+        <a href="/tags/LLM/" class="print-no-link">#LLM</a>
       
     </div>
   
@@ -449,8 +426,8 @@ label概率分布。这一点其实与KD是一致的。</p>
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Scaling Up Dataset Distillation to ImageNet-1K with Constant Memory</div>
-      <div>https://sophilex.github.io/posts/b581fc49/</div>
+      <div>Importance-Aware Data Selection for Efficient LLM Instruction Tuning</div>
+      <div>https://sophilex.github.io/posts/7ee4c4ca/</div>
     </div>
     <div class="license-meta">
       
@@ -462,7 +439,7 @@ label概率分布。这一点其实与KD是一致的。</p>
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年10月13日</div>
+          <div>2025年11月17日</div>
         </div>
       
       
@@ -494,18 +471,12 @@ label概率分布。这一点其实与KD是一致的。</p>
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/7ee4c4ca/" title="Importance-Aware Data Selection for Efficient LLM Instruction Tuning">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Importance-Aware Data Selection for Efficient LLM Instruction Tuning</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/750bb55b/" title="Squeeze, Recover and Relabel: Dataset Condensation at ImageNet Scale From A New Perspective">
-                        <span class="hidden-mobile">Squeeze, Recover and Relabel: Dataset Condensation at ImageNet Scale From A New Perspective</span>
+                      <a href="/posts/b581fc49/" title="Scaling Up Dataset Distillation to ImageNet-1K with Constant Memory">
+                        <span class="hidden-mobile">Scaling Up Dataset Distillation to ImageNet-1K with Constant Memory</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
