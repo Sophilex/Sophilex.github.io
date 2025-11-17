@@ -27,7 +27,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://sophilex.github.io/img/gm0.avif">
 <meta property="article:published_time" content="2025-11-17T05:25:41.000Z">
-<meta property="article:modified_time" content="2025-11-17T05:36:07.066Z">
+<meta property="article:modified_time" content="2025-11-17T05:43:07.964Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="LLM">
 <meta name="twitter:card" content="summary_large_image">
@@ -271,7 +271,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          500 字
+          499 字
         
       </span>
     
@@ -333,12 +333,8 @@
               <div class="markdown-body">
                 
                 <p>提出llm微调时的一种数据选择策略。利用In Context
-Learning来判断模型在特定指令类型上的表现，从而能够有针对性地选择影响力高的数据。</p>
-<figure>
-<img src="https://s2.loli.net/2025/11/17/FByYM2I76dZPJsN.png" srcset="/img/loadings.gif" lazyload
-alt="500" />
-<figcaption aria-hidden="true">500</figcaption>
-</figure>
+Learning来判断模型在特定指令类型上的表现，从而能够有针对性地选择影响力高的数据。
+<img src="https://s2.loli.net/2025/11/17/FByYM2I76dZPJsN.png" srcset="/img/loadings.gif" lazyload alt="" width="500"></p>
 <p>指令微调数据可以表示为<span class="math inline">\(\{(x_{1},y_{1}),
 (x_{2},y_{2}), \dots (x_{n}, y_{n})\}\)</span>，对于每一个<span
 class="math inline">\(x_{i} = (x_{i}^1, x_{i}^2, \dots
@@ -371,14 +367,12 @@ example之后，模型的预测结果并没有多少提升，从而其在该数�
 y_{i})\)</span>，其可能并没有非常接近的one shot
 example，引入的最接近的<span
 class="math inline">\((x_{j},y_{j})\)</span>可能反而会阻碍模型预测。这种情况下，该样本的MIWV值也会比较高，从而被采样到，这在一定程度上也保证了训练数据的多样性。</p>
-<p>对数据质量的分析也表示，MIWVtop的样本，其分布质量往往会更好。 <img
-src="https://s2.loli.net/2025/11/17/WevuANiqQG5r29d.png" srcset="/img/loadings.gif" lazyload
-alt="400" /></p>
+<p>对数据质量的分析也表示，MIWVtop的样本，其分布质量往往会更好。
+<img src="https://s2.loli.net/2025/11/17/WevuANiqQG5r29d.png" srcset="/img/loadings.gif" lazyload alt="" width="350"></p>
 <p>最后从实验结果上来看，哪怕仅仅使用前<span
 class="math inline">\(1\%\)</span>的数据，训练效果也比使用全量数据要好，这也代表原始数据是冗余且存在噪声的。这里最优比例在<span
-class="math inline">\(15\%\)</span>左右。 <img
-src="https://s2.loli.net/2025/11/17/BtmwDprndCW5R92.png" srcset="/img/loadings.gif" lazyload
-alt="400" /></p>
+class="math inline">\(15\%\)</span>左右。
+<img src="https://s2.loli.net/2025/11/17/BtmwDprndCW5R92.png" srcset="/img/loadings.gif" lazyload alt="" width="350"></p>
 
                 
               </div>
