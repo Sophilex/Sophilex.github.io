@@ -5,7 +5,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-        <!-- <title>Different Designs For LLM KD Loss</title> -->
+        <!-- <title>Different Designs For LLM KD Loss(II)</title> -->
 
         <link rel="stylesheet" href="https://cdn.bootcss.com/reveal.js/3.4.1/css/reveal.min.css">
 
@@ -298,16 +298,32 @@
                          data-separator="^\n---\n"
                          data-separator-vertical="^\n--\n"
                          data-separator-notes="^Note:">
-                    <script type="text/template">Different Designs For LLM KD Loss
+                    <script type="text/template">Different Designs For LLM KD Loss(II)
 
 
 
 <small>Alephia</small>
-<small>25/5/5</small>
+<small>25/11/20</small>
 
 ---
 
-## KLD
+## Background
+
+模型$q_{\theta}$依据前缀$w^{t-1}$生成文本的时候，$\text{loss}$可以表示为
+$$
+l(q_{\theta},w^{t-1};o) = \mathop{\mathbb{E}}\limits_{w_{t}\sim o(\cdot|w^{t-1})}\log \frac{o(w_{t}|w^{t-1})}{q_{\theta}(w_{t}|w^{t-1})}
+$$
+由分布o采样下一个$\text{token}$ $w_{t}$，再进行$\text{KLD}$对齐。
+<p class="fragment">
+可以展开得到
+$$
+L(q_{\theta};o) \approx \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{o}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{q_{\theta}(w_{t}|w^{t-1})}
+$$
+</p>
+
+---
+
+## Background
 
 $$ 
 KL(p(X),q_{\theta}(X)) = E_{x\sim p(X)}\left[ \log \frac{p(x)}{q_{\theta}(x)} \right]  
@@ -324,12 +340,9 @@ $$
 
 最小化KLD(p,q)等价于最小化CE(p,q)等价于最大化似然函数
 
-
 ---
 
-## RKLD
-
-
+## Background
 
 $$
 \begin{flalign}
@@ -338,6 +351,8 @@ RKL(p(X),q_{\theta}(X))&=KL(q_{\theta}(X),p(X)) \\\\
 &= E_{x\sim q_{\theta}(X)}\left[ -\log p(x) \right]-H(q_{\theta}(x))
 \end{flalign}
 $$
+
+最小化RKLD(p,q)等价于最小化CE(q,p)-H(q)
 
 ---
 
@@ -392,6 +407,7 @@ KLD下，学生在教师分布的viod region会高估，进而带来麻烦。这
 Gu, Y., Dong, L., Wei, MiniLLM: Knowledge Distillation of Large Language Models. In ICLR,24
 </div>
 
+
 ---
 
 ## Does RKLD really helps in LLM KD?
@@ -410,6 +426,7 @@ Wu, T., Tao, Rethinking Kullback-Leibler Divergence in Knowledge Distillation fo
 </div>
 
 ---
+
 ## Combine RKLD with FKLD
 
 <div class="slide-img">
@@ -419,6 +436,19 @@ Wu, T., Tao, Rethinking Kullback-Leibler Divergence in Knowledge Distillation fo
 LLM KD中，所谓mean-seeking和mode-seeking可能并不存在，取而代之的是：FKLD倾向于先拟合分布头部，RKLD倾向于先拟合分布尾部
 
 最终solution：$AKL(p,q_{\theta})=\alpha_1  FKL(p,q_{\theta}) + \alpha_2 RKL(p,q_{\theta})$
+
+---
+
+## A Better Format
+
+$$
+D_{AB}^{(\alpha,\beta)}(p,q) = -\frac{1}{\alpha\beta}\sum_{k}\left[ p(k)^aq(k)^\beta-\frac{\alpha}{\alpha+\beta}p(k)^{\alpha+\beta}- \frac{\beta}{\alpha+\beta}q(k)^{\alpha+\beta}\right]
+$$
+
+
+<div class='slide-ref'>
+Wang, G., Yang, Z., Wang, Z., Wang, S., Xu, Q., & Huang, Q. (2025). ABKD: Pursuing a Proper Allocation of the Probability Mass in Knowledge Distillation via α-β-Divergence. In ICML, 25, Spotlight
+</div>
 
 </script>
 

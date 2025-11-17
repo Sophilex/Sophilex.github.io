@@ -5,7 +5,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-        <!-- <title>Training-Inference Mismatch In LLM KD(2)</title> -->
+        <!-- <title>Training-Inference Mismatch In LLM KD(II)</title> -->
 
         <link rel="stylesheet" href="https://cdn.bootcss.com/reveal.js/3.4.1/css/reveal.min.css">
 
@@ -298,7 +298,7 @@
                          data-separator="^\n---\n"
                          data-separator-vertical="^\n--\n"
                          data-separator-notes="^Note:">
-                    <script type="text/template">Training-Inference Mismatch In LLM KD(2)
+                    <script type="text/template">Training-Inference Mismatch In LLM KD(II)
 
 
 
@@ -314,7 +314,7 @@
 $$
 l(q_{\theta},w^{t-1};o) = \mathop{\mathbb{E}}\limits_{w_{t}\sim \textcolor{red}{o}(\cdot|w^{t-1})}\log \frac{o(w_{t}|w^{t-1})}{q_{\theta}(w_{t}|w^{t-1})}
 $$
-由<mark style="background: #FF5582A6;">目标分布o</mark>采样下一个$\text{token}$ $w_{t}$，再进行$\text{KLD}$对齐。
+由<mark style="background: #FF5582A6;">分布o</mark>采样下一个$\text{token}$ $w_{t}$，再进行$\text{KLD}$对齐。
 <p class="fragment">
 可以展开得到
 $$
