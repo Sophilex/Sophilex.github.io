@@ -5,7 +5,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-        <!-- <title>Different Designs For LLM KD Loss(II)</title> -->
+        <!-- <title>Different Designs For LLM KD Loss</title> -->
 
         <link rel="stylesheet" href="https://cdn.bootcss.com/reveal.js/3.4.1/css/reveal.min.css">
 
@@ -298,7 +298,7 @@
                          data-separator="^\n---\n"
                          data-separator-vertical="^\n--\n"
                          data-separator-notes="^Note:">
-                    <script type="text/template">Different Designs For LLM KD Loss(II)
+                    <script type="text/template">Different Designs For LLM KD Loss
 
 
 
@@ -314,19 +314,19 @@ $$
 l(q_{\theta},w^{t-1};o) = \mathop{\mathbb{E}}\limits_{w_{t}\sim o(\cdot|w^{t-1})}\log \frac{o(w_{t}|w^{t-1})}{q_{\theta}(w_{t}|w^{t-1})}
 $$
 由分布o采样下一个$\text{token}$ $w_{t}$，再进行$\text{KLD}$对齐。
-<p class="fragment">
+
 可以展开得到
 $$
-L(q_{\theta};o) \approx \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{o}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{q_{\theta}(w_{t}|w^{t-1})}
+L(q_{\theta};o) \approx \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{o}^{t-1} ,\ w_{t}\sim o(\cdot|w^{t-1})}}\log \frac{o(w_{t}|w^{t-1})}{q_{\theta}(w_{t}|w^{t-1})} = \sum_{t=1}^{T}\  \mathop{\mathbb{E}}\limits_{\substack{w^{t-1}\sim d_{o}^{t-1} }} KL(o||q_{\theta})
 $$
-</p>
+
 
 ---
 
 ## Background
 
 $$ 
-KL(p(X),q_{\theta}(X)) = E_{x\sim p(X)}\left[ \log \frac{p(x)}{q_{\theta}(x)} \right]  
+KL(p(X),q_{\theta}(X)) = E_{x\sim p(X)}\left[ \log \frac{p(x)}{q_{\theta}(x)} \right]   = E_{x \sim p(X)} [-\log q_{\theta}(x)] - H(p(x))
 $$
 
 $$
@@ -338,7 +338,7 @@ argmin_{\theta}\ KL(p(X),q_{\theta}(X)) &= argmin_{\theta}\ E_{x\sim p(X)}\left[
 \end{flalign}
 $$
 
-最小化KLD(p,q)等价于最小化CE(p,q)等价于最大化似然函数
+最小化$KL(p,q_{\theta})$等价于最小化$CE(p,q_{\theta})$等价于最大化似然函数
 
 ---
 
@@ -394,7 +394,7 @@ $$
 
 ## RKLD in LLM KD
 
-KLD下，学生在教师分布的viod region会高估，进而带来麻烦。这一问题在RKLD下有所缓解
+KLD下，学生在教师分布的void region会高估，进而带来麻烦。这一问题在RKLD下有所缓解
 
 条件：
 1 教师服从混合Gaussion分布，学生服从Gaussion分布
@@ -450,7 +450,120 @@ $$
 Wang, G., Yang, Z., Wang, Z., Wang, S., Xu, Q., & Huang, Q. (2025). ABKD: Pursuing a Proper Allocation of the Probability Mass in Knowledge Distillation via α-β-Divergence. In ICML, 25, Spotlight
 </div>
 
-</script>
+---
+
+## Apply assistant distribution
+
+$$
+SKL^{\alpha}(p,q_{\theta}) = KL(p,\alpha p+(1-\alpha)q_{\theta})
+$$
+$$
+SRKL^{\alpha}(p,q_{\theta}) = RKL(q_{\theta}, \alpha q_{\theta}+(1-\alpha)p)
+$$
+
+
+<div class="slide-img">
+  <img src="https://s2.loli.net/2025/11/19/Kes6yAlmTEgoFwO.png" style="width: 300px; height: auto;border: none;float: left">
+</div>
+<div style="text-align: center;font-size: 36px; position: relative; left: 20px; top: 20px;">pulling-up effect for SKL</div>
+
+<div style="text-align: center;font-size: 36px; position: relative; left: 20px; top: 20px;">pulling-down effect for SRKL</div>
+<div style="font-size: 30px;">
+$$
+L_{CALD} = \frac{1}{2|D|}\sum_{(x,y_{t},y_{s})\sim D} SKL^{\alpha}(x,y_{t}) + SRKL^{\alpha}(x,y_{s})
+$$
+</div>
+<div class='slide-ref'>
+Ko, J., Kim, S., Chen, T., & Yun, S. (2024). DistiLLM: Towards Streamlined Distillation for Large Language Models. In ICML, 24
+
+Ko, J., Chen, T., Kim, S., Ding, T., Liang, L., Zharkov, I., & Yun, S. (2025). DistiLLM-2: A Contrastive Approach Boosts the Distillation of LLMs. In ICML, 25
+</div>
+
+---
+
+## Apply assistant distribution
+
+$$
+r = softmax((1-\alpha) \cdot \text{logit}(q_{\theta}(y_{s}|y_{<s})) + \alpha\cdot\text{logit}p((y_{s}|y_{<s})))
+$$
+
+$$
+r = p^\alpha q^{1-\alpha}
+$$
+
+<div class="slide-img">
+  <img src="https://s2.loli.net/2025/11/19/lpRbN1mHhkcVFex.png" style="width: 400px; height: auto;border: none">
+</div>
+
+<div class='slide-ref'>
+TAID: Temporally Adaptive Interpolated Distillation for Efficient Knowledge Transfer in Language Models. (2025). In ICLR, 25
+</div>
+
+---
+
+
+## Apply assistant distribution
+
+$$
+\tilde{r}^{(\alpha,\lambda)}(z) = \begin{cases}
+  (\lambda p(z)^{\frac{1-\alpha}{2}}+(1-\lambda)q(z)^{\frac{1-\alpha}{2}})^{\frac{2}{1-\alpha}} & \text{if } \alpha \neq 1 \\\\
+  p(z)^\lambda q(z)^{1-\lambda}   & \text{if } \alpha = 1
+\end{cases}
+$$
+
+$$
+r^{(\alpha,\lambda)}(z) = \frac{\tilde{r}^{(\alpha,\lambda)}(z)}{Z_{r}}, \ Z_{r} = \int \tilde{r}^{(\alpha,\lambda)}(x)dx
+$$
+
+<div class="slide-img">
+  <img src="https://s2.loli.net/2025/11/19/4E6qeZdPkDBCJvj.png" style="width: 650px; height: auto;border: none;float: left">
+</div>
+
+<div class="slide-img">
+  <img src="https://s2.loli.net/2025/11/19/uJFXZH46aeN9vst.png" style="width: 300px; height: auto;border: none;float: right">
+</div>
+
+<div class='slide-ref'>
+Shin, D., Kim, Y., Jo, S., Na, B., & Moon, I. (2025). AMiD: Knowledge Distillation for LLMs with $\alpha$-mixture Assistant Distribution.
+</div>
+
+
+---
+
+## Apply assistant distribution
+<div class="slide-img">
+  <img src="https://s2.loli.net/2025/11/19/jdeSLv7UYxFO51y.png" style="width: 1200px; height: auto;border: none">
+</div>
+
+<div class="slide-img">
+  <img src="https://s2.loli.net/2025/11/20/ZHdWOzABqvi687f.png" style="width: 300px; height: auto;border: none;float: right">
+</div>
+
+$w$ controls the magnitude of gradient
+
+when $p>q$, a larger $\alpha$ exhibits a mode-seeking behavior
+
+when $p<q$ , a smaller $\alpha$ exhibits a mean-seeking behavior
+
+
+
+---
+
+## Conclusion
+
+🤔 **Different choices of divergence**
+
+KLD, RKLD, AKD, ABKD...
+
+Focusing on **mode-seeking** ,**mean-seeking** behaviors and conbination of different divergence
+
+🤔 Apply assistant distribution
+
+Mitigate the teacher-student gap: AMiD, TAID, DistiLLM
+
+---
+
+## Thanks!</script>
 
                 </section>
             </div>
