@@ -397,11 +397,11 @@ $$
 KLD下，学生在教师分布的void region会高估，进而带来麻烦。这一问题在RKLD下有所缓解
 
 条件：
-1 教师服从混合Gaussion分布，学生服从Gaussion分布
-2 两个分布都是连续的
+1. 教师服从混合Gaussion分布，学生服从Gaussion分布
+2. 两个分布都是连续的
 
 
-<img src="https://s2.loli.net/2025/06/11/IKkgb3fMR9NxepO.png" style="width: 500px; height: auto; float: center; margin-top: auto; margin-bottom: auto;border: none;">
+<img src="https://s2.loli.net/2025/06/11/IKkgb3fMR9NxepO.png" style="width: 500px; height: auto; float: right; margin-top: auto; margin-bottom: auto;border: none;">
 
 <div class='slide-ref'>
 Gu, Y., Dong, L., Wei, MiniLLM: Knowledge Distillation of Large Language Models. In ICLR,24
@@ -444,10 +444,33 @@ LLM KD中，所谓mean-seeking和mode-seeking可能并不存在，取而代之�
 $$
 D_{AB}^{(\alpha,\beta)}(p,q) = -\frac{1}{\alpha\beta}\sum_{k}\left[ p(k)^aq(k)^\beta-\frac{\alpha}{\alpha+\beta}p(k)^{\alpha+\beta}- \frac{\beta}{\alpha+\beta}q(k)^{\alpha+\beta}\right]
 $$
+α controls ``Hardness Concentration``, while β controls ``Confidence-Concentration``
+
+**FKLD** 表现出弱`Hardness Concentration` 和弱`Confidence-Concentration` , $\alpha=1, \beta=0$
+
+**RKLD** 表现出强`Hardness Concentration` 和强`Confidence-Concentration`, $\alpha=0, \beta=1$
+
 
 
 <div class='slide-ref'>
-Wang, G., Yang, Z., Wang, Z., Wang, S., Xu, Q., & Huang, Q. (2025). ABKD: Pursuing a Proper Allocation of the Probability Mass in Knowledge Distillation via α-β-Divergence. In ICML, 25, Spotlight
+Wang, G., Yang, Z., Wang, Z., Wang, S., Xu, Q., & Huang, Q. (2025). ABKD: Pursuing a Proper Allocation of the Probability Mass in Knowledge Distillation via α-β-Divergence. In ICML, 25
+</div>
+
+---
+
+## A Better Format
+
+
+$$
+D_{\alpha}(p,q) = -\frac{1}{\alpha(1-\alpha)}\sum_{k}\left[ p(k)^aq(k)^{1-\alpha}-1\right]
+$$
+
+<div class="slide-img">
+  <img src="https://s2.loli.net/2025/11/20/eCIjqkg3JNy8smo.png" style="width: 450px; height: auto;border: none;float: left">
+</div>
+
+<div class="slide-img">
+  <img src="https://s2.loli.net/2025/11/20/XA6tng2FDYKGlcE.png" style="width: 450px; height: auto;border: none;float: right">
 </div>
 
 ---
@@ -557,7 +580,7 @@ KLD, RKLD, AKD, ABKD...
 
 Focusing on **mode-seeking** ,**mean-seeking** behaviors and conbination of different divergence
 
-🤔 Apply assistant distribution
+🤔 **Apply assistant distribution**
 
 Mitigate the teacher-student gap: AMiD, TAID, DistiLLM
 
