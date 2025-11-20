@@ -288,11 +288,11 @@
     </head>
     <body>
         <div class="reveal">
-            <button id="fullscreen-btn" title="全屏显示 (ESC退出)">
+            <!-- <button id="fullscreen-btn" title="全屏显示 (ESC退出)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
                 </svg>
-            </button>
+            </button> -->
             <div class="slides">
                 <section data-markdown
                          data-separator="^\n---\n"
@@ -309,7 +309,7 @@
 
 ## Background
 
-模型$q_{\theta}$依据前缀$w^{t-1}$生成文本的时候，$\text{loss}$可以表示为
+模型$q_{\theta}$依据前缀$w^{t-1}$生成token的时候，$\text{loss}$可以表示为
 $$
 l(q_{\theta},w^{t-1};o) = \mathop{\mathbb{E}}\limits_{w_{t}\sim o(\cdot|w^{t-1})}\log \frac{o(w_{t}|w^{t-1})}{q_{\theta}(w_{t}|w^{t-1})}
 $$
@@ -358,7 +358,7 @@ $$
 
 ## FKLD: Mean-Seeking Behaviour
 
-$$ KL(p(X),q_{\theta}(X)) =  E_{x\sim p(X)}\left[ -\log q_{\theta}(x) \right]-H(p(x)) $$
+$$ KL(p(X),q_{\theta}(X)) = E_{x\sim p(X)}\left[ \log \frac{p(x)}{q_{\theta}(x)} \right]= E_{x\sim p(X)}\left[ -\log q_{\theta}(x) \right]-H(p(x)) $$
 
 Zero Avoiding
 $$
@@ -377,14 +377,14 @@ $$
 
 $$
 \begin{flalign}
-RKL(p(X),q_{\theta}(X)) = E_{x\sim q_{\theta}(X)}\left[ -\log p(x) \right]-H(q_{\theta}(x))
+RKL(p(X),q_{\theta}(X)) = E_{x\sim q_{\theta}(X)}\left[ \log \frac{q_{\theta}(x)}{p(x)} \right]=E_{x\sim q_{\theta}(X)}\left[ -\log p(x) \right]-H(q_{\theta}(x))
 \end{flalign}
 $$
 
 $$
 \exists (x,y)\  s.t.\ q_{\theta}(y|x)\gg 0, p(y|x)\approx 0 \rightarrow KL(q_{\theta},p)=inf
 $$
-- q中高概率的地方，p也必须高， q中低概率的地方，p也应该较小
+- q中高概率的地方，p也必须高
 - p中高概率的地方，q不必高
 - RKLD倾向于拟合一个峰
 
@@ -433,7 +433,7 @@ Wu, T., Tao, Rethinking Kullback-Leibler Divergence in Knowledge Distillation fo
   <img src="https://s2.loli.net/2025/06/11/iLIvPSaxHVlET95.png" style="width: 700px; height: auto;border: none">
 </div>
 
-LLM KD中，所谓mean-seeking和mode-seeking可能并不存在，取而代之的是：FKLD倾向于先拟合分布头部，RKLD倾向于先拟合分布尾部
+LLM KD中，所谓mean-seeking和mode-seeking可能并不准确，取而代之的是：FKLD倾向于先拟合分布头部，RKLD倾向于先拟合分布尾部
 
 最终solution：$AKL(p,q_{\theta})=\alpha_1  FKL(p,q_{\theta}) + \alpha_2 RKL(p,q_{\theta})$
 
