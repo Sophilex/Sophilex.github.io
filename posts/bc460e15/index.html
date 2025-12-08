@@ -18,27 +18,26 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="关于LLM KD的一些讨论：Divergence的选择与代理分布的设计">
+    <meta name="description" content="优化时函数不可导的一些处理手段">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Different Designs For LLM KD Loss">
-<meta property="og:url" content="https://sophilex.github.io/posts/bb72292a/index.html">
+<meta property="og:title" content="Proximal Gradient and Subgradients">
+<meta property="og:url" content="https://sophilex.github.io/posts/bc460e15/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="关于LLM KD的一些讨论：Divergence的选择与代理分布的设计">
+<meta property="og:description" content="优化时函数不可导的一些处理手段">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/gm1.jpg">
-<meta property="article:published_time" content="2025-11-17T13:14:32.000Z">
-<meta property="article:modified_time" content="2025-11-20T01:38:16.481Z">
+<meta property="og:image" content="https://sophilex.github.io/img/lxh2.webp">
+<meta property="article:published_time" content="2025-12-08T06:38:17.000Z">
+<meta property="article:modified_time" content="2025-12-08T06:55:56.421Z">
 <meta property="article:author" content="Sophilex">
-<meta property="article:tag" content="LLM">
-<meta property="article:tag" content="KD">
+<meta property="article:tag" content="数学">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/gm1.jpg">
+<meta name="twitter:image" content="https://sophilex.github.io/img/lxh2.webp">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>Different Designs For LLM KD Loss - Sophilex‘s Blog</title>
+  <title>Proximal Gradient and Subgradients - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -238,13 +237,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/gm1.jpg') no-repeat center center; background-size: cover;">
+     style="background: url('/img/lxh2.webp') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Different Designs For LLM KD Loss"></span>
+            <span id="subtitle" data-typed-text="Proximal Gradient and Subgradients"></span>
           
         </div>
 
@@ -260,8 +259,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-11-17 21:14" pubdate>
-          2025年11月17日 晚上
+        <time datetime="2025-12-08 14:38" pubdate>
+          2025年12月8日 下午
         </time>
       </span>
     
@@ -272,7 +271,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          0 字
+          1.5k 字
         
       </span>
     
@@ -283,7 +282,7 @@
         
         
         
-          1 分钟
+          13 分钟
         
       </span>
     
@@ -328,26 +327,204 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">Different Designs For LLM KD Loss</h1>
+            <h1 id="seo-header">Proximal Gradient and Subgradients</h1>
             
             
               <div class="markdown-body">
                 
-                
+                <h1 id="proximal-gradient">Proximal Gradient</h1>
+<p>在对函数做梯度下降的时候，一般要求其是可微的，但这种情况并非总是成立。面对
+<span class="math display">\[
+min_{x}f(x)+g(x)\tag{1}
+\]</span> 其中<span class="math inline">\(f\)</span>可微，但是<span
+class="math inline">\(g\)</span>不是，那么普通的梯度下降就不能使用了，此时可以采用Proximal
+Gradient： <span class="math display">\[
+x_{k+1} = \text{prox}_{\lambda_kg}(x_k-\lambda_k \nabla f(x_k))\tag{2}
+\]</span> 这要求：</p>
+<ul>
+<li><span
+class="math inline">\(f\)</span>是<code>L-Lipschitz</code>光滑的</li>
+<li><span
+class="math inline">\(g\)</span>是凸函数（但是并不要求光滑）</li>
+</ul>
+<p>按照<span class="math inline">\((2)\)</span>式迭代更新<span
+class="math inline">\(x\)</span>即可。<span
+class="math inline">\((2)\)</span>式可以看成两个部分：右边就是一个正常的对<span
+class="math inline">\(f\)</span>的梯度下降，外面<span
+class="math inline">\(\text{prox}\)</span>是近端算子</p>
+<h2 id="近端算子">近端算子</h2>
+<p>其定义为 <span class="math display">\[
+\begin{flalign}
+\text{prox}_{\lambda g}(w) &amp;= argmin_{z}
+\frac{1}{2\lambda}||w-z||^2_{2} + g(z)\\
+&amp;=argmin_{z} \frac{1}{2} ||w-z||_{2}^2+\lambda g(z)\tag{3}
+\end{flalign}
+\]</span> 其中<span
+class="math inline">\(\lambda\)</span>是学习率。这个式子实际上是在求点<span
+class="math inline">\(w\)</span>附近一个可以使得<span
+class="math inline">\(g(z)\)</span>足够小的<span
+class="math inline">\(z\)</span>。代入<span
+class="math inline">\((2)\)</span>式我们可以发现，这里<span
+class="math inline">\(w\)</span>实际上对应了<span
+class="math inline">\(f\)</span>梯度下降后的next-state，从而这种操作本身是在两个函数优化之间做了trade-off</p>
+<p>接下来可以看一下从这种定义出发是如何近似<span
+class="math inline">\((1)\)</span>式的 <span class="math display">\[
+\begin{flalign}
+x_{k+1} &amp;= \text{prox}_{\lambda_kg}(x^k-\lambda_k \nabla f(x_k))\\
+&amp;= argmin_{z} \ g(z) + \frac{1}{2\lambda_k} ||x_k-\lambda_k \nabla
+f(x^k) - z||^2_{2}\\
+&amp;= argmin_{z} \ g(z) + \frac{\lambda_k}{2} ||\nabla f(x_k)||_{2}^2 +
+\nabla f(x_k)^T (x_k-z) + \frac{1}{2\lambda_k}||x_k-z||_{2}^2\\
+&amp;= argmin_{z}\ g(z) + f(x_k) + \nabla f(x_k)^T (x_k-z) +
+\frac{1}{2\lambda_k}||x_k-z||_{2}^2\\
+&amp;\approx argmin g(z)+f(z)
+\end{flalign}\tag{4}
+\]</span></p>
+<p>倒数第二个等号，用<span
+class="math inline">\(f(x_{k})\)</span>替换<span
+class="math inline">\(\frac{\lambda_k}{2} ||\nabla
+f(x_k)||_{2}^2\)</span>是因为它们都跟<span
+class="math inline">\(z\)</span>没有关系，最后一个等号，<span
+class="math inline">\(f(x_k) + \nabla f(x_k)^T
+(x_k-z)\)</span>用来线性近似<span
+class="math inline">\(f(z)\)</span>，后面一项用来控制近端误差，保证<span
+class="math inline">\(z\)</span>与<span
+class="math inline">\(x_{k}\)</span>不会太远，从而线性近似足够有效。整体来说，可以保证<span
+class="math inline">\(x_{k+1}\)</span>是<span
+class="math inline">\(x_{k}\)</span>附近使得<span
+class="math inline">\(g(\cdot)+f(\cdot)\)</span>足够小的一个点。</p>
+<p>此时我们还有一个非常重要的问题：<span
+class="math inline">\((3)\)</span>式要怎么求？实际上对于一般的凸函数<span
+class="math inline">\(g\)</span>，想要直接求解<span
+class="math inline">\((3)\)</span>式也不容易，因此这种方法一般也只对某些好求<span
+class="math inline">\((3)\)</span>式极值点的<span
+class="math inline">\(g\)</span>有效。</p>
+<h2 id="两个例子">两个例子</h2>
+<p>常用的有<span class="math inline">\(g(x)=||x||_{1}\)</span>，此时有
+<span class="math display">\[
+\text{prox}_{\lambda g}(x) = argmin_{z} \frac{1}{2\lambda}||x-z||_{2}^2
++ ||z||_{1}\tag{5}
+\]</span> 其每一个分量的最优解为 <span class="math display">\[
+z_{i}^* = \begin{cases}
+sgn(x_{i})(|x_{i}|-\lambda) &amp; \text{if } |x_{i}|&gt;\lambda, \\
+0  &amp; \text{if } else.
+\end{cases}\tag{6}
+\]</span></p>
+<p>而当 <span class="math display">\[
+g(x) = I_{C}(x) = \begin{cases}
+0 &amp; \text{if } x\in C\\ \\
+\infty &amp; \text{if } x\notin C
+\end{cases}\tag{7}
+\]</span> 时，近端算子就退化到了集合<span
+class="math inline">\(C\)</span>上的投影，因为如果<span
+class="math inline">\(x\notin C\)</span>的话，根本就找不到最小值，从而
+<span class="math display">\[
+\text{prox}_{\lambda g}(x) = argmin_{z} \frac{1}{2\lambda}||x-z||_{2}^2
++ I_{c}(x) = argmin_{z\in C}||x-z||_{2}^2\tag{8}
+\]</span></p>
+<h1 id="subgradients">Subgradients</h1>
+<p>尝试解决的问题与Proximal
+Gradient类似，都是处理不可微场景的。具体来说，对于一个不可微的点，其无法计算梯度，从而不能正常优化。为此引入次梯度，定义为
+<span class="math display">\[
+\partial f(x) = \{ g| f(y)\geq f(x) + g^T(y-x) , \forall y\in
+\text{dom}f\}\tag{9}
+\]</span>
+直观理解的话，就是下图中点x处的任意支撑超平面<img src="https://s2.loli.net/2025/12/08/xHGLuA8IyEBUTjv.png" srcset="/img/loadings.gif" lazyload alt="" width="300">当<span
+class="math inline">\(f(x)=x\)</span>的时候，有 <span
+class="math display">\[
+\partial f(x) = \begin{cases}
+sign(x) &amp; \text{if } x \neq 0\\ \\
+[-1,1] &amp; \text{if } x =0
+\end{cases}\tag{10}
+\]</span><img src="https://s2.loli.net/2025/12/08/W14lvIZwtHRrxbU.png" srcset="/img/loadings.gif" lazyload alt="" width="300">这一点并不难理解。</p>
+<h2 id="性质">性质</h2>
+<p>次梯度作为一个集合，存在如下性质</p>
+<ul>
+<li><span class="math inline">\(\partial
+f(x)\)</span>是一个闭凸集，哪怕<span
+class="math inline">\(f\)</span>是非凸的，这一点也是成立的</li>
+<li>当<span class="math inline">\(f\)</span>在点<span
+class="math inline">\(x\)</span>可微的时候，<span
+class="math inline">\(\partial f(x) = \{ \nabla f(x)\}\)</span></li>
+<li>当<span class="math inline">\(\partial f(x) = \{
+g\}\)</span>时，<span class="math inline">\(f\)</span>在点<span
+class="math inline">\(x\)</span>可微且<span class="math inline">\(\nabla
+f(x)=g\)</span></li>
+</ul>
+<h2 id="例子">例子</h2>
+<p>对于任意<span class="math inline">\(f\)</span>， <span
+class="math display">\[
+f(x^*)=min_{x} f(x) \iff 0\in \partial f(x^*)\tag{11}
+\]</span> 这是非常有意思的一点。以往用梯度的时候，点<span
+class="math inline">\(x\)</span>是极小值点能说明<span
+class="math inline">\(\nabla
+f(x)=0\)</span>，但是反过来并不成立，而用次梯度来思考的话，这成了一个等价条件。这里我们只需要证明必要性：
+<span class="math display">\[
+\forall y\in \text{dom} f,f(y) \geq f(x^*)+0^T(y-x^*)=f(x^*)\tag{12}
+\]</span></p>
+<hr />
+<p>利用次梯度还能证明一阶必要条件：</p>
+<p>首先极值问题等价于： <span class="math display">\[
+min_{x} f(x)+I_{C}(x)\tag{13}
+\]</span> 当点<span class="math inline">\(x^*\in
+\Omega\)</span>是函数<span
+class="math inline">\(f\)</span>的局部极值点时，有<span
+class="math inline">\(0\in \partial(f(x)+I_{C}(x))\)</span>，从而 <span
+class="math display">\[
+\begin{flalign}
+&amp; \iff 0\in \{ \nabla f(x) \} + N_{C}(x)\\
+&amp; \iff -\nabla f(x)\in N_{C}(x)\\
+&amp;\iff -\nabla f(x)^Tx\geq -\nabla f(x)^Ty , \forall y\in C\\
+&amp;\iff \nabla f(x)^T(y-x)\geq 0, \forall y\in C
+\end{flalign}\tag{14}
+\]</span> 其中<span class="math inline">\(N_{C}(x)\)</span>是<span
+class="math inline">\(I_{C}(x)\)</span>的次梯度 <span
+class="math display">\[
+N_{C}(x) = \{ g\in R^n| g^Tx \geq g^Ty, \forall y\in C \}\tag{15}
+\]</span></p>
+<hr />
+<p>在Proximal Gradient中我们看过一个近端算子的形式为 <span
+class="math display">\[
+\text{prox}_{\lambda g}(x) = argmin_{z} \frac{1}{2\lambda}||x-z||_{2}^2
++ ||z||_{1}\tag{16}
+\]</span> 它有一个更加normal的形式，被称为<strong>LASSO</strong> <span
+class="math display">\[
+argmin_{\beta\in \mathbb{R}^p}
+\frac{1}{2}||y-X\beta||_{2}^2+\lambda||\beta||_{1}\tag{17}
+\]</span> 这里<span class="math inline">\(y\in \mathbb{R}^{n}, X\in
+\mathbb{R}^{n \times p}\)</span>。我们同样可以用次梯度来分析这个问题
+<span class="math display">\[
+\begin{flalign}
+&amp; 0\in
+\partial(\frac{1}{2}||y-X\beta||_{2}^2+\lambda||\beta||_{1})\\
+&amp; \iff 0\in -X^T(y-X\beta) + \lambda \partial||\beta||_{1}\\
+&amp; \iff -X^T(y-X\beta)\in \lambda \partial||\beta||_{1}\\
+&amp; \iff \exists v\in \partial||\beta||_{1}, s.t.\
+X^T(y-X\beta)=\lambda v
+\end{flalign}\tag{18}
+\]</span> 我们仔细分析一下<span
+class="math inline">\(g=\partial||\beta||_{1}\)</span>，注意到<span
+class="math inline">\(||\beta||_{1}=\sum_{i}
+|\beta_{i}|\)</span>，各分量相互独立，从而 <span class="math display">\[
+g_{i} = \begin{cases}
+\{ sign(\beta_{i}) \} &amp; \text{if } \beta_{i}&gt;0 \\
+[-1,1] &amp; \text{if } \beta_{i}=0
+\end{cases}\tag{19}
+\]</span> 从而这为我们给出了最优解<span
+class="math inline">\(\beta\)</span>关于<span
+class="math inline">\(y\)</span>必须满足的两个关系： <span
+class="math display">\[
+\begin{cases}
+X^T(y-X\beta)=\lambda sign(\beta_{i}) &amp; \text{if } \beta_{i} \neq 0
+\\
+|X^T(y-X\beta)|\leq \lambda &amp; \text{if } \beta_{i}=0
+\end{cases}\tag{20}
+\]</span> 这实际上是一种soft-thresholding行为，从而利于导出稀疏的<span
+class="math inline">\(\beta\)</span>解，而这也正是<span
+class="math inline">\(L_{1}\)</span>正则化最重要的作用。</p>
+
                 
               </div>
-              
-                <hr/>
-                <div class="mt-4 d-flex justify-content-center gap-5">
-                  <a href="/posts/bb72292a/slide.html" class="btn btn-primary mx-3">
-                    View Slides
-                  </a>
-                  
-                    <a href="/posts/bb72292a/slide.pdf" class="btn btn-primary mx-3">
-                      View PDF
-                    </a>
-                  
-                </div>
               
 
             
@@ -365,7 +542,7 @@
     
       <span class="category-chain">
         
-  <a href="/categories/slides/" class="category-chain-item">slides</a>
+  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" class="category-chain-item">学习笔记</a>
   
   
 
@@ -380,9 +557,7 @@
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/LLM/" class="print-no-link">#LLM</a>
-      
-        <a href="/tags/KD/" class="print-no-link">#KD</a>
+        <a href="/tags/%E6%95%B0%E5%AD%A6/" class="print-no-link">#数学</a>
       
     </div>
   
@@ -394,8 +569,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Different Designs For LLM KD Loss</div>
-      <div>https://sophilex.github.io/posts/bb72292a/</div>
+      <div>Proximal Gradient and Subgradients</div>
+      <div>https://sophilex.github.io/posts/bc460e15/</div>
     </div>
     <div class="license-meta">
       
@@ -407,7 +582,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年11月17日</div>
+          <div>2025年12月8日</div>
         </div>
       
       
@@ -439,18 +614,12 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/bc460e15/" title="Proximal Gradient and Subgradients">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Proximal Gradient and Subgradients</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/7ee4c4ca/" title="Importance-Aware Data Selection for Efficient LLM Instruction Tuning">
-                        <span class="hidden-mobile">Importance-Aware Data Selection for Efficient LLM Instruction Tuning</span>
+                      <a href="/posts/bb72292a/" title="Different Designs For LLM KD Loss">
+                        <span class="hidden-mobile">Different Designs For LLM KD Loss</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
