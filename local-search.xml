@@ -4,6 +4,33 @@
   
   
   <entry>
+    <title>RETAINING BY DOING: THE ROLE OF ON-POLICY DATA IN MITIGATING FORGETTING</title>
+    <link href="/posts/3f64b17b/"/>
+    <url>/posts/3f64b17b/</url>
+    
+    <content type="html"><![CDATA[<p>通常认为，SFT使用的FKL(mean-seeking)，相比于RL对应的RKL(mode-seeking)，更能保留分布信息，从而在llm灾难性遗忘问题上有较好的缓解，但是本文提出，在原本的分布多模态假设下，RL可以在尽可能保留原本旧模态分布的情况下，学习新的模态，从而相比于SFT，在遗忘问题问题上有更好的表现。</p><p>同时，作者指出，这一行为主要来自RL的on-policy训练数据，而非其相对SFT多出来的KL正则化项或者优势函数估计。<img src="https://s2.loli.net/2025/12/14/Cq9SZMegdoA8RJB.png" /></p><h2 id="revisiting-rkl-and-skl">Revisiting RKL and SKL</h2><p>对于第一个结论，作者将最优策略分布<spanclass="math inline">\(\pi^*\)</span>建模为两个Gaussion分布的混合： <spanclass="math display">\[\pi^*(y) = \alpha^* p_{old}(y;\theta_{old}^*) + (1-\alpha^*)p_{new}(y;\theta_{new}^*)\tag{1}\]</span> 其中<spanclass="math inline">\(p_{old}\)</span>代表旧知识，<spanclass="math inline">\(p_{new}\)</span>代表新知识</p><p>当我们将初始策略固定为单模态时： <imgsrc="https://s2.loli.net/2025/12/14/XtRZNEGlvSFbc7P.png" />图中红色-&gt;黄色，蓝色-&gt;紫色代表训练过程的不断推进。可以看到，FKL尝试覆盖全部模态，对于旧知识会有相当一部分保留，而RKL在mode-seeking行为下会更加激进，从而导致原有知识的大量丢失，这一点可以通过Drop值来体现。</p><p>但是在LLM场景下，策略分布往往更可能本身就是多峰的： <spanclass="math display">\[\pi_{\theta}(y) = \alpha q_{old}(y;\theta_{old}) +q_{new}(y;\theta_{new})\tag{2}\]</span> 其中<spanclass="math inline">\(q_{old}\)</span>在预训练或者其它任务的微调之后，已经可以较好地覆盖目标分布<spanclass="math inline">\(p_{old}\)</span>，目标是让<spanclass="math inline">\(q_{new}\)</span>去逼近<spanclass="math inline">\(p_{new}\)</span>，同时尽可能保持<spanclass="math inline">\(q_{old}\)</span> <imgsrc="https://s2.loli.net/2025/12/14/mLEctRUWGKs4XwV.png" /></p><ul><li>FKL:同样尝试让整体分布去匹配目标，但是这会牺牲旧模式的匹配度，在高学习率下，为了更快匹配，对<spanclass="math inline">\(q_{old}\)</span>的改变会更大，甚至改变混合系数<spanclass="math inline">\(\alpha\)</span></li><li>RKL: <span class="math inline">\(q_{new}\)</span>很好地拟合了<spanclass="math inline">\(p_{new}\)</span>，但是同时<spanclass="math inline">\(q_{old}\)</span>也基本没有损失。注意到<spanclass="math display">\[RKL(p(X),q_{\theta}(X))= E_{x\sim q_{\theta}(X)}\left[ \log\frac{q_{\theta}(x)}{p(x)} \right]\tag{3}\]</span>RKL关注的是q中有概率的地方，p也必须有，从而可以避免在波谷处过度拟合。而原本的<spanclass="math inline">\(q_{old}\)</span>已经拟合的不错了，这部分并不会产生多少Loss，从而其可以专心拟合<spanclass="math inline">\(p_{new}\)</span></li></ul><p>总之，在对初始分布给出不同的假设之后，可以得到与之前工作截然相反的结论：</p><blockquote><p>RL相比SFT，在新任务上训练之后，可以有更好的防止遗忘旧任务的能力</p></blockquote><p>这个toy实验本身也并非足够完善，分布混合的模式，权重不同，也许会有其它结论，不过其本身给出了反例，可以说明之前的结论并不一定是正确的，尤其是在LLM场景下。</p><h2 id="on-policy-data-training">On-policy data training</h2><p>作者之后探讨了一下RL这种mode-seeking的行为，实际上是来自于on-policy的数据使用。目前RL与SFT的主要区别有：</p><ul><li>RL一般使用on-policy数据，SFT一般使用off-policy数据</li><li>RL的目标函数一般是<span class="math display">\[L_{RL}(\theta;x) = E_{y\sim \pi_{\theta}(\cdot|x)}[r(x,y)] - \betaD_{KL}(\pi_{\theta}(\cdot|x)||\pi&#39;(\cdot|x))\tag{4}\]</span>其相比于SFT，多出来一个KL正则化项</li><li>RL对advantage的运用，导致其对数据梯度进行了一个加权，而在SFT，所有样本梯度的权重是一致的，这一点在REINFORCEwith baseline的梯度表达式上可以非常直观的看到:<spanclass="math display">\[\nabla loss(x) = E_{(a_{t}, s_{t})\sim \pi}[\nabla \log\pi(a_{t}|s_{t})\  A(t)]\tag{5}\]</span></li></ul><p>在做了一系列对比实验之后，作者指出，on-policy的数据运用，是导致上述mode-seeking行为的主要原因。</p><h2 id="applying-on-policy-strategy-to-sft">Applying on-policy strategyto SFT</h2><p>利用这一点，我们显然也可以尝试对SFT进行on-policy的数据运用来尝试缓解灾难性遗忘。这个的成本是高昂的，但是如果做一个权衡：</p><blockquote><p>每隔一段训练时间，用当前模型重新生成数据并<strong>进行筛选</strong>，在这些新生成的数据上再做SFT</p></blockquote><p>这类似于on-policy，虽然更新频率相比于RL会更低，但是仍然可以享受到缓解灾难性遗忘的好处。<img src="https://s2.loli.net/2025/12/14/aGdMsLDhxqovVCt.png" /></p><h2 id="conclusion">Conclusion</h2><p>本文指出mode-seeking行为相比于mean-seeking，在LLM场景的分布多模态假设下，在学习新分布的时候，可以更好的保留原分布，从而缓解灾难性遗忘问题。<strong>并且指出这一行为主要来自于on-policy的数据运用。</strong></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+      <tag>Compression</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Proximal Gradient and Subgradients</title>
     <link href="/posts/bc460e15/"/>
     <url>/posts/bc460e15/</url>
