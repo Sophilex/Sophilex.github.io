@@ -4,6 +4,31 @@
   
   
   <entry>
+    <title>Selective Reflection-Tuning: Student-Selected Data Recycling for LLM Instruction-Tuning</title>
+    <link href="/posts/24a4ee0c/"/>
+    <url>/posts/24a4ee0c/</url>
+    
+    <content type="html"><![CDATA[<p>微调LLM的时候，数据往往来自提前设定好的数据集，最近有工作会提前用教师模型对数据进行加工，期望这可以让数据更加优质，从而推动学生模型的训练。但是这种操作假设教师的改动总是对学生有益的，这一点也许并不是那么合理。<img src="https://s2.loli.net/2025/12/15/LnJ49Gcx5MUsFNy.png" /></p><p>本文尝试引入学生的信息来帮助进行数据增强。原本以教师为中心的反思微调(Reflection-Tuning)方法包含两个步骤：</p><ul><li>设定了一系列标准来评估原始指令的优劣，包括“主题的复杂度”，“回答该指令所需的知识储备”，“指令的模糊程度”等。教师依据这些标准进行反思，在此基础上生成更好的指令以及对应的回答</li><li>对于生成的新的指令以及回答，设定了另外的评估回答的一系列标准，包括“回答是否有帮助”，“回答是否准确”等。教师依据此对模型的回答进行评价与反思，在此基础上生成更好的回答。</li></ul><p>当然这并没有考虑到学生的适配度，也许教师认为“好”的，对学生并不是。因此针对上述两个步骤分别提出两个指标进行比较：</p><ul><li><strong>指令遵循难度（IFD）分数</strong>：该指标衡量学生模型生成相应响应的指令难度：<spanclass="math display">\[IFD_{\theta}(y|x) = \frac{ppl(y|x)}{ppl(y)} = \exp(L_{\theta}(y|x) -L_{\theta}(y))\]</span>IFD分数越高，代表指令越难</li><li><strong>反向IFD（r-IFD）分数</strong>：这个新引入的指标通过量化响应如何帮助预测其对应指令来衡量样本的可行性：<spanclass="math display">\[r\text{-}IFD(x|y) = \frac{ppl(x|y&#39;)}{ppl(x)} =\exp(L_{\theta}(x|y&#39;)-L_{\theta}(x))\]</span>r-IFD分数越低表明学生可以轻易地从响应中推断出指令，这表示良好的对齐和学习可行性。</li></ul><p>在反思微调的第一阶段，面对原始指令对<spanclass="math inline">\((x_{0},y_{0})\)</span>以及教师反思优化后的<spanclass="math inline">\((x_{ins},y_{ins})\)</span>，学生分别计算IFD并选择较高的那个，第二阶段也是同样操作，选择<spanclass="math inline">\(r\text{-}IFD\)</span>较高的那个</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>RETAINING BY DOING: THE ROLE OF ON-POLICY DATA IN MITIGATING FORGETTING</title>
     <link href="/posts/3f64b17b/"/>
     <url>/posts/3f64b17b/</url>

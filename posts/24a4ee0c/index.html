@@ -18,27 +18,26 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="LLM场景下，mode-seeking相比mean-seeking也许可以更好保留原本的知识，并且这一行为可能来自on-policy strategy">
+    <meta name="description" content="LLM微调的时候引入学生信息辅助数据增强">
 <meta property="og:type" content="article">
-<meta property="og:title" content="RETAINING BY DOING: THE ROLE OF ON-POLICY DATA IN MITIGATING FORGETTING">
-<meta property="og:url" content="https://sophilex.github.io/posts/3f64b17b/index.html">
+<meta property="og:title" content="Selective Reflection-Tuning: Student-Selected Data Recycling for LLM Instruction-Tuning">
+<meta property="og:url" content="https://sophilex.github.io/posts/24a4ee0c/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="LLM场景下，mode-seeking相比mean-seeking也许可以更好保留原本的知识，并且这一行为可能来自on-policy strategy">
+<meta property="og:description" content="LLM微调的时候引入学生信息辅助数据增强">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/mc4.webp">
-<meta property="article:published_time" content="2025-12-14T14:29:14.000Z">
-<meta property="article:modified_time" content="2025-12-14T14:43:16.663Z">
+<meta property="og:image" content="https://sophilex.github.io/img/mc5.webp">
+<meta property="article:published_time" content="2025-12-15T06:39:45.000Z">
+<meta property="article:modified_time" content="2025-12-15T06:42:41.717Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="LLM">
-<meta property="article:tag" content="Compression">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/mc4.webp">
+<meta name="twitter:image" content="https://sophilex.github.io/img/mc5.webp">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>RETAINING BY DOING: THE ROLE OF ON-POLICY DATA IN MITIGATING FORGETTING - Sophilex‘s Blog</title>
+  <title>Selective Reflection-Tuning: Student-Selected Data Recycling for LLM Instruction-Tuning - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -238,13 +237,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/mc4.webp') no-repeat center center; background-size: cover;">
+     style="background: url('/img/mc5.webp') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="RETAINING BY DOING: THE ROLE OF ON-POLICY DATA IN MITIGATING FORGETTING"></span>
+            <span id="subtitle" data-typed-text="Selective Reflection-Tuning: Student-Selected Data Recycling for LLM Instruction-Tuning"></span>
           
         </div>
 
@@ -260,8 +259,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-12-14 22:29" pubdate>
-          2025年12月14日 晚上
+        <time datetime="2025-12-15 14:39" pubdate>
+          2025年12月15日 下午
         </time>
       </span>
     
@@ -272,7 +271,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.1k 字
+          571 字
         
       </span>
     
@@ -283,7 +282,7 @@
         
         
         
-          10 分钟
+          5 分钟
         
       </span>
     
@@ -328,85 +327,36 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">RETAINING BY DOING: THE ROLE OF ON-POLICY DATA IN MITIGATING FORGETTING</h1>
+            <h1 id="seo-header">Selective Reflection-Tuning: Student-Selected Data Recycling for LLM Instruction-Tuning</h1>
             
             
               <div class="markdown-body">
                 
-                <p>通常认为，SFT使用的FKL(mean-seeking)，相比于RL对应的RKL(mode-seeking)，更能保留分布信息，从而在llm灾难性遗忘问题上有较好的缓解，但是本文提出，在原本的分布多模态假设下，RL可以在尽可能保留原本旧模态分布的情况下，学习新的模态，从而相比于SFT，在遗忘问题问题上有更好的表现。</p>
-<p>同时，作者指出，这一行为主要来自RL的on-policy训练数据，而非其相对SFT多出来的KL正则化项或者优势函数估计。
-<img src="https://s2.loli.net/2025/12/14/Cq9SZMegdoA8RJB.png" srcset="/img/loadings.gif" lazyload /></p>
-<h2 id="revisiting-rkl-and-skl">Revisiting RKL and SKL</h2>
-<p>对于第一个结论，作者将最优策略分布<span
-class="math inline">\(\pi^*\)</span>建模为两个Gaussion分布的混合： <span
-class="math display">\[
-\pi^*(y) = \alpha^* p_{old}(y;\theta_{old}^*) + (1-\alpha^*)
-p_{new}(y;\theta_{new}^*)\tag{1}
-\]</span> 其中<span
-class="math inline">\(p_{old}\)</span>代表旧知识，<span
-class="math inline">\(p_{new}\)</span>代表新知识</p>
-<p>当我们将初始策略固定为单模态时： <img
-src="https://s2.loli.net/2025/12/14/XtRZNEGlvSFbc7P.png" srcset="/img/loadings.gif" lazyload />
-图中红色-&gt;黄色，蓝色-&gt;紫色代表训练过程的不断推进。可以看到，
-FKL尝试覆盖全部模态，对于旧知识会有相当一部分保留，而RKL在mode-seeking行为下会更加激进，从而导致原有知识的大量丢失，这一点可以通过Drop值来体现。</p>
-<p>但是在LLM场景下，策略分布往往更可能本身就是多峰的： <span
-class="math display">\[
-\pi_{\theta}(y) = \alpha q_{old}(y;\theta_{old}) +
-q_{new}(y;\theta_{new})\tag{2}
-\]</span> 其中<span
-class="math inline">\(q_{old}\)</span>在预训练或者其它任务的微调之后，已经可以较好地覆盖目标分布<span
-class="math inline">\(p_{old}\)</span>，目标是让<span
-class="math inline">\(q_{new}\)</span>去逼近<span
-class="math inline">\(p_{new}\)</span>，同时尽可能保持<span
-class="math inline">\(q_{old}\)</span> <img
-src="https://s2.loli.net/2025/12/14/mLEctRUWGKs4XwV.png" srcset="/img/loadings.gif" lazyload /></p>
+                <p>微调LLM的时候，数据往往来自提前设定好的数据集，最近有工作会提前用教师模型对数据进行加工，期望这可以让数据更加优质，从而推动学生模型的训练。但是这种操作假设教师的改动总是对学生有益的，这一点也许并不是那么合理。
+<img src="https://s2.loli.net/2025/12/15/LnJ49Gcx5MUsFNy.png" srcset="/img/loadings.gif" lazyload /></p>
+<p>本文尝试引入学生的信息来帮助进行数据增强。原本以教师为中心的反思微调(Reflection-Tuning)方法包含两个步骤：</p>
 <ul>
-<li>FKL:
-同样尝试让整体分布去匹配目标，但是这会牺牲旧模式的匹配度，在高学习率下，为了更快匹配，对<span
-class="math inline">\(q_{old}\)</span>的改变会更大，甚至改变混合系数<span
-class="math inline">\(\alpha\)</span></li>
-<li>RKL: <span class="math inline">\(q_{new}\)</span>很好地拟合了<span
-class="math inline">\(p_{new}\)</span>，但是同时<span
-class="math inline">\(q_{old}\)</span>也基本没有损失。注意到<span
-class="math display">\[
-RKL(p(X),q_{\theta}(X))= E_{x\sim q_{\theta}(X)}\left[ \log
-\frac{q_{\theta}(x)}{p(x)} \right]\tag{3}
-\]</span>RKL关注的是q中有概率的地方，p也必须有，从而可以避免在波谷处过度拟合。而原本的<span
-class="math inline">\(q_{old}\)</span>已经拟合的不错了，这部分并不会产生多少Loss，从而其可以专心拟合<span
-class="math inline">\(p_{new}\)</span></li>
+<li>设定了一系列标准来评估原始指令的优劣，包括“主题的复杂度”，“回答该指令所需的知识储备”，“指令的模糊程度”等。教师依据这些标准进行反思，在此基础上生成更好的指令以及对应的回答</li>
+<li>对于生成的新的指令以及回答，设定了另外的评估回答的一系列标准，包括“回答是否有帮助”，“回答是否准确”等。教师依据此对模型的回答进行评价与反思，在此基础上生成更好的回答。</li>
 </ul>
-<p>总之，在对初始分布给出不同的假设之后，可以得到与之前工作截然相反的结论：</p>
-<blockquote>
-<p>RL相比SFT，在新任务上训练之后，可以有更好的防止遗忘旧任务的能力</p>
-</blockquote>
-<p>这个toy实验本身也并非足够完善，分布混合的模式，权重不同，也许会有其它结论，不过其本身给出了反例，可以说明之前的结论并不一定是正确的，尤其是在LLM场景下。</p>
-<h2 id="on-policy-data-training">On-policy data training</h2>
-<p>作者之后探讨了一下RL这种mode-seeking的行为，实际上是来自于on-policy的数据使用。目前RL与SFT的主要区别有：</p>
+<p>当然这并没有考虑到学生的适配度，也许教师认为“好”的，对学生并不是。因此针对上述两个步骤分别提出两个指标进行比较：</p>
 <ul>
-<li>RL一般使用on-policy数据，SFT一般使用off-policy数据</li>
-<li>RL的目标函数一般是<span class="math display">\[
-L_{RL}(\theta;x) = E_{y\sim \pi_{\theta}(\cdot|x)}[r(x,y)] - \beta
-D_{KL}(\pi_{\theta}(\cdot|x)||\pi&#39;(\cdot|x))\tag{4}
-\]</span>其相比于SFT，多出来一个KL正则化项</li>
-<li>RL对advantage的运用，导致其对数据梯度进行了一个加权，而在SFT，所有样本梯度的权重是一致的，这一点在REINFORCE
-with baseline的梯度表达式上可以非常直观的看到:<span
+<li><strong>指令遵循难度（IFD）分数</strong>：该指标衡量学生模型生成相应响应的指令难度：<span
 class="math display">\[
-\nabla loss(x) = E_{(a_{t}, s_{t})\sim \pi}[\nabla \log\pi(a_{t}|s_{t})
-\  A(t)]\tag{5}
-\]</span></li>
+IFD_{\theta}(y|x) = \frac{ppl(y|x)}{ppl(y)} = \exp(L_{\theta}(y|x) -
+L_{\theta}(y))
+\]</span>IFD分数越高，代表指令越难</li>
+<li><strong>反向IFD（r-IFD）分数</strong>：这个新引入的指标通过量化响应如何帮助预测其对应指令来衡量样本的可行性：<span
+class="math display">\[
+r\text{-}IFD(x|y) = \frac{ppl(x|y&#39;)}{ppl(x)} =
+\exp(L_{\theta}(x|y&#39;)-L_{\theta}(x))
+\]</span>r-IFD
+分数越低表明学生可以轻易地从响应中推断出指令，这表示良好的对齐和学习可行性。</li>
 </ul>
-<p>在做了一系列对比实验之后，作者指出，on-policy的数据运用，是导致上述mode-seeking行为的主要原因。</p>
-<h2 id="applying-on-policy-strategy-to-sft">Applying on-policy strategy
-to SFT</h2>
-<p>利用这一点，我们显然也可以尝试对SFT进行on-policy的数据运用来尝试缓解灾难性遗忘。这个的成本是高昂的，但是如果做一个权衡：</p>
-<blockquote>
-<p>每隔一段训练时间，用当前模型重新生成数据并<strong>进行筛选</strong>，在这些新生成的数据上再做SFT</p>
-</blockquote>
-<p>这类似于on-policy，虽然更新频率相比于RL会更低，但是仍然可以享受到缓解灾难性遗忘的好处。
-<img src="https://s2.loli.net/2025/12/14/aGdMsLDhxqovVCt.png" srcset="/img/loadings.gif" lazyload /></p>
-<h2 id="conclusion">Conclusion</h2>
-<p>本文指出mode-seeking行为相比于mean-seeking，在LLM场景的分布多模态假设下，在学习新分布的时候，可以更好的保留原分布，从而缓解灾难性遗忘问题。
-<strong>并且指出这一行为主要来自于on-policy的数据运用。</strong></p>
+<p>在反思微调的第一阶段，面对原始指令对<span
+class="math inline">\((x_{0},y_{0})\)</span>以及教师反思优化后的<span
+class="math inline">\((x_{ins},y_{ins})\)</span>，学生分别计算IFD并选择较高的那个，第二阶段也是同样操作，选择<span
+class="math inline">\(r\text{-}IFD\)</span>较高的那个</p>
 
                 
               </div>
@@ -444,8 +394,6 @@ to SFT</h2>
       
         <a href="/tags/LLM/" class="print-no-link">#LLM</a>
       
-        <a href="/tags/Compression/" class="print-no-link">#Compression</a>
-      
     </div>
   
 </div>
@@ -456,8 +404,8 @@ to SFT</h2>
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>RETAINING BY DOING: THE ROLE OF ON-POLICY DATA IN MITIGATING FORGETTING</div>
-      <div>https://sophilex.github.io/posts/3f64b17b/</div>
+      <div>Selective Reflection-Tuning: Student-Selected Data Recycling for LLM Instruction-Tuning</div>
+      <div>https://sophilex.github.io/posts/24a4ee0c/</div>
     </div>
     <div class="license-meta">
       
@@ -469,7 +417,7 @@ to SFT</h2>
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年12月14日</div>
+          <div>2025年12月15日</div>
         </div>
       
       
@@ -501,18 +449,12 @@ to SFT</h2>
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/24a4ee0c/" title="Selective Reflection-Tuning: Student-Selected Data Recycling for LLM Instruction-Tuning">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Selective Reflection-Tuning: Student-Selected Data Recycling for LLM Instruction-Tuning</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/bc460e15/" title="Proximal Gradient and Subgradients">
-                        <span class="hidden-mobile">Proximal Gradient and Subgradients</span>
+                      <a href="/posts/3f64b17b/" title="RETAINING BY DOING: THE ROLE OF ON-POLICY DATA IN MITIGATING FORGETTING">
+                        <span class="hidden-mobile">RETAINING BY DOING: THE ROLE OF ON-POLICY DATA IN MITIGATING FORGETTING</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
