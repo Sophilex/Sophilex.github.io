@@ -4,6 +4,56 @@
   
   
   <entry>
+    <title>Distilling the Essence: Efficient Reasoning Distillation via Sequence Truncation</title>
+    <link href="/posts/d1709627/"/>
+    <url>/posts/d1709627/</url>
+    
+    <content type="html"><![CDATA[<p>对推理蒸馏在数据层面进行深入分析。做推理蒸馏时，每一条数据的构成一般是:Prompt(P)+CoT+Answer(A)。然后按照一般蒸馏的方法，给定Prompt的情况下，对齐CoT+A部分。</p><h2 id="cot的重要性">CoT的重要性</h2><p>作者通过实验发现，只需要对齐CoT部分，就能取得与整条数据都训练相当的效果，有时候甚至更好。而一旦去除CoT部分的对齐，性能就会非常低；同时在对齐CoT的情况下，再对齐P或者A，对结果基本没啥影响。<img src="https://s2.loli.net/2025/12/29/UlueLpoAMDqbZ8W.png" /></p><p>从语言分析来看，这是因为CoT当中已经基本包含了P和A的所有信息，从而再对齐P和A基本都是冗余信息了。</p><h2 id="关于序列不同位置的信息重要性">关于序列不同位置的信息重要性</h2><p>同时，如果直接对每一条训练数据直接按照比例进行截断，也会有一些有意思的结论。具体来说，对每一条数据分别按照<spanclass="math inline">\(p=\{0.1, 0.2, \dots 0.9,1.0\}\)</span>的比例保留前<spanclass="math inline">\(p\)</span>的token，后面部分直接截断，然后用于训练。<img src="https://s2.loli.net/2025/12/29/LcO1giohslIMxby.png" /></p><p>当学生模型规模比较大(大于4B)时，观察到训练效果最好的时候反而不是在<spanclass="math inline">\(p=1\)</span>时取得，这一点与上一个结论有一定联系，因为我们知道A的信息基本是冗余的。但是只取<spanclass="math inline">\(p=0.5\)</span>左右长度的数据，也能取得不错的性能，这意味着推理前期所获得的信息，相比后期，是要更多的。当然，当模型规模比较小的时候，这一点并不明显。</p><p><strong>不过感觉这里实验可能也并非足够合理，对于小的模型(0.6B,1.7B)来说，8B和32B实在是太大了，从中收益有限(实际是基本蒸了等于没蒸，尤其是0.6B)。如果选择更合理的教师，这里关于它们的结论可能会有些不同。</strong></p><p>作者直接对数据按照<spanclass="math inline">\(p=0.5\)</span>分成左右两部分，然后分别训练，结果表明，只用前半部分所能得到的效果，确实是要远好于后半部分的。<img src="https://s2.loli.net/2025/12/29/QvIqjpHtYgGMBEx.png" /></p><p>对于这一点，作者认为是因为在推理前期，基本可以第一次得到答案了，后半部分往往是在反复验证，或者干脆就是无益的过度推理。</p><p>这启示我们，当学生模型规模比较大的时候，可以尝试直接对训练数据按照<spanclass="math inline">\(p=0.5\)</span>的比例进行截断。这一操作的益处是相当明显的：一方面学生和教师的规模都不小，另一方面，推理数据，由于CoT的存在，都是相当长的，这会带来巨大的KVcache，以及显存压力，这一点可以在下图中看到。 <imgsrc="https://s2.loli.net/2025/12/29/CPLVMEIX9soxnKH.png" /></p><p><spanclass="math inline">\(p&lt;0.5\)</span>时，不管是显存压力，还是训练时间，都没有明显增长。但是<spanclass="math inline">\(p&gt;0.5\)</span>时，由于attention的平方复杂度，训练压力会直线上升。但是根据前面实验的结果，此时我们的训练效果并不会有很多提升。</p><h2 id="conclusion">Conclusion</h2><p>蒸馏的时候，直接用CoT，就可以取得与原本基本一致的效果学生规模较大(&gt;4B)时，对蒸馏数据按照<spanclass="math inline">\(p=0.5\)</span>截断，训练压力会下降很多，同时保持不错的训练效果。(这一结论在小模型上效果不明显，但我认为可能是实验设置不合理导致的，保留意见)</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Instruction tuning with loss over instructions</title>
+    <link href="/posts/62ef6c38/"/>
+    <url>/posts/62ef6c38/</url>
+    
+    <content type="html"><![CDATA[<p>提出在对llm做finetuning的时候，指令部分也加入loss计算。给定指令序列<spanclass="math inline">\(I\)</span>以及对应的Response序列<spanclass="math inline">\(C\)</span>，原本的训练目标可以表示为 <spanclass="math display">\[P(C|I) = \sum_{t=1}^{|C|}P(c_{t}|I,c_{&lt;t})\]</span> 考虑到指令序列之后，训练目标可以表示为 <spanclass="math display">\[P(C,I) =\sum_{t=1}^{|C|+|I|} P(x_{t}|x_{&lt;t})\]</span>这样做的动机是，作者认为，当训练数据中指令序列很长而response很短的时候，只对齐response，可能会导致过拟合，而当训练数据很少的时候，这一点可能会更加严重。此时加入对指令序列的对齐，可以充当一个正则化的作用。</p><p>这一结论与[1]刚好可以互补。[1]指出的是，在推理场景下，即response序列很长很长的时候，是否对齐prompt没啥影响，而本文这种<spanclass="math inline">\(\frac{len(I)}{len(C)}\)</span>较大的情况下，对齐指令就会很有用了。</p><p><img src="https://s2.loli.net/2025/12/29/JohzXW6efsI4iCT.png" /> <imgsrc="https://s2.loli.net/2025/12/29/Ts4p81YtVN6qEXh.png" /></p><p>上图中IT代表正常的Instrucion-Tuning，IM是加入与<spanclass="math inline">\(I\)</span>对齐的IT。从实验结果来看确实如此。不过作者也强调了，这种方法并非对所有数据集都有用，它更适合在数据量小，<spanclass="math inline">\(\frac{len(I)}{len(C)}\)</span>较大这种更容易导致过拟合的场景下使用，上述数据集的<spanclass="math inline">\(\frac{len(I)}{len(C)}\)</span>基本都在<spanclass="math inline">\(&gt;1\)</span>的范围。</p><p>同时作者也验证了一下对齐<spanclass="math inline">\(I\)</span>起到了正则化防止过拟合这一说法的合理性。<img src="https://s2.loli.net/2025/12/29/CqlsPcEaMNSgekw.png" /></p><p>这里左侧的LIMA数据集用于训练，右侧的Tulu数据集用于测试。可以看到与指令序列对齐之后，在训练集上的Loss相对变大，但是测试集上的Loss变小了。这里测试时只考虑response上的生成质量。</p><h2 id="conclusion">Conclusion</h2><p>总体来说，在<strong>处理指令详细，但是输出简洁的数据集，或者资源受限，数据集规模较小的时候</strong>，对指令部分也加入对齐，可以有效抑制模型过拟合，取得相对更好的效果。</p><h2 id="reference">Reference</h2><p>[1] Chen, W., Kothapalli, V., Fatahibaarzi, A., Sang, H., Tang, S.,Song, Q., Wang, Z., &amp; Abdul-Mageed, M. (2025). Distilling theEssence: Efficient Reasoning Distillation via Sequence Truncation.</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Selective Reflection-Tuning: Student-Selected Data Recycling for LLM Instruction-Tuning</title>
     <link href="/posts/24a4ee0c/"/>
     <url>/posts/24a4ee0c/</url>

@@ -18,26 +18,26 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="LLM微调的时候引入学生信息辅助数据增强">
+    <meta name="description" content="有些数据集上对prompt也进行对齐，可以有效防止过拟合">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Selective Reflection-Tuning: Student-Selected Data Recycling for LLM Instruction-Tuning">
-<meta property="og:url" content="https://sophilex.github.io/posts/24a4ee0c/index.html">
+<meta property="og:title" content="Instruction tuning with loss over instructions">
+<meta property="og:url" content="https://sophilex.github.io/posts/62ef6c38/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="LLM微调的时候引入学生信息辅助数据增强">
+<meta property="og:description" content="有些数据集上对prompt也进行对齐，可以有效防止过拟合">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/mc5.webp">
-<meta property="article:published_time" content="2025-12-15T06:39:45.000Z">
-<meta property="article:modified_time" content="2025-12-15T06:42:41.717Z">
+<meta property="og:image" content="https://sophilex.github.io/img/j8.jpg">
+<meta property="article:published_time" content="2025-12-29T03:26:32.000Z">
+<meta property="article:modified_time" content="2025-12-29T03:35:07.650Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="LLM">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/mc5.webp">
+<meta name="twitter:image" content="https://sophilex.github.io/img/j8.jpg">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>Selective Reflection-Tuning: Student-Selected Data Recycling for LLM Instruction-Tuning - Sophilex‘s Blog</title>
+  <title>Instruction tuning with loss over instructions - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -237,13 +237,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/mc5.webp') no-repeat center center; background-size: cover;">
+     style="background: url('/img/j8.jpg') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Selective Reflection-Tuning: Student-Selected Data Recycling for LLM Instruction-Tuning"></span>
+            <span id="subtitle" data-typed-text="Instruction tuning with loss over instructions"></span>
           
         </div>
 
@@ -259,8 +259,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-12-15 14:39" pubdate>
-          2025年12月15日 下午
+        <time datetime="2025-12-29 11:26" pubdate>
+          2025年12月29日 上午
         </time>
       </span>
     
@@ -271,7 +271,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          571 字
+          552 字
         
       </span>
     
@@ -327,36 +327,43 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">Selective Reflection-Tuning: Student-Selected Data Recycling for LLM Instruction-Tuning</h1>
+            <h1 id="seo-header">Instruction tuning with loss over instructions</h1>
             
             
               <div class="markdown-body">
                 
-                <p>微调LLM的时候，数据往往来自提前设定好的数据集，最近有工作会提前用教师模型对数据进行加工，期望这可以让数据更加优质，从而推动学生模型的训练。但是这种操作假设教师的改动总是对学生有益的，这一点也许并不是那么合理。
-<img src="https://s2.loli.net/2025/12/15/LnJ49Gcx5MUsFNy.png" srcset="/img/loadings.gif" lazyload /></p>
-<p>本文尝试引入学生的信息来帮助进行数据增强。原本以教师为中心的反思微调(Reflection-Tuning)方法包含两个步骤：</p>
-<ul>
-<li>设定了一系列标准来评估原始指令的优劣，包括“主题的复杂度”，“回答该指令所需的知识储备”，“指令的模糊程度”等。教师依据这些标准进行反思，在此基础上生成更好的指令以及对应的回答</li>
-<li>对于生成的新的指令以及回答，设定了另外的评估回答的一系列标准，包括“回答是否有帮助”，“回答是否准确”等。教师依据此对模型的回答进行评价与反思，在此基础上生成更好的回答。</li>
-</ul>
-<p>当然这并没有考虑到学生的适配度，也许教师认为“好”的，对学生并不是。因此针对上述两个步骤分别提出两个指标进行比较：</p>
-<ul>
-<li><strong>指令遵循难度（IFD）分数</strong>：该指标衡量学生模型生成相应响应的指令难度：<span
+                <p>提出在对llm做fine
+tuning的时候，指令部分也加入loss计算。给定指令序列<span
+class="math inline">\(I\)</span>以及对应的Response序列<span
+class="math inline">\(C\)</span>，原本的训练目标可以表示为 <span
 class="math display">\[
-IFD_{\theta}(y|x) = \frac{ppl(y|x)}{ppl(y)} = \exp(L_{\theta}(y|x) -
-L_{\theta}(y))
-\]</span>IFD分数越高，代表指令越难</li>
-<li><strong>反向IFD（r-IFD）分数</strong>：这个新引入的指标通过量化响应如何帮助预测其对应指令来衡量样本的可行性：<span
+P(C|I) = \sum_{t=1}^{|C|}P(c_{t}|I,c_{&lt;t})
+\]</span> 考虑到指令序列之后，训练目标可以表示为 <span
 class="math display">\[
-r\text{-}IFD(x|y) = \frac{ppl(x|y&#39;)}{ppl(x)} =
-\exp(L_{\theta}(x|y&#39;)-L_{\theta}(x))
-\]</span>r-IFD
-分数越低表明学生可以轻易地从响应中推断出指令，这表示良好的对齐和学习可行性。</li>
-</ul>
-<p>在反思微调的第一阶段，面对原始指令对<span
-class="math inline">\((x_{0},y_{0})\)</span>以及教师反思优化后的<span
-class="math inline">\((x_{ins},y_{ins})\)</span>，学生分别计算IFD并选择较高的那个，第二阶段也是同样操作，选择<span
-class="math inline">\(r\text{-}IFD\)</span>较高的那个</p>
+P(C,I) =\sum_{t=1}^{|C|+|I|} P(x_{t}|x_{&lt;t})
+\]</span>
+这样做的动机是，作者认为，当训练数据中指令序列很长而response很短的时候，只对齐response，可能会导致过拟合，而当训练数据很少的时候，这一点可能会更加严重。此时加入对指令序列的对齐，可以充当一个正则化的作用。</p>
+<p>这一结论与[1]刚好可以互补。[1]指出的是，在推理场景下，即response序列很长很长的时候，是否对齐prompt没啥影响，而本文这种<span
+class="math inline">\(\frac{len(I)}{len(C)}\)</span>较大的情况下，对齐指令就会很有用了。</p>
+<p><img src="https://s2.loli.net/2025/12/29/JohzXW6efsI4iCT.png" srcset="/img/loadings.gif" lazyload /> <img
+src="https://s2.loli.net/2025/12/29/Ts4p81YtVN6qEXh.png" srcset="/img/loadings.gif" lazyload /></p>
+<p>上图中IT代表正常的Instrucion-Tuning，IM是加入与<span
+class="math inline">\(I\)</span>对齐的IT。
+从实验结果来看确实如此。不过作者也强调了，这种方法并非对所有数据集都有用，它更适合在数据量小，<span
+class="math inline">\(\frac{len(I)}{len(C)}\)</span>
+较大这种更容易导致过拟合的场景下使用，上述数据集的<span
+class="math inline">\(\frac{len(I)}{len(C)}\)</span>基本都在<span
+class="math inline">\(&gt;1\)</span>的范围。</p>
+<p>同时作者也验证了一下对齐<span
+class="math inline">\(I\)</span>起到了正则化防止过拟合这一说法的合理性。
+<img src="https://s2.loli.net/2025/12/29/CqlsPcEaMNSgekw.png" srcset="/img/loadings.gif" lazyload /></p>
+<p>这里左侧的LIMA数据集用于训练，右侧的Tulu数据集用于测试。可以看到与指令序列对齐之后，在训练集上的Loss相对变大，但是测试集上的Loss变小了。这里测试时只考虑response上的生成质量。</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>总体来说，在<strong>处理指令详细，但是输出简洁的数据集，或者资源受限，数据集规模较小的时候</strong>，对指令部分也加入对齐，可以有效抑制模型过拟合，取得相对更好的效果。</p>
+<h2 id="reference">Reference</h2>
+<p>[1] Chen, W., Kothapalli, V., Fatahibaarzi, A., Sang, H., Tang, S.,
+Song, Q., Wang, Z., &amp; Abdul-Mageed, M. (2025). Distilling the
+Essence: Efficient Reasoning Distillation via Sequence Truncation.</p>
 
                 
               </div>
@@ -404,8 +411,8 @@ class="math inline">\(r\text{-}IFD\)</span>较高的那个</p>
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Selective Reflection-Tuning: Student-Selected Data Recycling for LLM Instruction-Tuning</div>
-      <div>https://sophilex.github.io/posts/24a4ee0c/</div>
+      <div>Instruction tuning with loss over instructions</div>
+      <div>https://sophilex.github.io/posts/62ef6c38/</div>
     </div>
     <div class="license-meta">
       
@@ -417,7 +424,7 @@ class="math inline">\(r\text{-}IFD\)</span>较高的那个</p>
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年12月15日</div>
+          <div>2025年12月29日</div>
         </div>
       
       
@@ -449,9 +456,9 @@ class="math inline">\(r\text{-}IFD\)</span>较高的那个</p>
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/62ef6c38/" title="Instruction tuning with loss over instructions">
+                      <a href="/posts/d1709627/" title="Distilling the Essence: Efficient Reasoning Distillation via Sequence Truncation">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Instruction tuning with loss over instructions</span>
+                        <span class="hidden-mobile">Distilling the Essence: Efficient Reasoning Distillation via Sequence Truncation</span>
                         <span class="visible-mobile">上一篇</span>
                       </a>
                     
@@ -459,8 +466,8 @@ class="math inline">\(r\text{-}IFD\)</span>较高的那个</p>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/3f64b17b/" title="RETAINING BY DOING: THE ROLE OF ON-POLICY DATA IN MITIGATING FORGETTING">
-                        <span class="hidden-mobile">RETAINING BY DOING: THE ROLE OF ON-POLICY DATA IN MITIGATING FORGETTING</span>
+                      <a href="/posts/24a4ee0c/" title="Selective Reflection-Tuning: Student-Selected Data Recycling for LLM Instruction-Tuning">
+                        <span class="hidden-mobile">Selective Reflection-Tuning: Student-Selected Data Recycling for LLM Instruction-Tuning</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
