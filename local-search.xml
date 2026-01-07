@@ -4,33 +4,6 @@
   
   
   <entry>
-    <title>SGO in LLM On-Policy KD</title>
-    <link href="/posts/5bd1f8f1/"/>
-    <url>/posts/5bd1f8f1/</url>
-    
-    <content type="html"><![CDATA[]]></content>
-    
-    
-    <categories>
-      
-      <category>slides</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>LLM</tag>
-      
-      <tag>KD</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
     <title>Distilling the Essence: Efficient Reasoning Distillation via Sequence Truncation</title>
     <link href="/posts/d1709627/"/>
     <url>/posts/d1709627/</url>
