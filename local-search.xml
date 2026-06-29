@@ -4,6 +4,81 @@
   
   
   <entry>
+    <title>Data_Parallel</title>
+    <link href="/posts/ea6ed38e/"/>
+    <url>/posts/ea6ed38e/</url>
+    
+    <content type="html"><![CDATA[<p>含义很好理解，模型在不同gpu中直接是完整的副本，但是数据会划分为不同的batch分发进行训练，然后不同gpu将各自的梯度信息汇集再分发。主要分为两个架构：PS-Worker以及Ring-AllReduce</p><h2 id="ps-worker">PS-Worker</h2><p>这是早期 TensorFlow、MXNet，torch.DP(已经弃用)等框架广泛采用的方式。这里的PS是指Parameter ServerPS有两种选择：CPU或者GPU</p><p>使用CPU的话，GPU与CPU之间只能通过PCIe进行数据传输，这个带宽相比GPU之间的NVLink来说是低很多的[[PCIe VS NVLink|(参考这里)]]，这是一点。但是PS-Worker架构本身，哪怕使用GPU作为PS，主卡的负载也比其它GPU大很多，主卡的性能和通信开销很容易成为瓶颈。同时，主卡在计算时，其它gpu在发呆，gpu利用率也很低。</p><h2 id="ring-allreduce">Ring-AllReduce</h2><p>这是目前 NVIDIA、PyTorch DDP、Megatron-LM、DeepSpeed默认采用的方法</p><p>相比于PS-Worker，它将数据聚合与计算的压力从一个PS分发到所有gpu上。这里每张卡只与其下一张卡进行数据传输操作。</p><p><imgsrc="http://img.sophilex.top/img/Pasted%20image%2020260621230924.png" />整个Ring-AllReduce包含两个过程：<code>scatter-reduce</code>以及<code>allgather</code></p><ul><li><code>scatter-reduce</code></li></ul><p>将每一块GPU上的梯度信息分为N块，其中N是gpu数量。那么目标是要将不同gpu上不同块的信息聚合(这里以加和操作为例)并进行分发。在实际操作中，会执行N-1次数据传输操作，每次将当前卡的对应block的数据信息传输到下一张卡上并进行聚合。以第一次操作为例，gpu0将<spanclass="math inline">\(a_{0}\)</span>信息传给gpu1，gpu1将<spanclass="math inline">\(b_{1}\)</span>信息传给gpu2，以此类推。第二次操作时，gpu1将<spanclass="math inline">\(a_{0}+a_{1}\)</span>这个信息传给gpu2，... <imgsrc="http://img.sophilex.top/img/Pasted%20image%2020260621233041.png" /></p><p>那么执行N-1次操作后，每一张gpu上恰好会有一个block是包含了所有gpu的完整数据信息的。接下来就是要把每一块的数据进行分发同步到其它gpu上。<imgsrc="http://img.sophilex.top/img/Pasted%20image%2020260621233636.png" /></p><ul><li><code>allgather</code></li></ul><p>allgather操作执行的过程与上一步类似，只不过由数据聚合变成了数据分发。同样需要执行N-1次。<imgsrc="http://img.sophilex.top/img/Pasted%20image%2020260621233819.png" />以第一次操作为例，gpu4将第一个block的信息同步给gpu1，其它gpu执行类似操作，把自己内部有效的完整信息部分进行分发。第二次操作时，再把上一轮收到的信息发给下一个gpu。N-1次操作后，所有gpu的每一个block都会包含完整信息。</p><p>Torch.DDP的实现，就是通过Ring-AllReduce来进行每张卡上前向传播完之后梯度信息的聚合和更新，来保证每轮操作之前，每张卡上都是相同的更新好的参数。</p><ul><li>通信量分析 设模型参数量为<spanclass="math inline">\(\Phi\)</span>。两个阶段都要执行N-1次数据传输操作，每一次传输的数据量是<spanclass="math inline">\(\frac{\Phi}{N}\)</span>，那么总数据传输量是 <spanclass="math display">\[2(N-1) \times \frac{\Phi}{N} = 2 \frac{N-1}{N} \Phi\]</span> 其存在固定上限<spanclass="math inline">\(2\Phi\)</span>，即<spanclass="math inline">\(2\)</span>倍模型参数量。因此gpu数量增加并不会带来通信成本的无限增长。（这里分析的是单卡的通信成本，而不是总线带宽。）</li></ul>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+      <tag>分布式训练</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Model_Parallel</title>
+    <link href="/posts/9470789c/"/>
+    <url>/posts/9470789c/</url>
+    
+    <content type="html"><![CDATA[<h2 id="张量并行tp">张量并行(TP)</h2><p><strong>对模型参数矩阵进行划分</strong>，划分为不同的张量，分发到不同gpu上进行计算，最后再进行汇总。这里与ZeRO-3的参数划分并不同。（ZeRO-3是将整个参数矩阵展成一维向量后进行平均划分，参数矩阵同一行的内容也可能被划分到不同gpu上。）具体实现张量并行(Tensor Parallelism, TP)有两种思路： * Row Parallelism：<span class="math display">\[XW = \begin{bmatrix}  X_{1} X_{2}  \end{bmatrix}\begin{bmatrix}  W_{1}\\W_{2}  \end{bmatrix} = X_{1}W_{1}+X_{2}W_{2} = Y_{1}+Y_{2}=Y\]</span> * Column Parallelism: <span class="math display">\[XW = [X][W_{1} \ W_{2}] = [XW_{1} \ XW_{2}] = [Y_{1}\ Y_{2}] = Y\]</span> <img src="http://img.sophilex.top/img/TP.png" /></p><blockquote><p>TP对带宽要求较高，不建议跨多个<strong>节点</strong>进行TP训练，机器之间的数据传输是比较慢的。</p></blockquote><h2 id="流水线并行pipeline-parallelism-pp">流水线并行(PipelineParallelism, PP)</h2><h3 id="传统pp">传统PP</h3><p>对于多层的模型，当参数过大，单卡装不下时，一个直观的方式就是按层切分，每一部分放到一块上。假设模型有L层，我们有K块GPU，简单起见假设<spanclass="math inline">\(L\%K=0\)</span>，那么就可以每<spanclass="math inline">\(\frac{L}{K}\)</span>层的参数放到一个GPU上。 <imgsrc="http://img.sophilex.top/img/Pasted%20image%2020260628211446.png" /></p><p>上图是具体的模型训练过程中不同gpu的运行负荷和时间。前向传播部分逐块进行，当前向进行到第一个gpu上时，其它gpu都是空闲的。反向传播过程类似，最后会有一块额外的时间消耗，每一块gpu根据反向传播计算得到梯度进行参数更新。这个实现非常符合直觉，但是显然其对gpu的利用率是非常低的，gpu空泡率为<spanclass="math inline">\(O\left( \frac{K-1}{K}\right)\)</span>，gpu数量<spanclass="math inline">\(K\)</span>越大，空泡率越接近1，即gpu资源基本都是被浪费的。</p><h3 id="gpipe">Gpipe</h3><p>上述传统PP的问题主要在于，由于数据处理的串行特点，一个batch的数据在处理的时候，其它gpu没办法运行。Gpipe提出把一个batch的数据再重新拆分为多个Micro-batch，提高并行程度，那么就可以减少等待的空闲时间。虽然我们可以通过将 Micro-batch 划分到最小来减少 PipelineBubble，但需要注意的是，让 GPU 执行一次 Batch_size=32 的计算和执行 32 次Batch_size=1 的计算，二者的效率天差地别。所以在实际中需要综合考虑Micro-batch_size 和 Pipeline Bubble 来进行权衡。</p><p><imgsrc="http://img.sophilex.top/img/Pasted%20image%2020260628224458.png" /></p><p>Gpipe本身是传统PP的一大优化，但是其依然是先前向处理完所有的数据，再进行反向传播。这意味每一层前向完之后，需要保存所有激活值（目前处理手段是引入gradient-checkpoint进行缓解），这是一笔很大的梯度开销。### PipeDreamPipeDream在Gpipe基础上进行显存峰值的优化。其采用1F1B的数据处理策略。<imgsrc="http://img.sophilex.top/img/Pasted%20image%2020260628230647.png" /></p><p>在gpu4处理完batch1的数据之后，就立马做其对应的反向传播，那么之后处理batch2数据的前向传播时，就可以完全丢弃batch1对应的所有激活值了，从而降低了显存峰值。假设单个Micro-batch的激活值显存为<spanclass="math inline">\(A\)</span>，那么Gpipe的显存峰值可以表示为<spanclass="math inline">\(O(M\times A)\)</span>，与Micro-batch的大小<spanclass="math inline">\(M\)</span>有关，而pipeDream的显存峰值则接近<spanclass="math inline">\(O(A)\)</span>，这是巨大的显存优化。</p><blockquote><p>原则就是“尽早执行反向计算”</p></blockquote><p>就 Pipeline Bubble 占比而言，PipeDream 明显优于GPipe，并且随着训练的进行，Pipeline Bubble 会越来越少。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+      <tag>分布式训练</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>ZeRO</title>
+    <link href="/posts/a5065ac6/"/>
+    <url>/posts/a5065ac6/</url>
+    
+    <content type="html"><![CDATA[<p>模型训练时，gpu上需要存储的参数包括：模型参数，优化器状态，激活函数的输出，梯度，临时缓存。</p><p>具体来说，设模型参数为<spanclass="math inline">\(\Phi\)</span>，模型参数（FP16）、模型梯度（FP16）以及Adam优化器状态（FP32格式的模型参数备份、FP32的momentum以及FP32的variance），总共需要<span class="math display">\[2\Phi + 2\Phi + (4\Phi + 4\Phi +4\Phi) = 16\Phi\]</span> 字节存储。可以看到占据显存的最主要是优化器状态，为75%；</p><h2 id="具体设计">具体设计</h2><p><imgsrc="http://img.sophilex.top/img/Pasted%20image%2020260621235519.png" /></p><p>ZeRO针对其进行gpu上的存储优化，将不同内容分片到不同的gpu上。具体来说：</p><ul><li>ZeRO-1：只针对优化器状态进行分片。每张卡保存优化器状态的<spanclass="math inline">\(\frac{1}{N}\)</span>。从而每张卡的显存为<spanclass="math inline">\(4\Phi + \frac{12\Phi}{N}\)</span>，这里记为<spanclass="math inline">\(P_{os}\)</span>。当<spanclass="math inline">\(N\)</span>比较大的时候，显存趋于<spanclass="math inline">\(4\Phi\)</span>。</li><li>ZeRO-2：优化器状态和梯度进行分片。那么每张卡显存为<spanclass="math inline">\(2\Phi +\frac{(2+12)\Phi}{N}\)</span>，这里记为<spanclass="math inline">\(P_{os+g}\)</span>。那么当<spanclass="math inline">\(N\)</span>比较大的时候，显存趋于<spanclass="math inline">\(2\Phi\)</span>。</li><li>ZeRO-3：优化器状态、梯度和模型参数进行分片。从而每张卡显存为<spanclass="math inline">\(\frac{(2+2+12)\Phi}{N}\)</span>，记为<spanclass="math inline">\(P_{os+g+p}\)</span>。需要指出的是，ZeRO-3的分片并不是按照层来分，而是每一个参数矩阵flatten之后，平均划分为N份。<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs armasm">W shape = [<span class="hljs-number">4096</span>, <span class="hljs-number">4096</span>]<br><br>先把 W contiguous 后展平成一维:<br> W_flat = [<span class="hljs-built_in">w0</span>, <span class="hljs-built_in">w1</span>, <span class="hljs-built_in">w2</span>, ..., w16777215]<br>  <br> 然后按 <span class="hljs-meta">data</span> parallel rank 切连续区间： <br> rank0 保存 W_flat 的第 <span class="hljs-number">0</span> 段 <br> rank1 保存 W_flat 的第 <span class="hljs-number">1</span> 段 <br> ... <br> rank15 保存 W_flat 的第 <span class="hljs-number">15</span> 段<br></code></pre></td></tr></table></figure>ZeRO-3对模型参数也进行分片，它已经是相当于数据并行加上模型并行了。</li></ul><h2 id="通信成本分析">通信成本分析</h2><ul><li><p>DDP：也就是ZeRO-0，除了数据分片之外没有多余操作。那么这部分的通信成本在[[数据并行(DataParallel)|数据并行]]部分已经分析过了：首先做<code>scatter-reduce</code>聚合梯度信息，每张卡拿到各自数据分片的完整梯度信息。然后做<code>allgather</code>同步卡间梯度信息。两个步骤都需要做<spanclass="math inline">\(N-1\)</span>次数据传输操作(<spanclass="math inline">\(N\)</span>是gpu数量)，每次传输量为<spanclass="math inline">\(\frac{\Phi}{N}\)</span>，所以总成本是<spanclass="math inline">\(2 \frac{N-1}{N}\Phi\)</span></p></li><li><p>ZeRO-1：同样是先做<code>scatter-reduce</code>，从而每张卡可以拿到各自分片的梯度信息。由于每张卡也只有自己分片的优化器状态信息，所以这里与DDP不同，直接更新各自分片的梯度信息即可。成本为<spanclass="math inline">\(\frac{N}{N-1}\Phi\)</span>。接下来需要同步不同分片的参数信息，所以还需要再做一个关于参数的<code>allgather</code>操作，这一步的成本同样是<spanclass="math inline">\(\frac{N}{N-1}\Phi\)</span>。从而ZeRO-1的最终通信成本与DDP是一样的:<span class="math inline">\(2 \frac{N-1}{N}\Phi\)</span></p></li><li><p>ZeRO-2：注意到ZeRO-1的数据更新部分，每个分片只更新自己优化器状态对应部分的参数，但是却保存了完整梯度，这是没必要的，所以梯度也分片存储了。但是通信内容与成本跟ZeRO-1是完全一致的，所以最终通信成本也是<spanclass="math inline">\(2 \frac{N-1}{N}\Phi\)</span></p></li><li><p>ZeRO-3：前面几种训练方法的数据通信都发生在每一轮前向传播完之后，但是ZeRO-3由于参数本身也被分片了，在前向过程中也需要进行数据传输。<strong>前向传播部分：</strong>数据传播到不同层时，关于该层的参数<spanclass="math inline">\(\Phi_{l}\)</span>做一次<code>all-gather</code>，那么每张卡通信量就是<spanclass="math inline">\(\frac{N-1}{N}\Phi_{l}\)</span>，所有层都做一次之后，总参数量就是<spanclass="math inline">\(\frac{N-1}{N}\sum_{l}\Phi_{l}=\frac{N-1}{N}\Phi\)</span>。<strong>反向传播部分：</strong>计算每一层梯度同样需要完整的参数信息，要做一次<code>all-gather</code>，所以这里的通信内容和成本与前向传播部分一致：<spanclass="math inline">\(\frac{N-1}{N}\Phi\)</span>。<strong>反向传播梯度汇总：</strong>每张卡计算得到每一层在对应数据分片下的梯度分片需要汇总，所以需要做一次<code>scatter-reduce</code>，那么成本也是<spanclass="math inline">\(\frac{N-1}{N}\Phi\)</span>。这之后每张卡都有各自分片在<strong>所有数据分片下</strong>的完整梯度信息，ZeRO-3下也不需要做梯度同步，所以直接更新参数就可以进行下一轮训练了，这一轮也不存在其它通信成本了。最终通信成本就是<spanclass="math inline">\(3 \frac{N-1}{N}\Phi\)</span>。</p><blockquote><p>可以看出，ZeRO-3相比前面三者，通信成本翻了1.5倍，所以这对卡间通信能力要求还是挺高的，也确实会在一定程度上拖慢训练速度。但是带来的好处也是显著的：它可以真正做到训练显存随着卡数线性减少。这在大规模训练场景下还是很有意义的。</p></blockquote></li></ul><h2 id="zero-offload">ZeRO-offload</h2><p>在使用ZeRO-1或者ZeRO-2的时候，还可以考虑将一些计算量低的操作交给cpu来处理，同时将相关信息卸载到cpu上，这可以进一步释放gpu显存。</p><h2 id="fsdp">FSDP</h2><p>本质上就是 PyTorch 对 ZeRO-3 思想的官方实现。当然它也是支持cpuoffload的。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>学习笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>LLM</tag>
+      
+      <tag>分布式训练</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Connections Between On Policy Distillation And RL</title>
     <link href="/posts/b6097cfc/"/>
     <url>/posts/b6097cfc/</url>

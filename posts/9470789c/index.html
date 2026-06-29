@@ -18,27 +18,27 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="OPD可以看成一种特殊的RL，在此基础上对其进行拓展">
+    <meta name="description" content="对模型进行划分，多卡训练">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Connections Between On Policy Distillation And RL">
-<meta property="og:url" content="https://sophilex.github.io/posts/b6097cfc/index.html">
+<meta property="og:title" content="Model_Parallel">
+<meta property="og:url" content="https://sophilex.github.io/posts/9470789c/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="OPD可以看成一种特殊的RL，在此基础上对其进行拓展">
+<meta property="og:description" content="对模型进行划分，多卡训练">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/j12.jpg">
-<meta property="article:published_time" content="2026-03-10T09:58:49.000Z">
-<meta property="article:modified_time" content="2026-03-10T10:13:46.970Z">
+<meta property="og:image" content="https://sophilex.github.io/img/j4.png">
+<meta property="article:published_time" content="2026-06-29T03:41:51.000Z">
+<meta property="article:modified_time" content="2026-06-29T04:36:20.119Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="LLM">
-<meta property="article:tag" content="Compression">
+<meta property="article:tag" content="分布式训练">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/j12.jpg">
+<meta name="twitter:image" content="https://sophilex.github.io/img/j4.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>Connections Between On Policy Distillation And RL - Sophilex‘s Blog</title>
+  <title>Model_Parallel - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -238,13 +238,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/j12.jpg') no-repeat center center; background-size: cover;">
+     style="background: url('/img/j4.png') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Connections Between On Policy Distillation And RL"></span>
+            <span id="subtitle" data-typed-text="Model_Parallel"></span>
           
         </div>
 
@@ -260,8 +260,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2026-03-10 17:58" pubdate>
-          2026年3月10日 下午
+        <time datetime="2026-06-29 11:41" pubdate>
+          2026年6月29日 中午
         </time>
       </span>
     
@@ -272,7 +272,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.4k 字
+          867 字
         
       </span>
     
@@ -283,7 +283,7 @@
         
         
         
-          20 分钟
+          8 分钟
         
       </span>
     
@@ -328,223 +328,62 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">Connections Between On Policy Distillation And RL</h1>
+            <h1 id="seo-header">Model_Parallel</h1>
             
             
               <div class="markdown-body">
                 
-                <p>对[1]的阅读笔记。</p>
-<h2 id="main">Main</h2>
-<p>早期LLM post training策略，一个是off policy的SFT/KD，一个是on
-policy的RL
-对于SFT来说，其对于每一个token都有监督信号，训练稳定性好，但是训练数据集分布固定，容易导致train-inference
-mismatch；对于RL，其直接优化当前策略，但是不稳定，并且常常面临奖励系稀疏、延迟、高方差的问题</p>
-<p>on-policy
-distillation(OPD)结合的两者的优点，并且同时规避了各自的缺点。这篇文章尝试描述OPD与RL之间在损失函数，梯度形式上的联系。</p>
-<p>RL的损失函数表述如下 <span class="math display">\[
-\mathcal{J}_{RL}(\theta) = \mathrm{max}_{\theta}\ \mathbb{E}_{x\sim D,
-y\sim \pi_{\theta}(\cdot|x)} \left[r(x,y) -
-\beta\mathcal{D}_{KL}(\pi_{\theta}(y|x)||\pi_{ref}(y|x)) \right] \tag{1}
-\]</span> 其中<span
-class="math inline">\(x\)</span>代表prompt，在此基础上生成response <span
-class="math inline">\(y\)</span> 。<span
-class="math inline">\(\mathcal{J}_{RL}\)</span> 的梯度可以表示为 <span
-class="math display">\[
-\nabla_{\theta}\mathcal{J}_{RL}(\theta) = \mathbb{E}_{x\sim D, y\sim
-\pi_{\theta}(\cdot|x)} \left[ \sum_{t=1}^{T} A_{t}\nabla_{\theta}\log
-\pi_{\theta}(y_{t}|x,y_{&lt;t}) \right]\tag{2}
-\]</span> 其中<span
-class="math inline">\(A_{t}\)</span>代表每一个token的优势。事实上由于nlp场景下一个句子往往只能在输出结束后获得奖励<span
-class="math inline">\(r(x,y)\)</span>，所以RL经常面临奖励稀疏的问题，进而导致credit
-assignment等问题。 对于OPD来说，其损失函数表述为 <span
-class="math display">\[
-\mathcal{J}_{OPD}(\theta) = \mathrm{min}_{\theta} \ \mathbb{E}_{x\sim
-D,y\sim \pi_{\theta}(\cdot|x)} \left[
-\mathcal{D}_{KL}(\pi_{\theta}(y|x)||\pi^*(y|x)) \right]\tag{3}
-\]</span> 这里默认其使用的是SRKL。相对应的，<span
-class="math inline">\(\mathcal{J}_{OPD}\)</span> 的梯度表示为 <span
-class="math display">\[
-\nabla_{\theta}\mathcal{J}_{OPD}(\theta) = \left[ \sum_{t=1}^{T} (\log
-\frac{\pi_{\theta}(y_{t}|x,y_{&lt;t})}{\pi^*(y_{t}|x,y_{&lt;t})})
-\nabla_{\theta}\log \pi_{\theta}(y_{t}|x,y_{&lt;t}) \right]\tag{4}
-\]</span> 如果将式<span class="math inline">\((2)\)</span>与式<span
-class="math inline">\((4)\)</span>放在一起对比，不难看出，OPD相对RL，提供了一个token-level的，相对更加dense的权重信息，或者说优势信息。如果对<span
-class="math inline">\(\mathcal{J}_{OPD}\)</span>进行变形，两者之间的联系会更加清晰
+                <h2 id="张量并行tp">张量并行(TP)</h2>
+<p><strong>对模型参数矩阵进行划分</strong>，划分为不同的张量，分发到不同gpu上进行计算，最后再进行汇总。这里与ZeRO-3的参数划分并不同。（ZeRO-3是将整个参数矩阵展成一维向量后进行平均划分，参数矩阵同一行的内容也可能被划分到不同gpu上。）
+具体实现张量并行(Tensor Parallelism, TP)有两种思路： * Row Parallelism：
 <span class="math display">\[
-\begin{flalign}
-\mathcal{J}_{OPD}(\theta) &amp;= \mathrm{min}_{\theta} \
-\mathbb{E}_{x\sim D,y\sim \pi_{\theta}(\cdot|x)}
-\left[ \mathcal{D}_{KL}(\pi_{\theta}(y|x)||\pi^*(y|x)) \right] \\
-&amp;= \mathrm{min}_{\theta} \ \mathbb{E}_{x\sim D,y\sim
-\pi_{\theta}(\cdot|x)} \left[ \log\pi_{\theta}(y|x) -\log \pi^*(y|x))
-\right] \\
-&amp;= \mathrm{min}_{\theta} \ \mathbb{E}_{x\sim D,y\sim
-\pi_{\theta}(\cdot|x)} \left[ (\log\pi_{\theta}(y|x) - \log
-\pi_{ref}(y|x)) -( \log \pi_{ref}(y|x) - \log \pi^*(y|x)) \right] \\
-&amp;= \mathrm{max}_{\theta} \ \mathbb{E}_{x\sim D,y\sim
-\pi_{\theta}(\cdot|x)} \left[ \log \frac{\pi^*(y|x)}{\pi_{ref}(y|x)} -
-\mathcal{D}_{KL}(\pi_{\theta}(y|x)||\pi_{ref}(y|x)) \right] \\
-\end{flalign} \tag{5}
-\]</span> 第二步到第三步引入了一个ref
-model，当然其会被消掉，因此其选择实际上并没有限制。</p>
-<p>将式<span class="math inline">\((5)\)</span>与式<span
-class="math inline">\((1)\)</span>进行对比之后就可以看到</p>
+XW = \begin{bmatrix}  
+X_{1} X_{2}  
+\end{bmatrix}
+\begin{bmatrix}  
+W_{1}\\W_{2}  
+\end{bmatrix} = X_{1}W_{1}+X_{2}W_{2} = Y_{1}+Y_{2}=Y
+\]</span> * Column Parallelism: <span class="math display">\[
+XW = [X][W_{1} \ W_{2}] = [XW_{1} \ XW_{2}] = [Y_{1}\ Y_{2}] = Y
+\]</span> <img src="http://img.sophilex.top/img/TP.png" srcset="/img/loadings.gif" lazyload /></p>
 <blockquote>
-<p>OPD其实就是一种特殊形式的RL</p>
+<p>TP对带宽要求较高，不建议跨多个<strong>节点</strong>进行TP训练，机器之间的数据传输是比较慢的。</p>
 </blockquote>
-<p>两者之间关系紧密，而区别主要体现在一下几点</p>
-<ul>
-<li><p>奖励信息不同 对于原始的RL来说，其奖励<span
-class="math inline">\(r_{t}\)</span>相当稀疏，只有输出最后一个token之后，才能获得奖励信息。
-<span class="math display">\[
-r_{t}^{RL} = \begin{cases}
-0 , &amp; t &lt; T \\
-\text{sentence reward},   &amp; t=T
-\end{cases}\tag{6}
-\]</span> 相比之下，OPD提供的奖励是token-level的 <span
-class="math display">\[
-r_{t}^{OPD} = \log
-\frac{\pi^*(y_{t}|x,y_{&lt;t})}{\pi_{ref}(y_{t}|x,y_{&lt;t})}, t \leq T
-\tag{7}
-\]</span> 其含义是best strategy（即KD场景下的教师模型）与 reference
-strategy之间的log-probability
-shift信息。这自然地解决了RL面临的奖励稀疏的问题。
-[2]实际上有指出，对于<span
-class="math inline">\((1)\)</span>来说，最优奖励形式为 <span
-class="math display">\[
-r^*(x,y) = \beta \log \frac{\pi^*(y|x)}{\pi_{ref}(y|x)} + \beta \log
-Z(x)\tag{8}
-\]</span> 其中<span
-class="math inline">\(Z(x)\)</span>是常数，代表归一化项，忽略之后，其实恰好就是OPD的奖励形式。</p></li>
-<li><p>对于OPD来说，其reference
-model并不是固定的，可以任意选取。而在RL中，这个reference
-model往往代表模型优化前的初始参数。</p></li>
-<li><p>对于OPD，其奖励项与KL项之间的系数是固定的1，而这实际上是可以被打破的</p></li>
-</ul>
-<blockquote>
-<p>因此，OPD相比于RL，有两点优势：dense reward，flexible choices of
-reference model</p>
-</blockquote>
-<p>而对于第三点，可以直接尝试添加超参来打破两者之间固有的系数比例，从而得到新的OPD
-Loss <span class="math display">\[
-\begin{flalign}
-\mathcal{J}_{G-OPD}(\theta)
-&amp;= \mathrm{max}_{\theta} \ \mathbb{E}_{x\sim D,y\sim
-\pi_{\theta}(\cdot|x)} \left[ \textcolor{red}{\lambda} \log
-\frac{\pi^*(y|x)}{\pi_{\textcolor{blue}{ref}}(y|x)} -
-\mathcal{D}_{KL}(\pi_{\theta}(y|x)||\pi_{\textcolor{blue}{ref}}(y|x))
-\right] \\
-\end{flalign} \tag{9}
-\]</span> 接下来尝试分析<span
-class="math inline">\(\lambda\)</span>的实际含义。这里<span
-class="math inline">\(\lambda\)</span>等价于<span
-class="math inline">\((1)\)</span>中<span
-class="math inline">\(\beta=\frac{1}{\lambda}\)</span>的情况，参考[2]，对于<span
-class="math inline">\((1)\)</span>来说，学生模型的最优参数形式为 <span
-class="math display">\[
-\pi_{\theta}(y|x) = \frac{1}{Z(x)}\pi_{ref}(y|x)\exp\left(
-\frac{1}{\beta}r(x,y) \right) \tag{10}
-\]</span> 在OPD中，代入奖励为<span class="math inline">\(r^{OPD}= \log
-\frac{\pi^*(y|x)}{\pi_{ref}(y|x)}\)</span>，以及<span
-class="math inline">\(\beta=\frac{1}{\lambda}\)</span>之后，得到 <span
-class="math display">\[
-\begin{flalign}
-\log \pi_{\theta}(x) &amp;= \log \pi_{ref}(y|x) + \lambda \log
-\frac{\pi^*(y|x)}{\pi_{ref}(y|x)} - \log Z(x)\\
-&amp;= \lambda \log \pi^*(y|x) + (1-\lambda) \log \pi_{ref}(y|x) \\
-&amp;= \log \pi^*(y|x) + (\lambda-1) (\log \pi^*(y|x) - \log
-\pi_{ref}(y|x))
-\end{flalign} \tag{11}
-\]</span></p>
-<p>进一步观察<span
-class="math inline">\(\lambda\)</span>取不同值的时候，最优学生模型参数，或者说学生的学习目标，会有什么变化</p>
-<ul>
-<li><span
-class="math inline">\(0&lt;\lambda&lt;1\)</span>时，学习目标在教师模型和ref
-model之间做了一个插值</li>
-<li><span class="math inline">\(\lambda=1\)</span> 的时候，
-第二项偏差项消失，此时学生的学习目标严格等于教师模型，这也是原始的OPD的形式</li>
-<li><span
-class="math inline">\(\lambda&gt;1\)</span>时，学生除了学习教师模型，还会额外学习教师与ref
-model之间的偏差，此时称为奖励外推</li>
-</ul>
+<h2 id="流水线并行pipeline-parallelism-pp">流水线并行(Pipeline
+Parallelism, PP)</h2>
+<h3 id="传统pp">传统PP</h3>
+<p>对于多层的模型，当参数过大，单卡装不下时，一个直观的方式就是按层切分，每一部分放到一块上。假设模型有L层，我们有K块GPU，简单起见假设<span
+class="math inline">\(L\%K=0\)</span>，那么就可以每<span
+class="math inline">\(\frac{L}{K}\)</span>层的参数放到一个GPU上。 <img
+src="http://img.sophilex.top/img/Pasted%20image%2020260628211446.png" srcset="/img/loadings.gif" lazyload /></p>
+<p>上图是具体的模型训练过程中不同gpu的运行负荷和时间。前向传播部分逐块进行，当前向进行到第一个gpu上时，其它gpu都是空闲的。反向传播过程类似，最后会有一块额外的时间消耗，每一块gpu根据反向传播计算得到梯度进行参数更新。
+这个实现非常符合直觉，但是显然其对gpu的利用率是非常低的，gpu空泡率为<span
+class="math inline">\(O\left( \frac{K-1}{K}
+\right)\)</span>，gpu数量<span
+class="math inline">\(K\)</span>越大，空泡率越接近1，即gpu资源基本都是被浪费的。</p>
+<h3 id="gpipe">Gpipe</h3>
+<p>上述传统PP的问题主要在于，由于数据处理的串行特点，一个batch的数据在处理的时候，其它gpu没办法运行。Gpipe提出把一个batch的数据再重新拆分为多个Micro-batch，提高并行程度，那么就可以减少等待的空闲时间。
+虽然我们可以通过将 Micro-batch 划分到最小来减少 Pipeline
+Bubble，但需要注意的是，让 GPU 执行一次 Batch_size=32 的计算和执行 32 次
+Batch_size=1 的计算，二者的效率天差地别。所以在实际中需要综合考虑
+Micro-batch_size 和 Pipeline Bubble 来进行权衡。</p>
 <p><img
-src="http://img.sophilex.top/img/Pasted%20image%2020260310154252.png" srcset="/img/loadings.gif" lazyload /></p>
-<p>从实验上来看，<span class="math inline">\(\lambda \leq
-1\)</span>时，蒸馏效果随<span
-class="math inline">\(\lambda\)</span>单调增，但是基本不太能超过教师。而<span
-class="math inline">\(\lambda&gt;1\)</span>之后，可以超过教师，但<span
-class="math inline">\(\lambda\)</span>过大(&gt;=1.5)之后，效果可能不如。作者指出，当<span
-class="math inline">\(\lambda&gt;1\)</span>时，这种外推的形式，在多教师蒸馏场景下，统一训出的学生，可以做到超越所有领域的教师。</p>
-<p>还有一个非常有意思的问题是：当<span class="math inline">\(\lambda
-\neq 1\)</span>时，ref
-model的选择是否有讲究？因为前面已经提过，OPD的形式中的ref
-model的选择实际上并没有严格限制。 作者提了两个选择：原始学生模型<span
-class="math inline">\(\pi_{base}^{S}\)</span>，优化前的教师模型<span
-class="math inline">\(\pi_{base}^{T}\)</span>。在单纯的strong-to-weak场景下，以往的直觉可能是原始学生模型，但是作者指出以优化前的教师模型<span
-class="math inline">\(\pi_{base}^{T}\)</span>作为ref
-model可能会是一个更好的选择。 <span class="math display">\[
-\begin{flalign}
-\mathcal{J}_{G-OPD}(\theta)
-&amp;= \mathrm{max}_{\theta} \ \mathbb{E}_{x\sim D,y\sim
-\pi_{\theta}(\cdot|x)} \left[ \lambda \log
-\frac{\pi^*(y|x)}{\pi_{ref}(y|x)} -
-\mathcal{D}_{KL}(\pi_{\theta}(y|x)||\pi_{ref}(y|x)) \right] \\
-&amp;= \mathrm{max}_{\theta} \ \mathbb{E}_{x\sim D,y\sim
-\pi_{\theta}(\cdot|x)} \left[ \lambda (\log \pi^*(y|x) - \log
-\pi_{ref}(y|x)) - \pi_{\theta}(y|x) +   \log \pi_{ref}(y|x) \right] \\
-&amp;= \mathrm{max}_{\theta} \ \mathbb{E}_{x\sim D,y\sim
-\pi_{\theta}(\cdot|x)} \left[ (\lambda-1) (\log\pi^*(y|x) - \log
-\pi_{ref}(y|x)) - (\pi_{\theta}(y|x) -   \log \pi_{*}(y|x) \right] \\
-&amp;= \mathrm{max}_{\theta} \ \mathbb{E}_{x\sim D,y\sim
-\pi_{\theta}(\cdot|x)} \left[ (\lambda-1) \log
-\frac{\pi^*(y|x)}{\pi_{ref}(y|x)} -
-\mathcal{D}_{KL}(\pi_{\theta}(y|x)||\pi_{*}(y|x)) \right] \\
-\end{flalign} \tag{12}
-\]</span> 此时KL项与<span
-class="math inline">\(\pi_{ref}\)</span>无关，我们可以只关注不同ref
-model的选择对奖励信号的影响。如果选择<span
-class="math inline">\(\pi_{base}^T\)</span>的话， <span
-class="math inline">\(\mathcal{J}_{OPD}\)</span>的奖励为<span
-class="math inline">\(\log
-\frac{\pi^*(y|x)}{\pi_{base}^T(y|x)}\)</span>，参考式<span
-class="math inline">\((8)\)</span>这实际上是教师在做RL时的隐藏奖励信号，相当于学生是在学习一个相对的从base到微调后的增量价值信号。相比之下，<span
-class="math inline">\(\pi_{base}^S\)</span>与<span
-class="math inline">\(\pi^*\)</span>的差距过大，并且往往可能包含更多噪声，比如架构偏差，表达风格等，这些是与推理能力提升无关的。</p>
-<p>需要指出的是，选择<span
-class="math inline">\(\pi_{base}^T\)</span>作为ref
-model时，要求能够访问到<span
-class="math inline">\(\pi_{base}^T\)</span>，这在某些场景下可能是不行的，并且使用<span
-class="math inline">\(\pi_{base}^T\)</span>，相比<span
-class="math inline">\(\pi_{base}^S\)</span>，计算压力会更大一些，毕竟其规模更大。
+src="http://img.sophilex.top/img/Pasted%20image%2020260628224458.png" srcset="/img/loadings.gif" lazyload /></p>
+<p>Gpipe本身是传统PP的一大优化，但是其依然是先前向处理完所有的数据，再进行反向传播。这意味每一层前向完之后，需要保存所有激活值（目前处理手段是引入gradient-checkpoint进行缓解），这是一笔很大的梯度开销。
+### PipeDream
+PipeDream在Gpipe基础上进行显存峰值的优化。其采用1F1B的数据处理策略。
 <img
-src="http://img.sophilex.top/img/Pasted%20image%2020260310143739.png" srcset="/img/loadings.gif" lazyload /></p>
-<p>从实验结果来看，使用<span
-class="math inline">\(\pi_{base}^T\)</span>的效果(w/ reward
-correction)确实会更好一些，但是考虑到其计算压力以及访问限制，与<span
-class="math inline">\(\pi_{base}^S\)</span>还是需要权衡使用。</p>
-<h2 id="conclusion">Conclusion</h2>
-<p>OPD可以看成一种特殊的RL，其奖励是token-level的<span
-class="math inline">\(\log
-\frac{\pi^*(y_{t}|x,y_{&lt;t})}{\pi_{ref}(y_{t}|x,y_{&lt;t})}\)</span>，相比RL可以有效缓解奖励稀疏问题。原始OPD的奖励项和KL项系数固定，通过解耦，改变系数，可以有更好的效果。最后是ref
-model的选择问题，使用<span
-class="math inline">\(\pi_{base}^T\)</span>，相比于<span
-class="math inline">\(\pi_{base}^S\)</span>，效果更好，但是计算成本更大，适合用于尝试蒸馏的极限性能。</p>
-<p>最后，本文总共出现了三种训练手段： *
-传统OPD：学生生成SGO，教师和学生在SGO上生成对应token的概率分布，并进行对其
-* G-OPD：损失函数使用<span
-class="math inline">\(\mathcal{J}_{G-OPD}\)</span>，引入ref model为<span
-class="math inline">\(\pi_{base}^{S}\)</span>，计算成本稍微大一点 *
-G-OPD(reward correction)：ref model使用<span
-class="math inline">\(\pi_{base}^T\)</span>，计算成本大，且需要保证能访问<span
-class="math inline">\(\pi_{base}^T\)</span>，但是效果好</p>
-<h2 id="reference">Reference</h2>
-<p>[1] Yang, W., Liu, W., Xie, R., Yang, K., Yang, S., &amp; Lin, Y.
-(2026). Learning beyond Teacher: Generalized On-Policy Distillation with
-Reward Extrapolation.</p>
-<p>[2] Rafailov, R., Sharma, A., Mitchell, E., Ermon, S., Manning, C.D.,
-&amp; Finn, C. (2023). Direct Preference Optimization: Your Language
-Model is Secretly a Reward Model. <em>ArXiv, abs/2305.18290</em>.</p>
+src="http://img.sophilex.top/img/Pasted%20image%2020260628230647.png" srcset="/img/loadings.gif" lazyload /></p>
+<p>在gpu4处理完batch1的数据之后，就立马做其对应的反向传播，那么之后处理batch2数据的前向传播时，就可以完全丢弃batch1对应的所有激活值了，从而降低了显存峰值。假设单个Micro-batch的激活值显存为<span
+class="math inline">\(A\)</span>，那么Gpipe的显存峰值可以表示为<span
+class="math inline">\(O(M\times A)\)</span>，与Micro-batch的大小<span
+class="math inline">\(M\)</span>有关，而pipeDream的显存峰值则接近<span
+class="math inline">\(O(A)\)</span>，这是巨大的显存优化。</p>
+<blockquote>
+<p>原则就是“尽早执行反向计算”</p>
+</blockquote>
+<p>就 Pipeline Bubble 占比而言，PipeDream 明显优于
+GPipe，并且随着训练的进行，Pipeline Bubble 会越来越少。</p>
 
                 
               </div>
@@ -582,7 +421,7 @@ Model is Secretly a Reward Model. <em>ArXiv, abs/2305.18290</em>.</p>
       
         <a href="/tags/LLM/" class="print-no-link">#LLM</a>
       
-        <a href="/tags/Compression/" class="print-no-link">#Compression</a>
+        <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E8%AE%AD%E7%BB%83/" class="print-no-link">#分布式训练</a>
       
     </div>
   
@@ -594,8 +433,8 @@ Model is Secretly a Reward Model. <em>ArXiv, abs/2305.18290</em>.</p>
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Connections Between On Policy Distillation And RL</div>
-      <div>https://sophilex.github.io/posts/b6097cfc/</div>
+      <div>Model_Parallel</div>
+      <div>https://sophilex.github.io/posts/9470789c/</div>
     </div>
     <div class="license-meta">
       
@@ -607,7 +446,7 @@ Model is Secretly a Reward Model. <em>ArXiv, abs/2305.18290</em>.</p>
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2026年3月10日</div>
+          <div>2026年6月29日</div>
         </div>
       
       
@@ -639,9 +478,9 @@ Model is Secretly a Reward Model. <em>ArXiv, abs/2305.18290</em>.</p>
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/a5065ac6/" title="ZeRO">
+                      <a href="/posts/ea6ed38e/" title="Data_Parallel">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">ZeRO</span>
+                        <span class="hidden-mobile">Data_Parallel</span>
                         <span class="visible-mobile">上一篇</span>
                       </a>
                     
@@ -649,8 +488,8 @@ Model is Secretly a Reward Model. <em>ArXiv, abs/2305.18290</em>.</p>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/d1709627/" title="Distilling the Essence: Efficient Reasoning Distillation via Sequence Truncation">
-                        <span class="hidden-mobile">Distilling the Essence: Efficient Reasoning Distillation via Sequence Truncation</span>
+                      <a href="/posts/a5065ac6/" title="ZeRO">
+                        <span class="hidden-mobile">ZeRO</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
