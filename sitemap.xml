@@ -621,13 +621,6 @@
   </url>
   
   <url>
-    <loc>https://sophilex.github.io/tags/Machine-Learning/</loc>
-    <lastmod>2026-07-06</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://sophilex.github.io/tags/LLM/</loc>
     <lastmod>2026-07-06</lastmod>
     <changefreq>weekly</changefreq>
@@ -650,6 +643,13 @@
   
   <url>
     <loc>https://sophilex.github.io/tags/KD/</loc>
+    <lastmod>2026-07-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://sophilex.github.io/tags/Machine-Learning/</loc>
     <lastmod>2026-07-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -747,13 +747,6 @@
   </url>
   
   <url>
-    <loc>https://sophilex.github.io/tags/%E9%85%8D%E7%BD%AE/</loc>
-    <lastmod>2026-07-06</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://sophilex.github.io/tags/%E5%8D%9A%E5%BC%88%E8%AE%BA/</loc>
     <lastmod>2026-07-06</lastmod>
     <changefreq>weekly</changefreq>
@@ -775,6 +768,13 @@
   </url>
   
   <url>
+    <loc>https://sophilex.github.io/tags/%E9%85%8D%E7%BD%AE/</loc>
+    <lastmod>2026-07-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>https://sophilex.github.io/tags/RL/</loc>
     <lastmod>2026-07-06</lastmod>
     <changefreq>weekly</changefreq>
@@ -782,14 +782,14 @@
   </url>
   
   <url>
-    <loc>https://sophilex.github.io/tags/%E8%A7%82%E5%90%8E%E6%84%9F/</loc>
+    <loc>https://sophilex.github.io/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F/</loc>
     <lastmod>2026-07-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://sophilex.github.io/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F/</loc>
+    <loc>https://sophilex.github.io/tags/%E8%A7%82%E5%90%8E%E6%84%9F/</loc>
     <lastmod>2026-07-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -847,14 +847,14 @@
 
   
   <url>
-    <loc>https://sophilex.github.io/categories/Machine-Learning/</loc>
+    <loc>https://sophilex.github.io/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</loc>
     <lastmod>2026-07-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://sophilex.github.io/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</loc>
+    <loc>https://sophilex.github.io/categories/Machine-Learning/</loc>
     <lastmod>2026-07-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -896,14 +896,14 @@
   </url>
   
   <url>
-    <loc>https://sophilex.github.io/categories/%E9%85%8D%E7%BD%AE%E7%AC%94%E8%AE%B0/</loc>
+    <loc>https://sophilex.github.io/categories/%E5%8D%9A%E5%BC%88%E8%AE%BA/</loc>
     <lastmod>2026-07-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://sophilex.github.io/categories/%E5%8D%9A%E5%BC%88%E8%AE%BA/</loc>
+    <loc>https://sophilex.github.io/categories/%E9%85%8D%E7%BD%AE%E7%AC%94%E8%AE%B0/</loc>
     <lastmod>2026-07-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
