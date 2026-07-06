@@ -295,6 +295,20 @@ body.theme-luka .section-title {
 body.theme-luka .section-body p {
   margin: 0 0 14px;
 }
+body.theme-luka .opportunity-note {
+  margin: 20px 0 18px;
+  padding: 16px 18px;
+  border-left: 3px solid var(--luka-accent);
+  border-radius: 8px;
+  background: rgba(48, 169, 222, 0.08);
+  color: var(--luka-text);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+body.theme-luka .opportunity-note strong {
+  color: var(--luka-accent);
+}
 
 body.theme-luka .card {
   background: transparent;
