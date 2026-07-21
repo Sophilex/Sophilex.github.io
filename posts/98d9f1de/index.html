@@ -18,27 +18,27 @@
   <meta name="author" content="Sophilex">
   <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
   
-    <meta name="description" content="对训练数据进行划分，降低单卡显存">
+    <meta name="description" content="一点OPD相关的阅读笔记+个人想法，施工中...">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Data_Parallel">
-<meta property="og:url" content="https://sophilex.github.io/posts/ea6ed38e/index.html">
+<meta property="og:title" content="OPD_SNR">
+<meta property="og:url" content="https://sophilex.github.io/posts/98d9f1de/index.html">
 <meta property="og:site_name" content="Sophilex‘s Blog">
-<meta property="og:description" content="对训练数据进行划分，降低单卡显存">
+<meta property="og:description" content="一点OPD相关的阅读笔记+个人想法，施工中...">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://sophilex.github.io/img/j11.jpg">
-<meta property="article:published_time" content="2026-06-29T03:42:04.000Z">
-<meta property="article:modified_time" content="2026-06-29T04:37:14.142Z">
+<meta property="og:image" content="https://sophilex.github.io/img/lxh2.webp">
+<meta property="article:published_time" content="2026-07-21T04:49:06.000Z">
+<meta property="article:modified_time" content="2026-07-21T04:54:59.910Z">
 <meta property="article:author" content="Sophilex">
 <meta property="article:tag" content="LLM">
-<meta property="article:tag" content="分布式训练">
+<meta property="article:tag" content="OPD">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sophilex.github.io/img/j11.jpg">
+<meta name="twitter:image" content="https://sophilex.github.io/img/lxh2.webp">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>Data_Parallel - Sophilex‘s Blog</title>
+  <title>OPD_SNR - Sophilex‘s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -238,13 +238,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/j11.jpg') no-repeat center center; background-size: cover;">
+     style="background: url('/img/lxh2.webp') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Data_Parallel"></span>
+            <span id="subtitle" data-typed-text="OPD_SNR"></span>
           
         </div>
 
@@ -260,8 +260,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2026-06-29 11:42" pubdate>
-          2026年6月29日 中午
+        <time datetime="2026-07-21 12:49" pubdate>
+          2026年7月21日 下午
         </time>
       </span>
     
@@ -272,7 +272,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          809 字
+          1.9k 字
         
       </span>
     
@@ -283,7 +283,7 @@
         
         
         
-          7 分钟
+          17 分钟
         
       </span>
     
@@ -328,59 +328,213 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">Data_Parallel</h1>
+            <h1 id="seo-header">OPD_SNR</h1>
             
             
               <div class="markdown-body">
                 
-                <p>含义很好理解，模型在不同gpu中直接是完整的副本，但是数据会划分为不同的batch分发进行训练，然后不同gpu将各自的梯度信息汇集再分发。
-主要分为两个架构：PS-Worker以及Ring-AllReduce</p>
-<h2 id="ps-worker">PS-Worker</h2>
-<p>这是早期 TensorFlow、MXNet，torch.DP(已经弃用)
-等框架广泛采用的方式。这里的PS是指Parameter Server
-PS有两种选择：CPU或者GPU</p>
-<p>使用CPU的话，GPU与CPU之间只能通过PCIe进行数据传输，这个带宽相比GPU之间的NVLink来说是低很多的
-[[PCIe VS NVLink|(参考这里)]]，这是一点。
-但是PS-Worker架构本身，哪怕使用GPU作为PS，主卡的负载也比其它GPU大很多，主卡的性能和通信开销很容易成为瓶颈。同时，主卡在计算时，其它gpu在发呆，gpu利用率也很低。</p>
-<h2 id="ring-allreduce">Ring-AllReduce</h2>
-<p>这是目前 NVIDIA、PyTorch DDP、Megatron-LM、DeepSpeed
-默认采用的方法</p>
-<p>相比于PS-Worker，它将数据聚合与计算的压力从一个PS分发到所有gpu上。这里每张卡只与其下一张卡进行数据传输操作。</p>
-<p><img
-src="http://img.sophilex.top/img/Pasted%20image%2020260621230924.png" srcset="/img/loadings.gif" lazyload />
-整个Ring-AllReduce包含两个过程：
-<code>scatter-reduce</code>以及<code>allgather</code></p>
-<ul>
-<li><code>scatter-reduce</code></li>
-</ul>
-<p>将每一块GPU上的梯度信息分为N块，其中N是gpu数量。
-那么目标是要将不同gpu上不同块的信息聚合(这里以加和操作为例)并进行分发。在实际操作中，会执行N-1次数据传输操作，每次将当前卡的对应block的数据信息传输到下一张卡上并进行聚合。以第一次操作为例，gpu0将<span
-class="math inline">\(a_{0}\)</span>信息传给gpu1，gpu1将<span
-class="math inline">\(b_{1}\)</span>信息传给gpu2，以此类推。第二次操作时，gpu1将<span
-class="math inline">\(a_{0}+a_{1}\)</span>这个信息传给gpu2，... <img
-src="http://img.sophilex.top/img/Pasted%20image%2020260621233041.png" srcset="/img/loadings.gif" lazyload /></p>
-<p>那么执行N-1次操作后，每一张gpu上恰好会有一个block是包含了所有gpu的完整数据信息的。接下来就是要把每一块的数据进行分发同步到其它gpu上。
-<img
-src="http://img.sophilex.top/img/Pasted%20image%2020260621233636.png" srcset="/img/loadings.gif" lazyload /></p>
-<ul>
-<li><code>allgather</code></li>
-</ul>
-<p>allgather操作执行的过程与上一步类似，只不过由数据聚合变成了数据分发。同样需要执行N-1次。
-<img
-src="http://img.sophilex.top/img/Pasted%20image%2020260621233819.png" srcset="/img/loadings.gif" lazyload />
-以第一次操作为例，gpu4将第一个block的信息同步给gpu1，其它gpu执行类似操作，把自己内部有效的完整信息部分进行分发。第二次操作时，再把上一轮收到的信息发给下一个gpu。N-1次操作后，所有gpu的每一个block都会包含完整信息。</p>
-<p>Torch.DDP的实现，就是通过Ring-AllReduce来进行每张卡上前向传播完之后梯度信息的聚合和更新，来保证每轮操作之前，每张卡上都是相同的更新好的参数。</p>
-<ul>
-<li>通信量分析 设模型参数量为<span
-class="math inline">\(\Phi\)</span>。两个阶段都要执行N-1次数据传输操作，每一次传输的数据量是<span
-class="math inline">\(\frac{\Phi}{N}\)</span>，那么总数据传输量是 <span
+                <h3 id="opd中的梯度信号">OPD中的梯度信号</h3>
+<p>OPD中，设学生分布为<span
+class="math inline">\(p\)</span>，教师分布为<span
+class="math inline">\(q\)</span>，其Loss，即RKL，表示为 <span
 class="math display">\[
-2(N-1) \times \frac{\Phi}{N} = 2 \frac{N-1}{N} \Phi
-\]</span> 其存在固定上限<span
-class="math inline">\(2\Phi\)</span>，即<span
-class="math inline">\(2\)</span>倍模型参数量。因此gpu数量增加并不会带来通信成本的无限增长。
-（这里分析的是单卡的通信成本，而不是总线带宽。）</li>
-</ul>
+\mathbb{E}_{\hat{y}_{t}\sim p}[\log p(\hat{y}_{t}) - \log
+q(\hat{y}_{t})]
+\]</span> 对应的总体梯度信号为 <span class="math display">\[
+\overline{g}_{OPD}(\theta) = \nabla_{\theta}\mathbb{E}_{\hat{y}_{t}\sim
+p}[\log p(\hat{y}_{t}) - \log q(\hat{y}_{t})] =
+\mathbb{E}_{\hat{y}_{t}\sim p}[u_{t}\nabla_{\theta}\log p(\hat{y}_{t})]
+\]</span> 即Policy Gradient的梯度形式，每一个梯度项的权重为 <span
+class="math display">\[
+u_{t} = \log p(\hat{y}_{t}) - \log q(\hat{y}_{t})
+\]</span>
+当然也可以把OPD的整体梯度信号表示成每一个token处对应的梯度信号的期望，即
+<span class="math display">\[
+\begin{flalign}
+\overline{g}_{OPD}(\theta) &amp;= \mathbb{E}_{\hat{y}_{t}\sim
+p}[g_{OPD}(\theta;\hat{y}_{t})]\\
+\text{where} \ g_{OPD}(\theta;\hat{y}_{t}) &amp;=
+u_{t}\nabla_{\theta}\log p(\hat{y}_{t})
+\end{flalign}
+\]</span></p>
+<h4 id="关于权重项u_t">关于权重项<span
+class="math inline">\(u_{t}\)</span></h4>
+<p>不难发现，<span class="math inline">\(u_{t}\)</span>的期望为 <span
+class="math display">\[
+\overline{u} = \mathbb{E}_{\hat{y}_{t}\sim p}[\log p(\hat{y}_{t}) - \log
+q(\hat{y}_{t})] = \mathcal{D}_{KL}(p||q)
+\]</span> 其方差为 <span class="math display">\[
+\mathrm{Var}_{p}(u_{t}) = \mathbb{E}_{p}[u_{t}^2] -
+\mathbb{E}_{p}[u_{t}]^2 = \mathbb{E}_{p}[u_{t}^2] - \overline{u}^2
+\]</span> 当两个分布<span
+class="math inline">\(p,q\)</span>足够接近的时候，定义 <span
+class="math display">\[
+\epsilon(y) = \frac{q(y)-p(y)}{p(y)}, \text{hence} \ q(y) =
+p(y)(1+\epsilon(y))  
+\]</span> 注意到<span class="math inline">\(p,q\)</span>都是分布，因此有
+<span class="math display">\[
+\mathbb{E}_{y\sim p}[\epsilon(y)] = \sum_{y}p(y)\epsilon(y) =
+\sum_{y}q(y)-p(y) = 1-1=0
+\]</span> 从而 <span class="math display">\[
+\begin{flalign}
+u_{t} &amp;= \log p(\hat{y}_{t}) - \log q(\hat{y}_{t}) =
+-\log(1+\epsilon(\hat{y}_{t}))\\
+&amp;=  - \epsilon(\hat{y}_{t}) + \frac{\epsilon(\hat{y}_{t})^2}{2} +
+O(\epsilon(\hat{y}_{t})^3)\\
+\end{flalign}
+\]</span> 因此<span class="math inline">\(u_{t}\)</span>是误差项<span
+class="math inline">\(\epsilon\)</span>的一阶小量。同时也有 <span
+class="math display">\[
+\overline{u} = \mathbb{E}_{p}(u_{t}) = \underbrace{\mathbb{E}_{p}[-
+\epsilon(\hat{y}_{t})]}_{=0} +
+\mathbb{E}_{p}[\frac{\epsilon(\hat{y}_{t})^2}{2}] =
+\mathbb{E}_{p}[\frac{\epsilon(\hat{y}_{t})^2}{2}]
+\]</span> 在对<span
+class="math inline">\(u_{t}\)</span>取期望之后，<span
+class="math inline">\(\epsilon\)</span>的期望也变成0了，因此<span
+class="math inline">\(u_{t}\)</span>的期望，也就是<span
+class="math inline">\(\overline{u}\)</span>反而是<span
+class="math inline">\(\epsilon\)</span>的一个二阶小量 将<span
+class="math inline">\(\overline{u}\)</span>与误差项<span
+class="math inline">\(\epsilon(\hat{y}_{t})\)</span>的关系代入<span
+class="math inline">\(\mathrm{Var}_{p}(u_{t})\)</span>的定义式，有 <span
+class="math display">\[
+\begin{flalign}
+\mathrm{Var}_{p}(u_{t}) &amp;= \mathbb{E}_{p}[u_{t}^2] -
+\overline{u}^2\\
+&amp; \approx \mathbb{E}_{p}[\epsilon^2] -
+(\frac{1}{2}\mathbb{E}_{p}[\epsilon^2])^2\\
+&amp; \approx \mathbb{E}_{p}[\epsilon^2]\\
+&amp;\approx 2\overline{u}
+\end{flalign}
+\]</span> 最终我们发现，</p>
+<blockquote>
+<p>对于这个梯度的权重项<span
+class="math inline">\(u_{t}\)</span>，当教师和学生分布非常接近时，其方差与期望是同阶的
+记<span
+class="math inline">\(\delta=\overline{u}=\mathcal{D}_{KL}(p||q)\)</span>，有<span
+class="math inline">\(\mathrm{Var}_{p}(u_{t})=Θ(\delta)\)</span>
+此时<strong>不管是正向KL、反向KL、对称KL、还是对数比的方差,都会以同一个速度趋于零</strong>,只是常数系数不同</p>
+</blockquote>
+<h4 id="opd梯度的信噪比">OPD梯度的信噪比</h4>
+<p>在此基础上，我们继续分析一下OPD的整体梯度<span
+class="math inline">\(\overline{g}_{OPD}(\theta)=
+\mathbb{E}_{\hat{y}_{t}\sim p}[u_{t}\nabla_{\theta}\log
+p(\hat{y}_{t})]\)</span> 对于score function <span
+class="math inline">\(\nabla_{\theta}\log
+p(\hat{y}_{t})\)</span>，其在自己的分布<span
+class="math inline">\(p\)</span>下期望为0（显然），从而对<span
+class="math inline">\(\overline{g}_{OPD}(\theta)\)</span>的权重项引入一个常数baseline并不会改变其期望（这也是REINFORCE
+with basline的动机来源），即 <span class="math display">\[
+\begin{flalign}
+\overline{g}_{OPD}(\theta) &amp;= \mathbb{E}_{\hat{y}_{t}\sim
+p}[u_{t}\nabla_{\theta}\log p(\hat{y}_{t})]\\
+&amp;= \mathbb{E}_{\hat{y}_{t}\sim p}[u_{t}\nabla_{\theta}\log
+p(\hat{y}_{t})] -
+\overline{u} \underbrace{\mathbb{E}_{\hat{y}_{t}\sim
+p}[\nabla_{\theta}\log p(\hat{y}_{t})]}_{=0}\\
+&amp;= \mathbb{E}_{\hat{y}_{t}\sim
+p}[(u_{t}-\overline{u})\nabla_{\theta}\log p(\hat{y}_{t})]
+\end{flalign}
+\]</span> 再次利用<span
+class="math inline">\(\mathbb{E}_{\hat{y}_{t}\sim p}[\nabla_{\theta}\log
+p(\hat{y}_{t})]=0\)</span>，上式可以写成 <span class="math display">\[
+\begin{flalign}
+\overline{g}_{OPD}(\theta) &amp;= \mathbb{E}_{\hat{y}_{t}\sim
+p}[(u_{t}-\mathbb{E}_{p}[u_{t}])(\nabla_{\theta}\log
+p(\hat{y}_{t})-\mathbb{E}_{p}[\nabla_{\theta}\log p(\hat{y}_{t})])]\\
+&amp;=\mathrm{Cov}_{p}(u_{t}, \nabla_{\theta}\log p(\hat{y}_{t}))
+\end{flalign}
+\]</span> 利用Cauchy-Schwarz Inequality， 有 <span
+class="math display">\[
+||\overline{g}_{OPD}(\theta)||_{2}=||\mathrm{Cov}_{p}(u_{t},
+\nabla_{\theta}\log p(\hat{y}_{t}))||_{2}\leq \sqrt{
+\mathrm{Var}_{p}(u_{t}) } \cdot \sqrt{
+\mathrm{Var}_{p}(\nabla_{\theta}\log p(\hat{y}_{t})) }
+\]</span> 注意到 <span class="math display">\[
+\mathrm{Var}_{p}(\nabla_{\theta}\log p(\hat{y}_{t})) =
+\mathbb{E}_{p}[(\nabla_{\theta}\log p(\hat{y}_{t}))^2] =
+Tr(\mathcal{F}(\theta))
+\]</span> 其中<span class="math inline">\(Tr(\mathcal{F}(\theta)) =
+\sum_{i}\lambda_{i}(\mathcal{F}(\theta))\geq dim(\theta) \cdot
+\lambda_{min}(\mathcal{F}(\theta))\)</span>，可以看成关于<span
+class="math inline">\(\delta\)</span>是<span
+class="math inline">\(O(1)\)</span>的。而前面已经分析过<span
+class="math inline">\(\mathrm{Var}_{p}(u_{t})\)</span>是<span
+class="math inline">\(O(\delta)\)</span>的，因此<span
+class="math inline">\(||\overline{g}_{OPD}(\theta)||_{2}^2\)</span>是<span
+class="math inline">\(O(\delta)\)</span>的</p>
+<p>OPD优化过程中，梯度的信噪比SNR定义为 <span class="math display">\[
+SNR(g) = \frac{||\overline{g}||_{2}^2}{Tr(Cov[g])}
+\]</span>
+分子部分是期望梯度的范数大小，也就是优化信号的强弱，而分母是估计梯度信号中的方差大小，这个式子衡量了估计过程中的信号强弱与噪声的比值。SNR趋于0时，代表训练中基本全是噪声信号，难以进行有效训练；而如果SNR趋于无穷，则代表梯度信号占主导。
+<span class="math display">\[
+\begin{flalign}
+Tr(Cov[g]) &amp;= Tr(\mathbb{E}_{p}[(g-\overline{g})(g-\overline{g})^T])
+= \mathbb{E}_{p}||g-\overline{g}||_{2}^2 = \mathrm{Var}_{p}(g) \\
+\end{flalign}
+\]</span> 注意到 <span class="math display">\[
+\begin{flalign}
+\mathrm{Var}_{p}(g_{OPD}(\theta)) &amp;= \mathbb{E}_{\hat{y}_{t}\sim
+p}[u_{t}^2||\nabla_{\theta}\log p(\hat{y}_{t})||^2_{2}] -
+\mathbb{E}_{\hat{y}_{t}\sim p}[u_{t}\nabla_{\theta}\log
+p(\hat{y}_{t})]^2\\
+&amp;=\mathbb{E}_{\hat{y}_{t}\sim p}[u_{t}^2||\nabla_{\theta}\log
+p(\hat{y}_{t})||^2_{2}] - ||\overline{g}_{OPD}(\theta)||_{2}^2
+\end{flalign}
+\]</span> 对于前半部分<span
+class="math inline">\(\mathbb{E}_{\hat{y}_{t}\sim
+p}[u_{t}^2||\nabla_{\theta}\log
+p(\hat{y}_{t})||^2_{2}]\)</span>，通过引入<span
+class="math inline">\(\overline{u}=\mathbb{E}_{\hat{y}_{t}\sim
+p}[u_{t}]\)</span>，将<span
+class="math inline">\(u_{t}\)</span>分解为<span
+class="math inline">\(u_{t} = \overline{u} + (u_{t}-
+\overline{u})\)</span>，有 <span class="math display">\[
+\begin{flalign}
+\mathbb{E}_{\hat{y}_{t}\sim p}[u_{t}^2||\nabla_{\theta}\log
+p(\hat{y}_{t})||^2_{2}] &amp;= \overline{u}^2
+\mathbb{E}_{\hat{y}_{t}\sim p}[||\nabla_{\theta}\log
+p(\hat{y}_{t})||^2_{2}] + 2\overline{u} \mathbb{E}_{\hat{y}_{t}\sim
+p}[(u_{t}-\overline{u})||\nabla_{\theta}\log p(\hat{y}_{t})||^2_{2}]\\
+&amp; + \mathbb{E}_{\hat{y}_{t}\sim
+p}[(u_{t}-\overline{u})^2||\nabla_{\theta}\log p(\hat{y}_{t})||^2_{2}]\\
+\end{flalign}
+\]</span> 为了说明信噪比是收敛的，我们需要给方差项找一个与<span
+class="math inline">\(\delta\)</span>相关的下界。当分布<span
+class="math inline">\(p,q\)</span>接近的时候，<span
+class="math inline">\(\mathrm{Var}_{p}(g_{OPD}(\theta))\)</span>中<span
+class="math inline">\(||\overline{g}_{OPD}(\theta)||_{2}^2\)</span>是<span
+class="math inline">\(O(\delta^2)\)</span>的，<span
+class="math inline">\(\mathbb{E}_{\hat{y}_{t}\sim
+p}[u_{t}^2||\nabla_{\theta}\log
+p(\hat{y}_{t})||^2_{2}]\)</span>的展开中，第一项和第二项分别是<span
+class="math inline">\(O(\delta^2)\)</span>以及<span
+class="math inline">\(O(\delta)\)</span>的。接下来尝试分析交叉项。 <span
+class="math display">\[
+\begin{flalign}
+\mathbb{E}_{\hat{y}_{t}\sim
+p}[(u_{t}-\overline{u})^2||\nabla_{\theta}\log
+p(\hat{y}_{t})||^2_{2}]&amp;=\mathbb{E}_{\hat{y}_{t}\sim
+p}[(u_{t}-\overline{u})^2]\mathbb{E}_{\hat{y}_{t}\sim p}[ff^T],
+f=\nabla_{\theta}\log p(\hat{y}_{t})\\
+&amp;= \mathrm{Var}_{p}(u_{t})\cdot Tr(\mathcal{F}(\theta))\\
+&amp; \geq \mathrm{Var}_{p}(u_{t}) \cdot \mathcal{F}_{min}(\theta)
+\end{flalign}
+\]</span> 这里<span
+class="math inline">\(\mathrm{Var}_{p}(u_{t})\)</span>前面已经证明过是<span
+class="math inline">\(O(\delta)\)</span>的，而<span
+class="math inline">\(\mathcal{F}_{min}\)</span>可以看成<span
+class="math inline">\(O(1)\)</span>的。最终，可以发现OPD梯度信噪比SNR的分母项<span
+class="math inline">\(Tr(Cov[g])\)</span>与分子项都是<span
+class="math inline">\(O(\delta)\)</span>的。因此，当训练后期两个分布接近时，SNR趋向于收敛到一个常数值，即噪声始终在训练过程中存在并影响模型训练。
+最终对OPD的训练过程进行总结：</p>
+<blockquote>
+<p>训练早期梯度范数<span
+class="math inline">\(||\overline{g}||_{2}^2\)</span>较大时，梯度信号强烈，模型可以快速收敛；但是训练进行到后期，师生分布接近时，信噪比始终存在，干扰模型训练，导致性能始终上不去甚至下降。</p>
+</blockquote>
+<p>这一现象，究其根本，是因为SNR的分母项，也就是梯度采样估计的方差，由于on
+policy采样的原因，始终存在。</p>
 
                 
               </div>
@@ -391,13 +545,34 @@ class="math inline">\(2\)</span>倍模型参数量。因此gpu数量增加并不
             <div>
               <div class="post-metas my-3">
   
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" class="category-chain-item">学习笔记</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
   
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
         <a href="/tags/LLM/" class="print-no-link">#LLM</a>
       
-        <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E8%AE%AD%E7%BB%83/" class="print-no-link">#分布式训练</a>
+        <a href="/tags/OPD/" class="print-no-link">#OPD</a>
       
     </div>
   
@@ -409,8 +584,8 @@ class="math inline">\(2\)</span>倍模型参数量。因此gpu数量增加并不
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Data_Parallel</div>
-      <div>https://sophilex.github.io/posts/ea6ed38e/</div>
+      <div>OPD_SNR</div>
+      <div>https://sophilex.github.io/posts/98d9f1de/</div>
     </div>
     <div class="license-meta">
       
@@ -422,7 +597,7 @@ class="math inline">\(2\)</span>倍模型参数量。因此gpu数量增加并不
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2026年6月29日</div>
+          <div>2026年7月21日</div>
         </div>
       
       
@@ -454,18 +629,12 @@ class="math inline">\(2\)</span>倍模型参数量。因此gpu数量增加并不
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/98d9f1de/" title="OPD_SNR">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">OPD_SNR</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/9470789c/" title="Model_Parallel">
-                        <span class="hidden-mobile">Model_Parallel</span>
+                      <a href="/posts/ea6ed38e/" title="Data_Parallel">
+                        <span class="hidden-mobile">Data_Parallel</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
