@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 286" width="560" height="286" font-family="'Times New Roman', Times, 'Nimbus Roman', serif">
+<defs><marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 Z" fill="#a0a0a0"/></marker><marker id="ar2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L9,4.5 L0,9 Z" fill="#c0392b"/></marker></defs>
+<rect width="560" height="286" fill="#fff"/>
+<ellipse cx="172.0" cy="166.0" rx="132.0" ry="94.0" fill="#fdf3e3" transform="rotate(-6.0 172.0 166.0)"/>
+<ellipse cx="172.0" cy="166.0" rx="95.0" ry="67.7" fill="#fae3c2" transform="rotate(-6.0 172.0 166.0)"/>
+<ellipse cx="172.0" cy="166.0" rx="58.1" ry="41.4" fill="#f6d3a3" transform="rotate(-6.0 172.0 166.0)"/>
+<ellipse cx="172.0" cy="166.0" rx="132.0" ry="94.0" fill="none" stroke="#d9a35c" stroke-width="1.6" transform="rotate(-6.0 172.0 166.0)"/>
+<text x="130" y="50" font-size="20" text-anchor="middle" fill="#b07d33" font-style="italic">Teacher support</text>
+<ellipse cx="150.0" cy="178.0" rx="38.0" ry="27.0" fill="#d4e3f3" transform="rotate(-12.0 150.0 178.0)"/>
+<ellipse cx="150.0" cy="178.0" rx="27.4" ry="19.4" fill="#a9c8e6" transform="rotate(-12.0 150.0 178.0)"/>
+<ellipse cx="150.0" cy="178.0" rx="16.7" ry="11.9" fill="#7aa5d0" transform="rotate(-12.0 150.0 178.0)"/>
+<ellipse cx="150.0" cy="178.0" rx="38.0" ry="27.0" fill="none" stroke="#3f6ea8" stroke-width="1.5" transform="rotate(-12.0 150.0 178.0)"/>
+<ellipse cx="404.0" cy="112.0" rx="48.0" ry="34.0" fill="#d4e3f3" transform="rotate(-8.0 404.0 112.0)"/>
+<ellipse cx="404.0" cy="112.0" rx="34.6" ry="24.5" fill="#a9c8e6" transform="rotate(-8.0 404.0 112.0)"/>
+<ellipse cx="404.0" cy="112.0" rx="21.1" ry="15.0" fill="#7aa5d0" transform="rotate(-8.0 404.0 112.0)"/>
+<ellipse cx="404.0" cy="112.0" rx="48.0" ry="34.0" fill="none" stroke="#3f6ea8" stroke-width="1.5" transform="rotate(-8.0 404.0 112.0)"/>
+<path d="M192,194 C 252,222 318,180 352,142" fill="none" stroke="#a0a0a0" stroke-width="1.8" stroke-dasharray="6 5" marker-end="url(#ar)"/>
+<text x="398" y="240" font-size="16" text-anchor="middle" fill="#999" font-style="italic">training progresses</text>
+<text x="148" y="226" font-size="18" text-anchor="middle" fill="#3f6ea8" font-style="italic">early</text>
+<text x="404" y="170" font-size="18" text-anchor="middle" fill="#3f6ea8" font-style="italic">late</text>
+<path d="M404,74 L404,52" fill="none" stroke="#c0392b" stroke-width="1.6" marker-end="url(#ar2)"/>
+<text x="404" y="38" font-size="18" text-anchor="middle" fill="#c0392b" font-style="italic">off the teacher support</text>
+</svg>

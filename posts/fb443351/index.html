@@ -1,0 +1,960 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=dark>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/jaychou.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Sophilex">
+  <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
+  
+    <meta name="description" content="推荐数据集蒸馏">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Dataset Condensation for Recommendation">
+<meta property="og:url" content="https://sophilex.github.io/posts/fb443351/index.html">
+<meta property="og:site_name" content="Sophilex‘s Blog">
+<meta property="og:description" content="推荐数据集蒸馏">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://sophilex.github.io/img/lxh1.webp">
+<meta property="article:published_time" content="2025-09-14T13:13:35.000Z">
+<meta property="article:modified_time" content="2026-11-24T11:46:44.447Z">
+<meta property="article:author" content="Sophilex">
+<meta property="article:tag" content="KD">
+<meta property="article:tag" content="Dataset_Condensation">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://sophilex.github.io/img/lxh1.webp">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Dataset Condensation for Recommendation - Sophilex‘s Blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"sophilex.github.io","root":"/","version":"1.9.7","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loadings.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baiduAnalytics":{"enable":true,"id":"87429697bdd967e2daa65f8887e98a2b"},"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+    <!-- Google tag (gtag.js) -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        Fluid.utils.createScript("https://www.googletagmanager.com/gtag/js?id=", function() {
+          window.dataLayer = window.dataLayer || [];
+          function gtag() {
+            dataLayer.push(arguments);
+          }
+          gtag('js', new Date());
+          gtag('config', '');
+        });
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+<script src="/live2d-widget/autoload.js"></script>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Sophilex&#39;s Blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>Home</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>Archive</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>Category</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>Tags</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/" target="_self">
+                <i class="iconfont icon-link-fill"></i>
+                <span>Friends</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/academic/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>About me</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/lxh1.webp') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Dataset Condensation for Recommendation"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-author" aria-hidden="true"></i>
+        Sophilex
+      </span>
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-09-14 21:13" pubdate>
+          2025年9月14日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.6k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          14 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Dataset Condensation for Recommendation</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>推荐数据集蒸馏的普遍问题是：</p>
+<ul>
+<li>对于用户的潜在兴趣，往往会被忽略</li>
+<li>难以生成<strong>离散</strong>的user-item交互信息</li>
+</ul>
+<p>首先回顾一下推荐数据集蒸馏操作的基本框架</p>
+<p>记<span class="math inline">\(\Phi: U\times I\rightarrow
+\mathbb{R}\)</span>代表在对应数据集上训练的推荐模型。对于原始数据集<span
+class="math inline">\(D\in R^{|U|\times
+|I|}\)</span>，要找到一个较小的数据集<span
+class="math inline">\(D^s\)</span>，其应当满足 <span
+class="math display">\[\underset{D^s}{argmin}\  \underset{(u,i,r)\sim
+D^{val}}{\mathbb{E}}[l(\theta_{D^s}^*(u,i),r)]\ \ \ s.t. \theta_{D^s}^*
+= \underset{\theta}{argmin}\  \underset{(u,i,r)\sim D^{s}}{\mathbb{E}}
+[l(\Phi(u,i),r)]\tag{1}\]</span> 其中<span
+class="math inline">\(D^{val}\)</span>是一个验证集，<span
+class="math inline">\(l(\cdot)\)</span>代表对应的可微的loss，其监督模型<span
+class="math inline">\(\Phi\)</span>关于用户<span
+class="math inline">\(u\)</span>对<span
+class="math inline">\(i\)</span>的评分结果。
+这是一个经典的数据集蒸馏的双层优化问题，其中内层优化对应的模型，外层优化数据集。这里合成数据集<span
+class="math inline">\(D^s\)</span>与<span
+class="math inline">\(D\)</span>一样代表user-item交互信息，其应当是参数化的，然后通过<span
+class="math inline">\((1)\)</span>式进行优化。</p>
+<p>对于第一点，用户未交互的item并不一定是其不感兴趣的，这一隐式关系在原始数据集中通过大量信息的学习也许是可以挖掘出来的，但是当数据集压缩之后，难度可能会变大，因此作者希望在压缩数据集中也能反映出user的潜在感兴趣item。</p>
+<p>实现上，首先需要提前训练一个模型<span
+class="math inline">\(f_{p}\)</span>，找出每一个user的潜在感兴趣item，这些item应当是user未交互过的，从中取出前topK，作为该user的潜在感兴趣item，形式化来说，
+<span class="math display">\[TopK(u) = \{ i| i = arg\ \text{IsTopK}
+f_{p}(u,i&#39;), i&#39;\in I&#39;(u) \}\tag{2}\]</span> 其中<span
+class="math inline">\(I&#39;(u)\)</span>就代表<span
+class="math inline">\(u\)</span>未交互过的item集合。那么接下来，只需要将
+<span class="math display">\[D^{ps} = \{ (u,i)|u\in U, i\in
+TopK(u)\}\tag{3}\]</span></p>
+<p>加入原始数据集<span
+class="math inline">\(D\)</span>，就得到最终<strong>增强过的数据集<span
+class="math inline">\(D^{p}\)</span></strong>，其保留原始数据集信息的同时，帮助挖掘出了用户的隐藏兴趣，更有利于数据集质量的提升。整体来说，这一操作还是非常自然，符合直觉的，并且从之后的实验来看，这一操作的收益是很大的。
+<img src="https://s2.loli.net/2025/09/14/gAltfHaWNhZFOcq.png" srcset="/img/loadings.gif" lazyload
+alt="|400" /> 关于这里的推荐模型<span
+class="math inline">\(f_{p}\)</span>的选择，跟正常做推荐没啥区别，LighGCN，MF，XSimGCL之类的都是可以的，文中也有不同<span
+class="math inline">\(f_{p}\)</span>选择的对比实验，这里略过。</p>
+<p>接下来是关于<strong>离散</strong>的user-item交互信息的生成。由于交互信息中，每一个<span
+class="math inline">\((u,i)\)</span>对的值只有<span
+class="math inline">\(0,1\)</span>两个值，是离散的，并不能直接用梯度下降进行优化。针对这一点，[1]提出重新构造一个参数矩阵<span
+class="math inline">\(S\)</span>，<span
+class="math inline">\((u,i)\)</span>对的分数<span
+class="math inline">\(S_{(u,i)}\in \mathbb{R}\)</span>，然后依据<span
+class="math inline">\(S_{(u,i)}\)</span>的大小，采样出较为重要的<span
+class="math inline">\((u,i)\)</span>对，用于构造合成数据集<span
+class="math inline">\(D^s\)</span>。这里采样操作是不可微的，因此需要调整为gumbal-softmax。此时分数是连续值，因此也就可以用梯度下降来优化了。</p>
+<p>关于这一点，本文的思路其实是类似的，同样构造一个参数矩阵<span
+class="math inline">\(S\)</span>，但是<span
+class="math inline">\((u,i)\)</span>对的分数<span
+class="math inline">\(S_{u,i}\in
+(0,1)\)</span>，然后通过Bernoulli采样得到<span
+class="math inline">\(M\)</span>，代表<span
+class="math inline">\((u,i)\)</span>是否在<span
+class="math inline">\(D^s\)</span>中应该有交互，并用<span
+class="math inline">\(M\)</span>构造合成数据集<span
+class="math inline">\(D^s\)</span>。即 <span
+class="math display">\[P(M|S) = \prod_{(u,i)\in
+D^p}(S_{u,i})^{M_{u,i}}(1-S_{u,i})^{1-M_{u,i}}\tag{4}\]</span>
+同时还需要对<span
+class="math inline">\(||M||_{0}\)</span>进行限制，因为我们需要限制最终合成数据集的规模，其应当满足
+<span class="math display">\[||M||_{0} \leq r|D|\tag{5}\]</span>
+通过<span class="math inline">\((4)\)</span>式，可以将对<span
+class="math inline">\(M\)</span>的限制转化到参数<span
+class="math inline">\(S\)</span>上，即<span
+class="math inline">\((5)\)</span>式可以转化为 <span
+class="math display">\[\mathbb{E}_{p(M|S)}||M_{0}|| = \sum_{(u,i)\in
+D^p}S_{u,i} = ||S||_{1}\tag{6}\]</span>
+这就是参数上关于数据集规模的限制，后续<span
+class="math inline">\(S\)</span>在进行更新之后，会额外做一步投影操作将其投影到对应的合法空间，即满足<span
+class="math inline">\(||S||_{1}\leq
+r|D|,S_{u,i}\in[0,1]\)</span>的空间内</p>
+<p>但是注意到Bernoulli采样操作本身也是不可微的，因此还需要做一些操作。此时外层优化dataset的过程中，Loss表示为
+<span class="math display">\[\Phi(S) =
+\mathbb{E}_{p(M|S)}L(\theta^*(M)), s.t.\ \ \theta^*(M) =
+\underset{\theta}{argmin}\ \hat{L}(\theta;M)\tag{7}\]</span>
+从而梯度可以表示为 <span class="math display">\[\begin{flalign}
+\nabla_{S}\Phi(S) &amp;= \mathbb{E}_{p(M|S)}L(\theta^*(M))\\
+&amp;= \nabla_{S} \int L(\theta^*(M))p(M|S)dM\\
+&amp;= \int L(\theta^*(M)) \frac{\nabla_{S}p(M|S)}{p(M|S)}p(M|S)dM\\
+&amp;= \int L(\theta^*(M)) \nabla_{S}\ln p(M|S)\ p(M|S)dM\\
+&amp;= \mathbb{E}_{p(M|S)}L(\theta^*(M))\nabla_{S}\ln p(M|S)\tag{8}
+\end{flalign}\]</span>
+通过策略梯度，我们现在可以直接估计出Loss对参数S的梯度，并且这一操作只需要forward计算出<span
+class="math inline">\(L(\theta^*(M))\)</span>，以及一个非常好算的<span
+class="math inline">\(\nabla_{S}\ln p(M|S)\)</span>，这一点只需要对<span
+class="math inline">\((4)\)</span>式做一些变形即可。</p>
+<p>最终参数<span class="math inline">\(S\)</span>的更新形式为 <span
+class="math display">\[S \leftarrow Pc(S - \eta
+L(\theta^*(M))\nabla_{S}\ln p(M|S))\tag{9}\]</span> 这里<span
+class="math inline">\(Pc(\cdot)\)</span>操作就是为了将<span
+class="math inline">\(S\)</span>投影到合法空间内</p>
+<p>从而，同样是对交互信息进行重参数化建模，同样是有不可微的采样操作以及对应的补救措施，但是本文相对于[1]，实现了一次forward就可以计算梯度，时间上会有巨大的优势，这一点在下图中会更加直观
+<img src="https://s2.loli.net/2025/09/14/67HCKwFZsNzIOVB.png" srcset="/img/loadings.gif" lazyload
+alt="|400" />
+此外，为了进一步减少计算成本，内部推荐模型优化的时候，只进行了一步更新，然后就进行梯度对齐。</p>
+<blockquote>
+<p>"The intuition behind is that the loss decreases after first step
+optimization of the inner model training is strong enough to provide
+comprehensive information to guide the outer data update"</p>
+</blockquote>
+<p>从下图的结果来看，压缩前先增强数据集这一步的质量收益是很大的，并且one-step
+update以及REINFORCE极大压缩了计算成本。 <img
+src="https://s2.loli.net/2025/09/14/enty5mEAu16ZarX.png" srcset="/img/loadings.gif" lazyload /></p>
+<blockquote>
+<p><strong>reducing the dataset size by 75% and approximating 98% of the
+original performance on Dianping and about 90% on other
+datasets</strong><br />
+<strong>Besides, our framework is significantly faster than the
+prevalent gradient matching solver (e.g., 8× in dataset Ciao for
+updating the data for 100 epochs)</strong></p>
+</blockquote>
+<p>总结一下，压缩前先增强数据集，显式表达user的隐藏兴趣，提升数据集质量。REINFORCE实现前向传播即可估计外层优化的梯度，同时内层优化使用one-step
+update，压缩计算成本。</p>
+<h2 id="reference">Reference</h2>
+<p>[1] Sachdeva, N., Dhaliwal, M.P., Wu, C., &amp; McAuley, J. (2022).
+Infinite Recommendation Networks: A Data-Centric Approach. In NeurIPS,
+22.</p>
+
+                
+              </div>
+              
+
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" class="category-chain-item">学习笔记</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/KD/" class="print-no-link">#KD</a>
+      
+        <a href="/tags/Dataset-Condensation/" class="print-no-link">#Dataset_Condensation</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Dataset Condensation for Recommendation</div>
+      <div>https://sophilex.github.io/posts/fb443351/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Sophilex</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年9月14日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/4a91a6ca/" title="TD3: Tucker Decomposition Based Dataset Distillation Method for Sequential Recommendation">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">TD3: Tucker Decomposition Based Dataset Distillation Method for Sequential Recommendation</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/bb161de0/" title="BOND: Aligning LLMs with Best-of-N distillation">
+                        <span class="hidden-mobile">BOND: Aligning LLMs with Best-of-N distillation</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+  <div id="waline"></div>
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#waline', function() {
+      Fluid.utils.createCssLink('https://cdn.staticfile.org/waline/2.15.5/waline.min.css')
+      Fluid.utils.createScript('https://cdn.staticfile.org/waline/2.15.5/waline.min.js', function() {
+        var options = Object.assign(
+          {"serverURL":"walline-git-main-alephias-projects.vercel.app","path":"window.location.pathname","meta":["nick","mail","link"],"requiredMeta":["nick"],"lang":"zh-CN","emoji":["https://cdn.jsdelivr.net/gh/walinejs/emojis/weibo"],"dark":"html[data-user-color-scheme=\"dark\"]","wordLimit":0,"pageSize":10},
+          {
+            el: '#waline',
+            path: window.location.pathname
+          }
+        )
+        Waline.init(options);
+        Fluid.utils.waitElementVisible('#waline .vcontent', () => {
+          var imgSelector = '#waline .vcontent img:not(.vemoji)';
+          Fluid.plugins.imageCaption(imgSelector);
+          Fluid.plugins.fancyBox(imgSelector);
+        })
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      京ICP证123456号
+    </a>
+  </span>
+  
+    
+      <span>
+        <a
+          href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=12345678"
+          rel="nofollow noopener"
+          class="beian-police"
+          target="_blank"
+        >
+          
+            <span style="visibility: hidden; width: 0">|</span>
+            <img src="/img/police_beian.png" srcset="/img/loadings.gif" lazyload alt="police-icon"/>
+          
+          <span>京公网安备12345678号</span>
+        </a>
+      </span>
+    
+  
+</div>
+
+  
+  
+</div>
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">载入天数...</span>
+<span id="times">载入时分秒...</span>
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("12/18/2023 10:00:00"); //此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 ";
+        document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒.";
+    }
+setInterval("createtime()",250);
+</script>
+
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

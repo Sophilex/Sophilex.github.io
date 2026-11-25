@@ -1,0 +1,1020 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=dark>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/jaychou.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Sophilex">
+  <meta name="keywords" content="抽象代数，组合数学，算法，多项式，动态规划">
+  
+    <meta name="description" content="一点OPD相关的阅读笔记+个人想法，施工中...">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OPD_SNR">
+<meta property="og:url" content="https://sophilex.github.io/posts/98d9f1de/index.html">
+<meta property="og:site_name" content="Sophilex‘s Blog">
+<meta property="og:description" content="一点OPD相关的阅读笔记+个人想法，施工中...">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://sophilex.github.io/img/lxh2.webp">
+<meta property="article:published_time" content="2026-07-21T04:49:06.000Z">
+<meta property="article:modified_time" content="2026-11-24T11:46:44.542Z">
+<meta property="article:author" content="Sophilex">
+<meta property="article:tag" content="LLM">
+<meta property="article:tag" content="OPD">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://sophilex.github.io/img/lxh2.webp">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>OPD_SNR - Sophilex‘s Blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"sophilex.github.io","root":"/","version":"1.9.7","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loadings.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baiduAnalytics":{"enable":true,"id":"87429697bdd967e2daa65f8887e98a2b"},"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+    <!-- Google tag (gtag.js) -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        Fluid.utils.createScript("https://www.googletagmanager.com/gtag/js?id=", function() {
+          window.dataLayer = window.dataLayer || [];
+          function gtag() {
+            dataLayer.push(arguments);
+          }
+          gtag('js', new Date());
+          gtag('config', '');
+        });
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+<script src="/live2d-widget/autoload.js"></script>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Sophilex&#39;s Blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>Home</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>Archive</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>Category</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>Tags</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/" target="_self">
+                <i class="iconfont icon-link-fill"></i>
+                <span>Friends</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/academic/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>About me</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/lxh2.webp') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="OPD_SNR"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-author" aria-hidden="true"></i>
+        Sophilex
+      </span>
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-07-21 12:49" pubdate>
+          2026年7月21日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.9k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          17 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">OPD_SNR</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h3 id="opd中的梯度信号">OPD中的梯度信号</h3>
+<p>OPD中，设学生分布为<span
+class="math inline">\(p\)</span>，教师分布为<span
+class="math inline">\(q\)</span>，其Loss，即RKL，表示为 <span
+class="math display">\[\mathbb{E}_{\hat{y}_{t}\sim p}[\log
+p(\hat{y}_{t}) - \log q(\hat{y}_{t})]\]</span> 对应的总体梯度信号为
+<span class="math display">\[\overline{g}_{OPD}(\theta) =
+\nabla_{\theta}\mathbb{E}_{\hat{y}_{t}\sim p}[\log p(\hat{y}_{t}) - \log
+q(\hat{y}_{t})] = \mathbb{E}_{\hat{y}_{t}\sim
+p}[u_{t}\nabla_{\theta}\log p(\hat{y}_{t})]\]</span> 即Policy
+Gradient的梯度形式，每一个梯度项的权重为 <span
+class="math display">\[u_{t} = \log p(\hat{y}_{t}) - \log
+q(\hat{y}_{t})\]</span>
+当然也可以把OPD的整体梯度信号表示成每一个token处对应的梯度信号的期望，即
+<span class="math display">\[\begin{flalign}
+\overline{g}_{OPD}(\theta) &amp;= \mathbb{E}_{\hat{y}_{t}\sim
+p}[g_{OPD}(\theta;\hat{y}_{t})]\\
+\text{where} \ g_{OPD}(\theta;\hat{y}_{t}) &amp;=
+u_{t}\nabla_{\theta}\log p(\hat{y}_{t})
+\end{flalign}\]</span></p>
+<h4 id="关于权重项u_t">关于权重项<span
+class="math inline">\(u_{t}\)</span></h4>
+<p>不难发现，<span class="math inline">\(u_{t}\)</span>的期望为 <span
+class="math display">\[\overline{u} = \mathbb{E}_{\hat{y}_{t}\sim
+p}[\log p(\hat{y}_{t}) - \log q(\hat{y}_{t})] =
+\mathcal{D}_{KL}(p||q)\]</span> 其方差为 <span
+class="math display">\[\mathrm{Var}_{p}(u_{t}) = \mathbb{E}_{p}[u_{t}^2]
+- \mathbb{E}_{p}[u_{t}]^2 = \mathbb{E}_{p}[u_{t}^2] -
+\overline{u}^2\]</span> 当两个分布<span
+class="math inline">\(p,q\)</span>足够接近的时候，定义 <span
+class="math display">\[\epsilon(y) = \frac{q(y)-p(y)}{p(y)},
+\text{hence} \ q(y) = p(y)(1+\epsilon(y))\]</span> 注意到<span
+class="math inline">\(p,q\)</span>都是分布，因此有 <span
+class="math display">\[\mathbb{E}_{y\sim p}[\epsilon(y)] =
+\sum_{y}p(y)\epsilon(y) = \sum_{y}q(y)-p(y) = 1-1=0\]</span> 从而 <span
+class="math display">\[\begin{flalign}
+u_{t} &amp;= \log p(\hat{y}_{t}) - \log q(\hat{y}_{t}) =
+-\log(1+\epsilon(\hat{y}_{t}))\\
+&amp;=  - \epsilon(\hat{y}_{t}) + \frac{\epsilon(\hat{y}_{t})^2}{2} +
+O(\epsilon(\hat{y}_{t})^3)\\
+\end{flalign}\]</span> 因此<span
+class="math inline">\(u_{t}\)</span>是误差项<span
+class="math inline">\(\epsilon\)</span>的一阶小量。同时也有 <span
+class="math display">\[\overline{u} = \mathbb{E}_{p}(u_{t}) =
+\underbrace{\mathbb{E}_{p}[- \epsilon(\hat{y}_{t})]}_{=0} +
+\mathbb{E}_{p}[\frac{\epsilon(\hat{y}_{t})^2}{2}] =
+\mathbb{E}_{p}[\frac{\epsilon(\hat{y}_{t})^2}{2}]\]</span> 在对<span
+class="math inline">\(u_{t}\)</span>取期望之后，<span
+class="math inline">\(\epsilon\)</span>的期望也变成0了，因此<span
+class="math inline">\(u_{t}\)</span>的期望，也就是<span
+class="math inline">\(\overline{u}\)</span>反而是<span
+class="math inline">\(\epsilon\)</span>的一个二阶小量 将<span
+class="math inline">\(\overline{u}\)</span>与误差项<span
+class="math inline">\(\epsilon(\hat{y}_{t})\)</span>的关系代入<span
+class="math inline">\(\mathrm{Var}_{p}(u_{t})\)</span>的定义式，有 <span
+class="math display">\[\begin{flalign}
+\mathrm{Var}_{p}(u_{t}) &amp;= \mathbb{E}_{p}[u_{t}^2] -
+\overline{u}^2\\
+&amp; \approx \mathbb{E}_{p}[\epsilon^2] -
+(\frac{1}{2}\mathbb{E}_{p}[\epsilon^2])^2\\
+&amp; \approx \mathbb{E}_{p}[\epsilon^2]\\
+&amp;\approx 2\overline{u}
+\end{flalign}\]</span> 最终我们发现，</p>
+<blockquote>
+<p>对于这个梯度的权重项<span
+class="math inline">\(u_{t}\)</span>，当教师和学生分布非常接近时，其方差与期望是同阶的
+记<span
+class="math inline">\(\delta=\overline{u}=\mathcal{D}_{KL}(p||q)\)</span>，有<span
+class="math inline">\(\mathrm{Var}_{p}(u_{t})=Θ(\delta)\)</span>
+此时<strong>不管是正向KL、反向KL、对称KL、还是对数比的方差,都会以同一个速度趋于零</strong>,只是常数系数不同</p>
+</blockquote>
+<h4 id="opd梯度的信噪比">OPD梯度的信噪比</h4>
+<p>在此基础上，我们继续分析一下OPD的整体梯度<span
+class="math inline">\(\overline{g}_{OPD}(\theta)=
+\mathbb{E}_{\hat{y}_{t}\sim p}[u_{t}\nabla_{\theta}\log
+p(\hat{y}_{t})]\)</span> 对于score function <span
+class="math inline">\(\nabla_{\theta}\log
+p(\hat{y}_{t})\)</span>，其在自己的分布<span
+class="math inline">\(p\)</span>下期望为0（显然），从而对<span
+class="math inline">\(\overline{g}_{OPD}(\theta)\)</span>的权重项引入一个常数baseline并不会改变其期望（这也是REINFORCE
+with basline的动机来源），即 <span
+class="math display">\[\begin{flalign}
+\overline{g}_{OPD}(\theta) &amp;= \mathbb{E}_{\hat{y}_{t}\sim
+p}[u_{t}\nabla_{\theta}\log p(\hat{y}_{t})]\\
+&amp;= \mathbb{E}_{\hat{y}_{t}\sim p}[u_{t}\nabla_{\theta}\log
+p(\hat{y}_{t})] -
+\overline{u} \underbrace{\mathbb{E}_{\hat{y}_{t}\sim
+p}[\nabla_{\theta}\log p(\hat{y}_{t})]}_{=0}\\
+&amp;= \mathbb{E}_{\hat{y}_{t}\sim
+p}[(u_{t}-\overline{u})\nabla_{\theta}\log p(\hat{y}_{t})]
+\end{flalign}\]</span> 再次利用<span
+class="math inline">\(\mathbb{E}_{\hat{y}_{t}\sim p}[\nabla_{\theta}\log
+p(\hat{y}_{t})]=0\)</span>，上式可以写成 <span
+class="math display">\[\begin{flalign}
+\overline{g}_{OPD}(\theta) &amp;= \mathbb{E}_{\hat{y}_{t}\sim
+p}[(u_{t}-\mathbb{E}_{p}[u_{t}])(\nabla_{\theta}\log
+p(\hat{y}_{t})-\mathbb{E}_{p}[\nabla_{\theta}\log p(\hat{y}_{t})])]\\
+&amp;=\mathrm{Cov}_{p}(u_{t}, \nabla_{\theta}\log p(\hat{y}_{t}))
+\end{flalign}\]</span> 利用Cauchy-Schwarz Inequality， 有 <span
+class="math display">\[||\overline{g}_{OPD}(\theta)||_{2}=||\mathrm{Cov}_{p}(u_{t},
+\nabla_{\theta}\log p(\hat{y}_{t}))||_{2}\leq \sqrt{
+\mathrm{Var}_{p}(u_{t}) } \cdot \sqrt{
+\mathrm{Var}_{p}(\nabla_{\theta}\log p(\hat{y}_{t})) }\]</span> 注意到
+<span class="math display">\[\mathrm{Var}_{p}(\nabla_{\theta}\log
+p(\hat{y}_{t})) = \mathbb{E}_{p}[(\nabla_{\theta}\log p(\hat{y}_{t}))^2]
+= Tr(\mathcal{F}(\theta))\]</span> 其中<span
+class="math inline">\(Tr(\mathcal{F}(\theta)) =
+\sum_{i}\lambda_{i}(\mathcal{F}(\theta))\geq dim(\theta) \cdot
+\lambda_{min}(\mathcal{F}(\theta))\)</span>，可以看成关于<span
+class="math inline">\(\delta\)</span>是<span
+class="math inline">\(O(1)\)</span>的。而前面已经分析过<span
+class="math inline">\(\mathrm{Var}_{p}(u_{t})\)</span>是<span
+class="math inline">\(O(\delta)\)</span>的，因此<span
+class="math inline">\(||\overline{g}_{OPD}(\theta)||_{2}^2\)</span>是<span
+class="math inline">\(O(\delta)\)</span>的</p>
+<p>OPD优化过程中，梯度的信噪比SNR定义为 <span
+class="math display">\[SNR(g) =
+\frac{||\overline{g}||_{2}^2}{Tr(Cov[g])}\]</span>
+分子部分是期望梯度的范数大小，也就是优化信号的强弱，而分母是估计梯度信号中的方差大小，这个式子衡量了估计过程中的信号强弱与噪声的比值。SNR趋于0时，代表训练中基本全是噪声信号，难以进行有效训练；而如果SNR趋于无穷，则代表梯度信号占主导。
+<span class="math display">\[\begin{flalign}
+Tr(Cov[g]) &amp;= Tr(\mathbb{E}_{p}[(g-\overline{g})(g-\overline{g})^T])
+= \mathbb{E}_{p}||g-\overline{g}||_{2}^2 = \mathrm{Var}_{p}(g) \\
+\end{flalign}\]</span> 注意到 <span
+class="math display">\[\begin{flalign}
+\mathrm{Var}_{p}(g_{OPD}(\theta)) &amp;= \mathbb{E}_{\hat{y}_{t}\sim
+p}[u_{t}^2||\nabla_{\theta}\log p(\hat{y}_{t})||^2_{2}] -
+\mathbb{E}_{\hat{y}_{t}\sim p}[u_{t}\nabla_{\theta}\log
+p(\hat{y}_{t})]^2\\
+&amp;=\mathbb{E}_{\hat{y}_{t}\sim p}[u_{t}^2||\nabla_{\theta}\log
+p(\hat{y}_{t})||^2_{2}] - ||\overline{g}_{OPD}(\theta)||_{2}^2
+\end{flalign}\]</span> 对于前半部分<span
+class="math inline">\(\mathbb{E}_{\hat{y}_{t}\sim
+p}[u_{t}^2||\nabla_{\theta}\log
+p(\hat{y}_{t})||^2_{2}]\)</span>，通过引入<span
+class="math inline">\(\overline{u}=\mathbb{E}_{\hat{y}_{t}\sim
+p}[u_{t}]\)</span>，将<span
+class="math inline">\(u_{t}\)</span>分解为<span
+class="math inline">\(u_{t} = \overline{u} + (u_{t}-
+\overline{u})\)</span>，有 <span class="math display">\[\begin{flalign}
+\mathbb{E}_{\hat{y}_{t}\sim p}[u_{t}^2||\nabla_{\theta}\log
+p(\hat{y}_{t})||^2_{2}] &amp;= \overline{u}^2
+\mathbb{E}_{\hat{y}_{t}\sim p}[||\nabla_{\theta}\log
+p(\hat{y}_{t})||^2_{2}] + 2\overline{u} \mathbb{E}_{\hat{y}_{t}\sim
+p}[(u_{t}-\overline{u})||\nabla_{\theta}\log p(\hat{y}_{t})||^2_{2}]\\
+&amp; + \mathbb{E}_{\hat{y}_{t}\sim
+p}[(u_{t}-\overline{u})^2||\nabla_{\theta}\log p(\hat{y}_{t})||^2_{2}]\\
+\end{flalign}\]</span>
+为了说明信噪比是收敛的，我们需要给方差项找一个与<span
+class="math inline">\(\delta\)</span>相关的下界。当分布<span
+class="math inline">\(p,q\)</span>接近的时候，<span
+class="math inline">\(\mathrm{Var}_{p}(g_{OPD}(\theta))\)</span>中<span
+class="math inline">\(||\overline{g}_{OPD}(\theta)||_{2}^2\)</span>是<span
+class="math inline">\(O(\delta^2)\)</span>的，<span
+class="math inline">\(\mathbb{E}_{\hat{y}_{t}\sim
+p}[u_{t}^2||\nabla_{\theta}\log
+p(\hat{y}_{t})||^2_{2}]\)</span>的展开中，第一项和第二项分别是<span
+class="math inline">\(O(\delta^2)\)</span>以及<span
+class="math inline">\(O(\delta)\)</span>的。接下来尝试分析交叉项。 <span
+class="math display">\[\begin{flalign}
+\mathbb{E}_{\hat{y}_{t}\sim
+p}[(u_{t}-\overline{u})^2||\nabla_{\theta}\log
+p(\hat{y}_{t})||^2_{2}]&amp;=\mathbb{E}_{\hat{y}_{t}\sim
+p}[(u_{t}-\overline{u})^2]\mathbb{E}_{\hat{y}_{t}\sim p}[ff^T],
+f=\nabla_{\theta}\log p(\hat{y}_{t})\\
+&amp;= \mathrm{Var}_{p}(u_{t})\cdot Tr(\mathcal{F}(\theta))\\
+&amp; \geq \mathrm{Var}_{p}(u_{t}) \cdot \mathcal{F}_{min}(\theta)
+\end{flalign}\]</span> 这里<span
+class="math inline">\(\mathrm{Var}_{p}(u_{t})\)</span>前面已经证明过是<span
+class="math inline">\(O(\delta)\)</span>的，而<span
+class="math inline">\(\mathcal{F}_{min}\)</span>可以看成<span
+class="math inline">\(O(1)\)</span>的。最终，可以发现OPD梯度信噪比SNR的分母项<span
+class="math inline">\(Tr(Cov[g])\)</span>与分子项都是<span
+class="math inline">\(O(\delta)\)</span>的。因此，当训练后期两个分布接近时，SNR趋向于收敛到一个常数值，即噪声始终在训练过程中存在并影响模型训练。
+最终对OPD的训练过程进行总结：</p>
+<blockquote>
+<p>训练早期梯度范数<span
+class="math inline">\(||\overline{g}||_{2}^2\)</span>较大时，梯度信号强烈，模型可以快速收敛；但是训练进行到后期，师生分布接近时，信噪比始终存在，干扰模型训练，导致性能始终上不去甚至下降。</p>
+</blockquote>
+<p>这一现象，究其根本，是因为SNR的分母项，也就是梯度采样估计的方差，由于on
+policy采样的原因，始终存在。</p>
+
+                
+              </div>
+              
+
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" class="category-chain-item">学习笔记</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/LLM/" class="print-no-link">#LLM</a>
+      
+        <a href="/tags/OPD/" class="print-no-link">#OPD</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>OPD_SNR</div>
+      <div>https://sophilex.github.io/posts/98d9f1de/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Sophilex</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年7月21日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/bce2f7a6/" title="Burnside 引理">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Burnside 引理</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/ea6ed38e/" title="Data_Parallel">
+                        <span class="hidden-mobile">Data_Parallel</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+  <div id="waline"></div>
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#waline', function() {
+      Fluid.utils.createCssLink('https://cdn.staticfile.org/waline/2.15.5/waline.min.css')
+      Fluid.utils.createScript('https://cdn.staticfile.org/waline/2.15.5/waline.min.js', function() {
+        var options = Object.assign(
+          {"serverURL":"walline-git-main-alephias-projects.vercel.app","path":"window.location.pathname","meta":["nick","mail","link"],"requiredMeta":["nick"],"lang":"zh-CN","emoji":["https://cdn.jsdelivr.net/gh/walinejs/emojis/weibo"],"dark":"html[data-user-color-scheme=\"dark\"]","wordLimit":0,"pageSize":10},
+          {
+            el: '#waline',
+            path: window.location.pathname
+          }
+        )
+        Waline.init(options);
+        Fluid.utils.waitElementVisible('#waline .vcontent', () => {
+          var imgSelector = '#waline .vcontent img:not(.vemoji)';
+          Fluid.plugins.imageCaption(imgSelector);
+          Fluid.plugins.fancyBox(imgSelector);
+        })
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      京ICP证123456号
+    </a>
+  </span>
+  
+    
+      <span>
+        <a
+          href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=12345678"
+          rel="nofollow noopener"
+          class="beian-police"
+          target="_blank"
+        >
+          
+            <span style="visibility: hidden; width: 0">|</span>
+            <img src="/img/police_beian.png" srcset="/img/loadings.gif" lazyload alt="police-icon"/>
+          
+          <span>京公网安备12345678号</span>
+        </a>
+      </span>
+    
+  
+</div>
+
+  
+  
+</div>
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">载入天数...</span>
+<span id="times">载入时分秒...</span>
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("12/18/2023 10:00:00"); //此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 ";
+        document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒.";
+    }
+setInterval("createtime()",250);
+</script>
+
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
