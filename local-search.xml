@@ -4,31 +4,6 @@
   
   
   <entry>
-    <title>How to better combine OPD with RL</title>
-    <link href="/posts/bc86efb0/"/>
-    <url>/posts/bc86efb0/</url>
-    
-    <content type="html"><![CDATA[]]></content>
-    
-    
-    <categories>
-      
-      <category>学习笔记</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>算法</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
     <title>Burnside 引理</title>
     <link href="/posts/bce2f7a6/"/>
     <url>/posts/bce2f7a6/</url>
@@ -675,9 +650,9 @@
       
       <tag>LLM</tag>
       
-      <tag>KD</tag>
-      
       <tag>Pruning</tag>
+      
+      <tag>KD</tag>
       
     </tags>
     
